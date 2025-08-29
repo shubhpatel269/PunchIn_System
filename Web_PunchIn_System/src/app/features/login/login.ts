@@ -234,38 +234,79 @@ export class Login implements AfterViewInit, OnDestroy {
 
   async loadEmployeeDescriptors() {
     this.isLoadingDescriptors = true;
+    this.employeeDescriptors = []; // Reset any existing descriptors
 
-    this.employees = await new Promise<any[]>((resolve, reject) => {
-      this.employeeService.getEmployees().subscribe({
-        next: resolve,
-        error: reject
+    try {
+      // Get employees with their face descriptors
+      this.employees = await new Promise<any[]>((resolve, reject) => {
+        this.employeeService.getEmployeesWithFaceDescriptors().subscribe({
+          next: resolve,
+          error: reject
+        });
       });
-    });
 
-    const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      console.log('Raw employee data:', this.employees);
 
-    for (const emp of this.employees) {
-      try {
-        const img = await faceapi.fetchImage(emp.image);
-        const detection = await faceapi
-          .detectSingleFace(img, options)
-          .withFaceLandmarks()
-          .withFaceDescriptor();
-        console.log('Detection for', emp.name, ':', detection);
-        if (detection) {
+      // Process each employee's descriptor
+      for (const emp of this.employees) {
+        try {
+          if (!emp.faceDescriptor) {
+            console.warn(`No face descriptor found for employee ${emp.name} (${emp.id})`);
+            continue;
+          }
+
+          let descriptor: Float32Array;
+          
+          if (Array.isArray(emp.faceDescriptor)) {
+            // If it's already an array, convert to Float32Array
+            descriptor = new Float32Array(emp.faceDescriptor);
+          } else if (typeof emp.faceDescriptor === 'string') {
+            try {
+              // Try to parse as JSON array string
+              const parsed = JSON.parse(emp.faceDescriptor);
+              if (Array.isArray(parsed)) {
+                descriptor = new Float32Array(parsed);
+              } else {
+                throw new Error('Descriptor is not an array');
+              }
+            } catch (e) {
+              console.warn(`Invalid descriptor format for employee ${emp.name} (${emp.id})`, e);
+              continue;
+            }
+          } else {
+            console.warn(`Unsupported descriptor format for employee ${emp.name} (${emp.id})`);
+            continue;
+          }
+
+          if (descriptor.length !== 128) {
+            console.warn(`Invalid descriptor length (${descriptor.length}) for employee ${emp.name} (${emp.id})`);
+            continue;
+          }
+
           this.employeeDescriptors.push({
             id: emp.id,
             name: emp.name,
-            descriptor: detection.descriptor
+            descriptor: descriptor
           });
+          
+          console.log(`Successfully loaded descriptor for ${emp.name} (${emp.id})`);
+        } catch (error) {
+          console.error(`Error processing employee ${emp.name} (${emp.id}):`, error);
         }
-      } catch (err) {
-        console.error('Error loading image for', emp.name, err);
       }
+      
+      console.log('Loaded employee descriptors:', this.employeeDescriptors);
+    } catch (error) {
+      console.error('Error loading employee descriptors:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to load employee face data',
+        life: 5000
+      });
+    } finally {
+      this.isLoadingDescriptors = false;
     }
-    this.isLoadingDescriptors = false;
-    console.log('Loaded employee descriptors:', this.employeeDescriptors);
-
   }
 
 
@@ -526,23 +567,43 @@ export class Login implements AfterViewInit, OnDestroy {
     }, 1000);
   }
 
-  //  find best match face from database
+  // Find best matching face from database using face descriptor
   findBestMatch(queryDescriptor: Float32Array) {
-    console.log('findBestMatch called', this.employeeDescriptors);
-    let minDistance = 0.4;
+    if (!queryDescriptor || queryDescriptor.length === 0) {
+      console.error('Invalid query descriptor');
+      return null;
+    }
+
+    console.log('Starting face matching with', this.employeeDescriptors.length, 'stored descriptors');
+  
+    let minDistance = 0.6; // Increased threshold to be more permissive
     let bestMatch = null;
+  
     for (const emp of this.employeeDescriptors) {
-      const distance = faceapi.euclideanDistance(emp.descriptor, queryDescriptor);
-      console.log(`Distance to ${emp.name}:`, distance);
-      if (distance < minDistance) {
-        minDistance = distance;
-        bestMatch = emp;
+      try {
+        if (!emp.descriptor || !(emp.descriptor instanceof Float32Array)) {
+          console.warn('Invalid descriptor for employee:', emp.name);
+          continue;
+        }
+        
+        const distance = faceapi.euclideanDistance(emp.descriptor, queryDescriptor);
+        console.log(`Distance to ${emp.name} (ID: ${emp.id}):`, distance);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          bestMatch = emp;
+          console.log(`New best match found: ${emp.name} with distance ${distance}`);
+        }
+      } catch (error) {
+        console.error(`Error comparing with employee ${emp.name}:`, error);
       }
     }
+  
+    console.log('Best match:', bestMatch ? `${bestMatch.name} (distance: ${minDistance})` : 'No match found');
     return bestMatch;
   }
 
-  // capture image from video
+  // capture image from video 
   captureSnapshot(): string {
     const canvas = this.canvasRef.nativeElement;
     const ctx = canvas.getContext('2d');
