@@ -1,0 +1,69 @@
+:host {
+    display: block;
+    min-height: 100%;
+  }
+  
+  .dashboard-container {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  
+  /* Card styles */
+  .p-card {
+    height: 100%;
+    box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 
+                0 1px 1px 0 rgba(0,0,0,.14), 
+                0 1px 3px 0 rgba(0,0,0,.12);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .p-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  
+  /* Table styles */
+  .p-datatable .p-datatable-thead > tr > th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+  
+  .p-datatable .p-tag {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 4px;
+  }
+  
+  /* Responsive adjustments */
+  @media screen and (max-width: 960px) {
+    .p-tabview-panels {
+      padding: 1rem 0;
+    }
+  }
+  
+  /* Map container */
+  .map-container {
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  /* Status indicators */
+  .status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+  
+  .status-indicator.active {
+    background-color: #4CAF50;
+  }
+  
+  .status-indicator.paused {
+    background-color: #FFC107;
+  }
+  
+  .status-indicator.completed {
+    background-color: #F44336;
+  }

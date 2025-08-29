@@ -1,0 +1,117 @@
+/* Main container */
+.manage-designation {
+    padding: 1.5rem;
+}
+
+/* Process Dialog Styles */
+.process-content {
+    padding: 1rem 0;
+}
+
+.process-content h3 {
+    color: #2563eb;
+    margin-bottom: 1rem;
+}
+
+/* Timeline Customization */
+:host ::ng-deep .p-timeline.p-timeline-vertical {
+    margin-top: 2rem;
+}
+
+:host ::ng-deep .p-timeline-event-opposite {
+    flex: 0 0 auto;
+    padding: 0 1rem;
+}
+
+:host ::ng-deep .p-timeline-event-content {
+    padding: 0 1rem 1rem 1rem;
+}
+
+:host ::ng-deep .p-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+:host ::ng-deep .p-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+:host ::ng-deep .p-card .p-card-header {
+    color: #1e40af;
+    font-weight: 600;
+    padding: 1rem 1rem 0.5rem 1rem;
+}
+
+:host ::ng-deep .p-card .p-card-subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+:host ::ng-deep .p-card .p-card-content {
+    padding: 0 1rem 1rem 1rem;
+    color: #334155;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    :host ::ng-deep .p-timeline-vertical .p-timeline-event-opposite {
+        display: none;
+    }
+    
+    :host ::ng-deep .p-timeline-vertical .p-timeline-event-content {
+        padding: 0 0 1rem 1rem;
+    }
+}
+
+/* Style for the table header */
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  border: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+/* Style for table rows */
+.p-datatable .p-datatable-tbody > tr {
+  transition: background-color 0.2s;
+}
+
+/* Hover effect for table rows */
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+/* Style for action buttons */
+.action-buttons .p-button {
+  margin-right: 0.5rem;
+}
+
+/* Style for the dialog form */
+.p-dialog .p-dialog-content {
+  padding: 1.5rem;
+}
+
+/* Style for form fields */
+.p-field {
+  margin-bottom: 1.5rem;
+}
+
+.p-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* Responsive table */
+@media screen and (max-width: 768px) {
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+  }
+}
