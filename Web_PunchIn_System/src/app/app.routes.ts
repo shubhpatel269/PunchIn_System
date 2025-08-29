@@ -12,7 +12,7 @@ export const routes: Routes = [
     {path:'login',component:Login},
     {path:'punchin',component:PunchIn},
     {path:'admin',component:AdminDashboard, children: [
-        { path: 'dashboard', component: AttendanceDashboardComponent },
+        { path: 'dashboard', component: ManageEmployee },
         { path: 'manage-user', component: ManageEmployee },
         { path: 'manage-designation', component: ManageDesignation },
         {

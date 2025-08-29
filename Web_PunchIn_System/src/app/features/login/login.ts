@@ -11,6 +11,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Employee } from '../../shared/services/employee';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+import { AuthService } from '../../shared/services/auth.service';
+
 
 
 interface Punch {
