@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, ViewChild, ElementRef, AfterViewInit, OnDestroy,NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 import * as faceapi from 'face-api.js';
@@ -33,7 +34,7 @@ interface LocationLog {
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, ButtonModule, ImageModule, CardModule, DividerModule, ToastModule, ConfirmPopupModule],
+  imports: [CommonModule, ButtonModule, ImageModule, CardModule, DividerModule, ToastModule, ConfirmPopupModule, FormsModule],
   providers: [ConfirmationService, MessageService],
   templateUrl: './login.html',
   styleUrl: './login.css'
@@ -90,12 +91,17 @@ export class Login implements AfterViewInit, OnDestroy {
   showAdminLogin = true;
   activeTab: 'admin' | 'user' | 'none' = 'none';
 
+  adminEmail: string = '';
+  adminPassword: string = '';
+  adminLoading: boolean = false;
+  adminError: string = '';
 
   constructor(private router: Router,
     private messageService: MessageService,
     private employeeService: Employee,
     private confirmationService: ConfirmationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private authService: AuthService
   ) { }
 
   login() {
@@ -838,7 +844,24 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   adminLogin() {
-    this.router.navigate(['/admin']);
+    this.adminLoading = true;
+    this.adminError = '';
+    this.authService.login({ email: this.adminEmail, password: this.adminPassword }).subscribe({
+      next: (res) => {
+        this.adminLoading = false;
+        this.router.navigate(['/admin']);
+      },
+      error: (err) => {
+        this.adminLoading = false;
+        this.adminError = err?.error?.message || 'Login failed. Please check your credentials.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Login Failed',
+          detail: this.adminError,
+          life: 4000
+        });
+      }
+    });
   }
 
   ngOnDestroy() {

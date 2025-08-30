@@ -63,7 +63,7 @@
                 </div>
                 <input type="email"
                   class="block w-full pl-10 pr-3  py-3 border placeholder:text-gray-400 border-gray-300 rounded-lg bg-white"
-                  placeholder="your@email.com" required>
+                  placeholder="your@email.com" required [(ngModel)]="adminEmail" name="adminEmail" autocomplete="username">
               </div>
             </div>
 
@@ -78,14 +78,17 @@
                 </div>
                 <input type="password"
                   class="block w-full pl-10 pr-3 py-3 border placeholder:text-gray-400 border-gray-300 rounded-lg bg-white"
-                  placeholder="Enter your password" required>
+                  placeholder="Enter your password" required [(ngModel)]="adminPassword" name="adminPassword" autocomplete="current-password">
               </div>
             </div>
 
             <button type="button" (click)="adminLogin()"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-              Sign in to Dashboard
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              [disabled]="adminLoading">
+              <span *ngIf="!adminLoading">Sign in to Dashboard</span>
+              <span *ngIf="adminLoading"><i class="pi pi-spin pi-spinner mr-2"></i>Signing in...</span>
             </button>
+            <div *ngIf="adminError" class="text-red-500 text-center text-sm mt-2">{{ adminError }}</div>
           </form>
         </div>
       </ng-container>

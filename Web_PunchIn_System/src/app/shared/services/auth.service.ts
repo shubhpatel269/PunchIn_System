@@ -25,7 +25,7 @@ export class AuthService {
 
   // Login with credentials
   login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/Auth/admin/login`, credentials).pipe(
+    return this.http.post('https://localhost:7127/api/Auth/login', credentials).pipe(
       tap((response: any) => {
         if (response && response.token) {
           localStorage.setItem('jwt_token', response.token);
