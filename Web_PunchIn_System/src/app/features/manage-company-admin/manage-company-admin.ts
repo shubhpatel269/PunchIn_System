@@ -1,10 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CompanyAdminService } from '../../shared/services/company-admin.service';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MessageModule } from 'primeng/message';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -30,29 +33,62 @@ interface CompanyAdmin {
     ToastModule, 
     RouterModule,
     TagModule,
-    // Add any other required modules here
+    ProgressSpinnerModule,
+    MessageModule
   ],
   templateUrl: './manage-company-admin.html',
   styleUrls: ['./manage-company-admin.css'],
   providers: [DialogService, ConfirmationService, MessageService]
 })
 export default class ManageCompanyAdmin implements OnInit, OnDestroy {
-  admins: CompanyAdmin[] = [
-    { id: 1, name: 'Admin One', email: 'admin1@company.com', phone: '1234567890', status: 'Active', lastLogin: new Date() },
-    { id: 2, name: 'Admin Two', email: 'admin2@company.com', phone: '0987654321', status: 'Active', lastLogin: new Date() },
-  ];
-  
+  admins: CompanyAdmin[] = [];
+  loading: boolean = true;
+  error: string | null = null;
   private dialogRef?: DynamicDialogRef;
   
   constructor(
     public dialogService: DialogService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private companyAdminService: CompanyAdminService
   ) {}
 
   ngOnInit() {
-    // Load admins from your service here
-    // this.loadAdmins();
+    this.loading = true;
+    this.error = null;
+    
+    this.companyAdminService.getAdmins().subscribe({
+      next: (admins: any[]) => {
+        this.admins = admins.map(a => ({
+          id: a.adminId,
+          name: `${a.adminFirstName} ${a.adminLastName || ''}`.trim(),
+          email: a.adminEmail,
+          phone: a.adminPhone,
+          status: a.isActive ? 'Active' : 'Inactive',
+          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined
+        }));
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading admins:', err);
+        
+        if (err.status === 401) {
+          this.error = 'Your session has expired. Please log in again.';
+          // Optionally redirect to login
+          // this.router.navigate(['/login']);
+        } else {
+          this.error = 'Failed to load admin data. Please try again later.';
+        }
+        
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.error,
+          life: 5000
+        });
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -92,41 +128,76 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
       width: '50%',
       contentStyle: { 'max-height': '90vh', 'overflow': 'auto' },
       baseZIndex: 10000,
-      data: { admin: { ...admin } }
+      data: { 
+        admin: { 
+          adminId: admin.id,
+          adminFirstName: admin.name.split(' ')[0],
+          adminLastName: admin.name.split(' ').slice(1).join(' '),
+          adminEmail: admin.email,
+          adminPhone: admin.phone,
+          isActive: admin.status === 'Active'
+        } 
+      }
     });
 
     this.dialogRef.onClose.subscribe((result: any) => {
       if (result) {
-        const index = this.admins.findIndex(a => a.id === result.id);
-        if (index > -1) {
-          this.admins[index] = {
-            ...this.admins[index],
-            name: result.name,
-            email: result.email,
-            phone: result.phone
-          };
-          this.admins = [...this.admins];
-          this.showSuccess('Admin updated successfully');
-        }
+        this.loading = true;
+        this.companyAdminService.updateAdmin(result).subscribe({
+          next: () => {
+            this.loadAdmins();
+            this.showSuccess('Admin updated successfully');
+          },
+          error: (err) => {
+            console.error('Error updating admin:', err);
+            this.showError('Failed to update admin');
+            this.loading = false;
+          }
+        });
       }
     });
   }
 
   deleteAdmin(admin: CompanyAdmin) {
     this.confirmationService.confirm({
-      message: `Are you sure you want to delete ${admin.name}?`,
-      header: 'Confirm',
+      message: `Are you sure you want to delete ${admin.name}? This action cannot be undone.`,
+      header: 'Confirm Deletion',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.admins = this.admins.filter(a => a.id !== admin.id);
-        this.showSuccess('Admin deleted successfully');
+        this.loading = true;
+        this.companyAdminService.deleteAdmin(admin.id).subscribe({
+          next: () => {
+            this.admins = this.admins.filter(a => a.id !== admin.id);
+            this.showSuccess('Admin deleted successfully');
+            this.loading = false;
+          },
+          error: (err) => {
+            console.error('Error deleting admin:', err);
+            this.showError('Failed to delete admin');
+            this.loading = false;
+          }
+        });
       }
     });
   }
 
   toggleStatus(admin: CompanyAdmin) {
-    admin.status = admin.status === 'Active' ? 'Inactive' : 'Active';
-    this.showSuccess(`Admin status changed to ${admin.status}`);
+    const newStatus = admin.status === 'Active' ? 'Inactive' : 'Active';
+    const updatedAdmin = {
+      ...admin,
+      isActive: newStatus === 'Active'
+    };
+
+    this.companyAdminService.updateAdmin(updatedAdmin).subscribe({
+      next: () => {
+        admin.status = newStatus;
+        this.showSuccess(`Admin status changed to ${newStatus}`);
+      },
+      error: (err) => {
+        console.error('Error updating admin status:', err);
+        this.showError('Failed to update admin status');
+      }
+    });
   }
 
   public getNextId(): number {
@@ -139,6 +210,38 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
       summary: 'Success',
       detail: message,
       life: 3000
+    });
+  }
+
+  private showError(message: string) {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: message,
+      life: 5000
+    });
+  }
+
+  private loadAdmins() {
+    this.loading = true;
+    this.companyAdminService.getAdmins().subscribe({
+      next: (admins: any[]) => {
+        this.admins = admins.map(a => ({
+          id: a.adminId,
+          name: `${a.adminFirstName} ${a.adminLastName || ''}`.trim(),
+          email: a.adminEmail,
+          phone: a.adminPhone,
+          status: a.isActive ? 'Active' : 'Inactive',
+          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined
+        }));
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error loading admins:', err);
+        this.error = 'Failed to load admin data. Please try again later.';
+        this.loading = false;
+        this.showError(this.error);
+      }
     });
   }
 }

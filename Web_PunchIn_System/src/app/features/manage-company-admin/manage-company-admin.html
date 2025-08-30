@@ -13,9 +13,24 @@
   </div>
 
   <div class="card">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-content-center p-5">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="p-3">
+      <p-message severity="error">
+        {{ error }}
+      </p-message>
+    </div>
+
+    <!-- Table -->
     <p-table [value]="admins" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+      [loading]="loading" [lazy]="false" [showLoader]="false" 
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-      [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '60rem'}">
+      [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '60rem'}" 
+      [globalFilterFields]="['name', 'email', 'phone']">
 
       <ng-template pTemplate="header">
         <tr>
@@ -37,7 +52,7 @@
             <p-tag [value]="admin.status" [severity]="admin.status === 'Active' ? 'success' : 'danger'">
             </p-tag>
           </td>
-          <td>{{admin.lastLogin | date:'medium'}}</td>
+          <td>{{admin.lastLogin ? (admin.lastLogin | date:'medium') : 'Never'}}</td>
           <td>
             <div class="flex gap-2">
               <button pButton pRipple type="button" icon="pi pi-pencil"
