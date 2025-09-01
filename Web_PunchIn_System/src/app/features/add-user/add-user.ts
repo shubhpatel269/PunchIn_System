@@ -174,31 +174,52 @@ export class AddUser {
     }
   }
 
-  async detectFaceInImage(base64Image: string): Promise<boolean> {
+  async detectFaceInImage(base64Image: string): Promise<Float32Array | null> {
     await this.loadFaceModels();
     const img = new Image();
     img.src = base64Image;
-    await new Promise((resolve) => { img.onload = resolve; });
-    const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-    const detection = await faceapi.detectSingleFace(img, options).withFaceLandmarks().withFaceDescriptor();
-    return !!detection;
-  }
+    await new Promise((resolve) => (img.onload = resolve));
 
+    const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+    const detection = await faceapi
+      .detectSingleFace(img, options)
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    return detection?.descriptor || null;
+  }
   async register() {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
     }
+
     const image = this.registerForm.get('image')?.value;
+
+    let faceDescriptor: Float32Array | null = null;
     if (image) {
-      const faceDetected = await this.detectFaceInImage(image);
-      if (!faceDetected) {
-        this.messageService.add({ severity: 'warn', summary: 'Face Not Detected', detail: 'No face detected in the uploaded image. Please upload a clear photo with your face visible.' });
+      faceDescriptor = await this.detectFaceInImage(image);
+      if (!faceDescriptor) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Face Not Detected',
+          detail: 'No face detected in the uploaded image. Please upload a clear photo.'
+        });
         return;
       }
     }
+
+    // Convert descriptor to a plain array
+    const faceDescriptorArray = faceDescriptor ? Array.from(faceDescriptor) : [];
+
+    // Prepare payload
+    const payload = {
+      ...this.registerForm.value,
+      faceDescriptor: JSON.stringify(faceDescriptorArray) // 🧠 Important: stringify it
+    };
+
     if (this.editingEmployee) {
-      this.employeeService.updateEmployee(this.editingEmployee.id || this.editingEmployee.employeeId, this.registerForm.value).subscribe({
+      this.employeeService.updateEmployee(this.editingEmployee.id || this.editingEmployee.employeeId, payload).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'User updated successfully.' });
           this.ref.close('updated');
@@ -208,7 +229,7 @@ export class AddUser {
         }
       });
     } else {
-      this.employeeService.registerEmployee(this.registerForm.value).subscribe({
+      this.employeeService.registerEmployee(payload).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Registered', detail: 'User registered successfully.' });
           this.registerForm.reset();
