@@ -54,23 +54,22 @@ export class Login implements AfterViewInit, OnDestroy {
   private faceLandmarker: FaceLandmarker | null = null;
   private animationId: number | null = null;
 
-  // Add blink detection variables
   blinkVerified: boolean = false;
   private eyeClosedFrames: number = 0;
   private readonly EYE_CLOSED_THRESHOLD = 0.25;
   private readonly BLINK_FRAME_THRESHOLD = 3;
   private lastBlinkTime: number = 0;
   showBlinkInstruction: boolean = false;
-  private recognitionTimer: any = null;
-
-  private startTime: number = 0;
+  private recognitionTimer: NodeJS.Timeout | null = null;
   private timerRequestId: number | null = null;
+  private sessionTimer: NodeJS.Timeout | null = null;
+  private locationInterval: NodeJS.Timeout | null = null;
+  private faceDetectionInterval: NodeJS.Timeout | null = null;
+  private countdownInterval: NodeJS.Timeout | null = null;
+  private sessionActive = false;
+  private sessionStartTime: Date | null = null;
+  private startTime: number | null = null;
 
-
-  sessionActive: boolean = false;
-  sessionStartTime!: Date;
-  sessionTimer!: ReturnType<typeof setTimeout>;
-  locationInterval!: ReturnType<typeof setInterval>;
   locationLogs: LocationLog[] = [];
 
   employees: any[] = [];
@@ -79,13 +78,8 @@ export class Login implements AfterViewInit, OnDestroy {
   detectedEmployee: any = null;
   lastFaceNotRecognizedTime: number = 0;
   detectedUser: string = "";
-  faceDetectionInterval: any = null;
-
-
   navigatingToHome: boolean = false;
   navigationCountdown: number = 5;
-  countdownInterval!: ReturnType<typeof setInterval>;
-
 
   showSignIn = false;
   showAdminLogin = true;
@@ -190,10 +184,9 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    // Initialize face detection models
     await this.loadModels();
-    await this.loadEmployeeDescriptors();
   }
-
 
   async ngAfterViewInit() {
     if (this.activeTab === 'user') {
@@ -202,11 +195,24 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   async initFaceRecognition() {
-    await this.loadModels();
-    await this.initializeMediaPipe();
-
-    await this.loadEmployeeDescriptors();
-    this.startVideo();
+    try {
+      // Initialize MediaPipe for blink detection
+      await this.initializeMediaPipe();
+      
+      // Start the camera
+      await this.startVideo();
+      
+      // Start the blink detection loop
+      this.detectFaceWithBlink();
+    } catch (error) {
+      console.error('Error initializing face recognition:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Initialization Error',
+        detail: 'Failed to initialize face recognition. Please refresh the page and try again.',
+        life: 5000
+      });
+    }
   }
   async initializeMediaPipe() {
     try {
@@ -243,103 +249,54 @@ export class Login implements AfterViewInit, OnDestroy {
   async loadEmployeeDescriptors() {
     this.isLoadingDescriptors = true;
     this.employeeDescriptors = []; // Reset any existing descriptors
-
-    try {
-      // Get employees with their face descriptors
-      this.employees = await new Promise<any[]>((resolve, reject) => {
-        this.employeeService.getEmployeesWithFaceDescriptors().subscribe({
-          next: resolve,
-          error: reject
-        });
-      });
-
-      console.log('Raw employee data:', this.employees);
-
-      // Process each employee's descriptor
-      for (const emp of this.employees) {
-        try {
-          if (!emp.faceDescriptor) {
-            console.warn(`No face descriptor found for employee ${emp.name} (${emp.id})`);
-            continue;
-          }
-
-          let descriptor: Float32Array;
-          
-          if (Array.isArray(emp.faceDescriptor)) {
-            // If it's already an array, convert to Float32Array
-            descriptor = new Float32Array(emp.faceDescriptor);
-          } else if (typeof emp.faceDescriptor === 'string') {
-            try {
-              // Try to parse as JSON array string
-              const parsed = JSON.parse(emp.faceDescriptor);
-              if (Array.isArray(parsed)) {
-                descriptor = new Float32Array(parsed);
-              } else {
-                throw new Error('Descriptor is not an array');
-              }
-            } catch (e) {
-              console.warn(`Invalid descriptor format for employee ${emp.name} (${emp.id})`, e);
-              continue;
-            }
-          } else {
-            console.warn(`Unsupported descriptor format for employee ${emp.name} (${emp.id})`);
-            continue;
-          }
-
-          if (descriptor.length !== 128) {
-            console.warn(`Invalid descriptor length (${descriptor.length}) for employee ${emp.name} (${emp.id})`);
-            continue;
-          }
-
-          this.employeeDescriptors.push({
-            id: emp.id,
-            name: emp.name,
-            descriptor: descriptor
-          });
-          
-          console.log(`Successfully loaded descriptor for ${emp.name} (${emp.id})`);
-        } catch (error) {
-          console.error(`Error processing employee ${emp.name} (${emp.id}):`, error);
-        }
-      }
-      
-      console.log('Loaded employee descriptors:', this.employeeDescriptors);
-    } catch (error) {
-      console.error('Error loading employee descriptors:', error);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to load employee face data',
-        life: 5000
-      });
-    } finally {
-      this.isLoadingDescriptors = false;
-    }
+    this.isLoadingDescriptors = false;
+    
+    // No need to load descriptors on client side anymore
+    // All face matching is now done on the server
   }
 
 
-  startVideo() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        this.videoRef.nativeElement.srcObject = stream;
-        this.videoRef.nativeElement.play();
+  async startVideo(): Promise<void> {
+    try {
+      // Stop any existing video stream
+      if (this.videoRef?.nativeElement?.srcObject) {
+        const stream = this.videoRef.nativeElement.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
 
-        // Wait for video to be loaded before starting detection
-        this.videoRef.nativeElement.addEventListener('loadeddata', () => {
-          // Start MediaPipe detection for blink verification
-          this.detectFaceWithBlink();
-        });
-      })
-      .catch((err) => {
-        this.camera_permission = false;
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Warning',
-          detail: 'WebCam permission denied',
-          life: 4000
-        });
+      // Request camera access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 },
+          facingMode: 'user' // Use front camera
+        } 
       });
+      
+      this.videoRef.nativeElement.srcObject = stream;
+      
+      // Wait for video to be ready
+      await new Promise<void>((resolve) => {
+        this.videoRef.nativeElement.onloadedmetadata = () => {
+          this.videoRef.nativeElement.play();
+          resolve();
+        };
+      });
+      
+      this.camera_permission = true;
+      return Promise.resolve();
+      
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      this.camera_permission = false;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Camera Access Required',
+        detail: 'Please allow camera access to use face recognition',
+        life: 5000
+      });
+      return Promise.reject(error);
+    }
   }
 
   detectFaceWithBlink() {
@@ -360,54 +317,64 @@ export class Login implements AfterViewInit, OnDestroy {
       const video = this.videoRef.nativeElement;
 
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        // Use the local variable that TypeScript knows is not null
-        const results = await faceLandmarker.detectForVideo(video, timestamp);
+        try {
+          // Use the local variable that TypeScript knows is not null
+          const results = await faceLandmarker.detectForVideo(video, timestamp);
 
-        if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-          this.isFaceDetected = true;
+          if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+            this.isFaceDetected = true;
 
-          if (!this.showBlinkInstruction && !this.blinkVerified) {
-            this.showBlinkInstruction = true;
-          }
-
-          if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
-            const blinkDetected = this.checkForBlink(results.faceBlendshapes[0].categories);
-
-            if (blinkDetected && !this.blinkVerified) {
-              // First, indicate blink was detected
-              this.blinkVerified = true;
-              this.showBlinkInstruction = false;
-
-              this.messageService.add({
-                severity: 'info',
-                summary: 'Blink Detected',
-                detail: 'Please keep looking at the camera...',
-                life: 2000
-              });
-
-              // Clear any existing timer
-              if (this.recognitionTimer) {
-                clearTimeout(this.recognitionTimer);
-              }
-
-              // Wait 1.5 seconds before face recognition to ensure eyes are open
-              this.recognitionTimer = setTimeout(() => {
-                this.performFaceRecognition();
-              }, 1500);
+            if (!this.showBlinkInstruction && !this.blinkVerified) {
+              this.showBlinkInstruction = true;
             }
+
+            if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+              const blinkDetected = this.checkForBlink(results.faceBlendshapes[0].categories);
+
+              if (blinkDetected && !this.blinkVerified) {
+                // First, indicate blink was detected
+                this.blinkVerified = true;
+                this.showBlinkInstruction = false;
+
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Blink Detected',
+                  detail: 'Please keep looking at the camera...',
+                  life: 2000
+                });
+
+                // Clear any existing timer
+                if (this.recognitionTimer) {
+                  clearTimeout(this.recognitionTimer);
+                }
+
+                // Wait 1.5 seconds before face recognition to ensure eyes are open
+                this.recognitionTimer = setTimeout(() => {
+                  this.performFaceRecognition();
+                }, 1500);
+              }
+            }
+          } else {
+            this.isFaceDetected = false;
+            this.showBlinkInstruction = false;
           }
-        } else {
-          this.isFaceDetected = false;
-          this.showBlinkInstruction = false;
+        } catch (error) {
+          console.error('Error in face detection loop:', error);
+          // Continue detection even if there's an error
         }
       }
 
       // Continue detection loop unless blinkVerified and recognition is complete
       if (!this.blinkVerified) {
         this.animationId = requestAnimationFrame(detectLoop);
+      } else if (this.animationId) {
+        // Clean up animation frame if we're done
+        cancelAnimationFrame(this.animationId);
+        this.animationId = null;
       }
     };
 
+    // Start the detection loop
     this.animationId = requestAnimationFrame(detectLoop);
   }
 
@@ -439,49 +406,59 @@ export class Login implements AfterViewInit, OnDestroy {
     const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
     try {
-      // Use face-api.js for recognition
+      // Use face-api.js to get face descriptor
       const result = await faceapi.detectSingleFace(
         this.videoRef.nativeElement,
         options
       ).withFaceLandmarks().withFaceDescriptor();
 
       if (result) {
-        const bestMatch = this.findBestMatch(result.descriptor);
+        // Convert Float32Array to regular array for JSON serialization
+        const faceDescriptor = Array.from(result.descriptor);
+        
+        // Send to backend for verification
+        this.authService.faceLogin(faceDescriptor).subscribe({
+          next: (response) => {
+            // Stop all detection processes
+            this.stopVideo();
+            
+            // Get user data from response
+            const user = response.user;
+            const userName = `${user.employeeFirstName} ${user.employeeLastName}`;
+            
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Verification Complete',
+              detail: `Welcome ${userName}!`,
+              life: 4000
+            });
 
-        if (bestMatch) {
-          // We found a matching employee
-          this.detectedEmployee = bestMatch;
-          const imageData = this.captureSnapshot();
+            this.detectedUser = `User: ${userName}`;
+            this.detectedEmployee = user;
+            
+            // Capture snapshot and get location
+            const imageData = this.captureSnapshot();
+            this.requestLocationAndSave(imageData);
+          },
+          error: (error) => {
+            console.error('Face login failed:', error);
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Face Not Recognized',
+              detail: 'Your face does not match any employee record.',
+              life: 4000
+            });
+            
+            // Reset blink verification to try again
+            this.blinkVerified = false;
+            this.showBlinkInstruction = true;
 
-          // Stop all detection processes
-          this.stopVideo();
-
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Verification Complete',
-            detail: `Welcome ${bestMatch.name}!`,
-            life: 4000
-          });
-
-          this.detectedUser = `User: ${bestMatch.name}`;
-          this.requestLocationAndSave(imageData);
-        } else {
-          // Face detected but no match in database
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Face Not Recognized',
-            detail: 'Your face does not match any employee record.',
-            life: 4000
-          });
-          // Reset blink verification to try again
-          this.blinkVerified = false;
-          this.showBlinkInstruction = true;
-
-          // Continue detection
-          if (!this.animationId && this.activeTab === 'user') {
-            this.animationId = requestAnimationFrame(this.detectFaceWithBlink.bind(this));
+            // Continue detection
+            if (this.activeTab === 'user') {
+              this.animationId = requestAnimationFrame(this.detectFaceWithBlink.bind(this));
+            }
           }
-        }
+        });
       } else {
         // No face detected during recognition
         this.messageService.add({
@@ -641,6 +618,7 @@ export class Login implements AfterViewInit, OnDestroy {
         const long: number = this.longitude;
         const timestamp: string = new Date().toLocaleString();
 
+        // Store punch data
         const punch: Punch = {
           timestamp,
           image: imageData,
@@ -651,43 +629,32 @@ export class Login implements AfterViewInit, OnDestroy {
         };
 
         this.punchData.push(punch);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Punch-In Successful',
-          detail: `You punched in at ${timestamp}`,
-          life: 4000
-        });
-
-        // store user details in localStorage
+        
+        // Store user details in localStorage
         if (this.detectedEmployee) {
-          const emp = this.employees.find(e => e.id === this.detectedEmployee.id || e.employeeId === this.detectedEmployee.id);
-          if (emp) {
-            const userData = {
-              name: emp.name,
-              email: emp.email,
-              mobile: emp.phone || emp.mobile,
-              employeeId: emp.employeeId || emp.id,
-              location: lat && long ? `${lat}, ${long}` : '',
-              punchedTime: timestamp
-            };
+          const userData = {
+            name: `${this.detectedEmployee.employeeFirstName} ${this.detectedEmployee.employeeLastName}`,
+            email: this.detectedEmployee.employeeEmail,
+            employeeId: this.detectedEmployee.employeeId,
+            companyId: this.detectedEmployee.companyId,
+            location: lat && long ? `${lat}, ${long}` : '',
+            punchedTime: timestamp
+          };
 
-            // Save user data to localStorage
-            localStorage.setItem('punchInUser', JSON.stringify(userData));
-          }
+          // Save user data to localStorage
+          localStorage.setItem('punchInUser', JSON.stringify(userData));
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Punch-In Successful',
+            detail: `Welcome ${userData.name}! You punched in at ${timestamp}`,
+            life: 4000
+          });
+          
+          // Navigate to home after a short delay
+          this.startNavigationCountdown();
+          this.startSession();
         }
-        // this.navigatingToHome = true;
-        // this.navigationCountdown = 5;
-
-        // this.countdownInterval = setInterval(() => {
-        //   this.navigationCountdown--;
-        //   if (this.navigationCountdown <= 0) {
-        //     clearInterval(this.countdownInterval);
-        //     this.router.navigate(['/home']);
-        //   }
-        // }, 1000);
-        this.startNavigationCountdown();
-
-        this.startSession();
       },
       (error) => {
         this.messageService.add({
@@ -706,24 +673,27 @@ export class Login implements AfterViewInit, OnDestroy {
     this.navigationCountdown = 5;
     this.startTime = Date.now();
 
+    // Clear any existing animation frame
     if (this.timerRequestId !== null) {
       cancelAnimationFrame(this.timerRequestId);
+      this.timerRequestId = null;
     }
 
     const updateTimer = () => {
-      const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-
-      // Run inside Angular's zone to trigger change detection
-      this.ngZone.run(() => {
-        this.navigationCountdown = Math.max(5 - elapsed, 0);
-      });
-
-      if (this.navigationCountdown > 0) {
+      if (this.startTime !== null) {
+        const elapsed = Date.now() - this.startTime;
+        // Run inside Angular's zone to trigger change detection
         this.timerRequestId = requestAnimationFrame(updateTimer);
       } else {
         this.timerRequestId = null;
         this.ngZone.run(() => {
-          this.router.navigate(['/home']);
+          // Navigate to the appropriate dashboard based on user role
+          const userRole = localStorage.getItem('user_role');
+          if (userRole === 'Admin') {
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/home']);
+          }
         });
       }
     };
@@ -732,27 +702,50 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
 
-  stopVideo() {
+  stopVideo(): void {
     try {
-      // Cancel MediaPipe animation frame
+      // Cancel any pending animation frames
       if (this.animationId) {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
       }
 
-      // Clear face-api interval
+      // Clear any pending timeouts
+      if (this.recognitionTimer) {
+        clearTimeout(this.recognitionTimer);
+        this.recognitionTimer = null;
+      }
+
+      // Clear face detection interval if it exists
       if (this.faceDetectionInterval) {
         clearInterval(this.faceDetectionInterval);
         this.faceDetectionInterval = null;
       }
 
-      // Stop camera
-      if (this.videoRef && this.videoRef.nativeElement) {
-        const stream = this.videoRef.nativeElement.srcObject as MediaStream;
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
+      // Stop camera stream if it exists
+      if (this.videoRef?.nativeElement?.srcObject) {
+        try {
+          const stream = this.videoRef.nativeElement.srcObject as MediaStream;
+          if (stream) {
+            // Stop all tracks in the stream
+            stream.getTracks().forEach(track => {
+              track.stop();
+              stream.removeTrack(track);
+            });
+          }
+          
+          // Clear the video source
           this.videoRef.nativeElement.srcObject = null;
+          this.videoRef.nativeElement.pause();
+        } catch (e) {
+          console.warn('Error while stopping video tracks:', e);
         }
+      }
+      
+      // Reset video element
+      if (this.videoRef?.nativeElement) {
+        this.videoRef.nativeElement.removeAttribute('src');
+        this.videoRef.nativeElement.load();
       }
     } catch (error) {
       console.error('Error stopping video:', error);
@@ -768,6 +761,12 @@ export class Login implements AfterViewInit, OnDestroy {
     const intervalScheduledAt = performance.now();
     console.log('setInterval scheduled at:', intervalScheduledAt);
 
+    // Clear any existing interval
+    if (this.locationInterval) {
+      clearInterval(this.locationInterval);
+      this.locationInterval = null;
+    }
+
     this.locationInterval = setInterval(() => {
       const intervalCallbackAt = performance.now();
       console.log(
@@ -775,27 +774,28 @@ export class Login implements AfterViewInit, OnDestroy {
         '| Delay since scheduled:', (intervalCallbackAt - intervalScheduledAt).toFixed(2), 'ms'
       );
       this.trackUserLocation();
-    }, 10 * 1000); // 10 sec for fast check
+    }, 10 * 1000) as NodeJS.Timeout; // 10 sec for fast check
 
     // Log when setTimeout is scheduled
     const timeoutScheduledAt = performance.now();
     console.log('setTimeout scheduled at:', timeoutScheduledAt);
 
+    // Clear any existing timer
+    if (this.sessionTimer) {
+      clearTimeout(this.sessionTimer);
+      this.sessionTimer = null;
+    }
+
     this.sessionTimer = setTimeout(() => {
-      const timeoutCallbackAt = performance.now();
-      console.log(
-        'setTimeout callback at:', timeoutCallbackAt,
-        '| Delay since scheduled:', (timeoutCallbackAt - timeoutScheduledAt).toFixed(2), 'ms'
-      );
-      this.endSession();
-    }, 60 * 60 * 1000); // 1 hour
+      if (this.sessionActive) {
+        this.endSession();
+      }
+    }, 60 * 60 * 1000) as NodeJS.Timeout; // 1 hour
 
     console.log("WFH session tracking started.");
   }
 
   trackUserLocation() {
-
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const log: LocationLog = {
@@ -831,7 +831,7 @@ export class Login implements AfterViewInit, OnDestroy {
       this.timerWorker = undefined;
     }
     clearInterval(this.locationInterval);
-    // clearTimeout(this.sessionTimer);
+    clearTimeout(this.sessionTimer);
     this.sessionActive = false;
 
     this.messageService.add({
@@ -864,34 +864,88 @@ export class Login implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
-    if (this.recognitionTimer) {
-      clearTimeout(this.recognitionTimer);
+  private clearTimers() {
+    // Clear countdown interval
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval as unknown as number);
+      this.countdownInterval = null;
     }
 
+    // Clear location tracking interval
+    if (this.locationInterval) {
+      clearInterval(this.locationInterval as unknown as number);
+      this.locationInterval = null;
+    }
+
+    // Clear session timer
+    if (this.sessionTimer) {
+      clearTimeout(this.sessionTimer as unknown as number);
+      this.sessionTimer = null;
+    }
+
+    // Clear animation frame
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
 
+    // Clear recognition timer
+    if (this.recognitionTimer) {
+      clearTimeout(this.recognitionTimer as unknown as number);
+      this.recognitionTimer = null;
+    }
+
+    // Clear face detection interval
     if (this.faceDetectionInterval) {
-      clearInterval(this.faceDetectionInterval);
+      clearInterval(this.faceDetectionInterval as unknown as number);
       this.faceDetectionInterval = null;
     }
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-    }
-    if (this.locationInterval) {
-      clearInterval(this.locationInterval);
-    }
-    if (this.sessionTimer) {
-      clearTimeout(this.sessionTimer);
-    }
-    this.stopVideo();
-    if (this.timerWorker) {
-      this.timerWorker.postMessage('stop');
-      this.timerWorker.terminate();
-      this.timerWorker = undefined;
+
+    // Clear timer request ID
+    if (this.timerRequestId) {
+      cancelAnimationFrame(this.timerRequestId);
+      this.timerRequestId = null;
     }
   }
-}
+
+  ngOnDestroy() {
+    this.clearTimers();
+    this.stopVideo();
+
+    // Clean up web worker if it exists
+    if (this.timerWorker) {
+      try {
+        this.timerWorker.postMessage('stop');
+        this.timerWorker.terminate();
+      } catch (e) {
+        console.warn('Error terminating timer worker:', e);
+      } finally {
+        this.timerWorker = undefined;
+      }
+    }
+
+    // Reset all component state
+    this.isFaceDetected = false;
+    this.blinkVerified = false;
+    this.showBlinkInstruction = false;
+    this.detectedEmployee = null;
+    this.detectedUser = '';
+    this.navigatingToHome = false;
+    this.navigationCountdown = 0;
+  }
+
+  /**
+   * Resets all component state to initial values
+   */
+  private resetComponentState(): void {
+    this.isFaceDetected = false;
+    this.blinkVerified = false;
+    this.showBlinkInstruction = false;
+    this.detectedEmployee = null;
+    this.detectedUser = '';
+    this.navigatingToHome = false;
+    this.navigationCountdown = 0;
+    this.startTime = null;
+    this.sessionActive = false;
+    this.sessionStartTime = null;
+  }

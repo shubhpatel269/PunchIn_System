@@ -15,7 +15,7 @@ export class AuthService {
     private router: Router,
     private messageService: MessageService
   ) {}
-
+  
   // Check if user has a valid JWT token
   private hasToken(): boolean {
     return !!localStorage.getItem('jwt_token');
@@ -27,6 +27,8 @@ export class AuthService {
       tap((response: any) => {
         if (response && response.token) {
           localStorage.setItem('jwt_token', response.token);
+          localStorage.setItem('user_role', response.userRole);
+          localStorage.setItem('user_data', JSON.stringify(response.user));
           this.isAuthenticatedSubject.next(true);
           this.messageService.add({
             severity: 'success',
@@ -34,6 +36,20 @@ export class AuthService {
             detail: 'Welcome back!',
             life: 3000
           });
+        }
+      })
+    );
+  }
+
+  // Employee face login
+  faceLogin(faceDescriptor: number[]): Observable<any> {
+    return this.http.post('https://localhost:7127/api/Auth/employee/login/face', { faceDescriptor }).pipe(
+      tap((response: any) => {
+        if (response && response.token) {
+          localStorage.setItem('jwt_token', response.token);
+          localStorage.setItem('user_role', response.userRole);
+          localStorage.setItem('user_data', JSON.stringify(response.user));
+          this.isAuthenticatedSubject.next(true);
         }
       })
     );
