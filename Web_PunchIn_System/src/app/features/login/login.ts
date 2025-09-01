@@ -633,7 +633,8 @@ export class Login implements AfterViewInit, OnDestroy {
             employeeId: this.detectedEmployee.employeeId,
             companyId: this.detectedEmployee.companyId,
             location: lat && long ? `${lat}, ${long}` : '',
-            punchedTime: timestamp
+            punchedTime: timestamp,
+            mobile: this.detectedEmployee.employeePhone
           };
 
           // Save user data to localStorage
