@@ -117,23 +117,36 @@ export class AttendanceDashboardComponent implements OnInit {
   }
 
   // ---------------- Date Helpers ----------------
-  getToday(): Date {
-    return new Date();
+  getToday(): Date[] {
+    const today = new Date();
+    return [today, today];
   }
 
-  getYesterday(): Date {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return d;
+  getYesterday(): Date[] {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return [yesterday, yesterday];
   }
 
-  onDateSelect(date: Date) {
-    console.log("Selected date:", date);
-    this.dateRange = [date, date]; // ✅ if using range mode
+  onDateSelect(event: any) {
+    if (event) {
+      if (Array.isArray(event)) {
+        this.dateRange = event;
+      } else if (event instanceof Date) {
+        this.dateRange = [event, event];
+      }
+      console.log("Selected date range:", this.dateRange);
+    }
   }
 
   onCompanyChange(event: any) {
-    console.log('Selected company:', event.value);
+    this.selectedCompany = event.value;
+    console.log('Selected company:', this.selectedCompany);
+  }
+  
+  exportToExcel() {
+    console.log('Exporting to Excel...');
+    // TODO: Implement export to Excel functionality
   }
 
   exportReport(format: 'pdf' | 'excel') {
