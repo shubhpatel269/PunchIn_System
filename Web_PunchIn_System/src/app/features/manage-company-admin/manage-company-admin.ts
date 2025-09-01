@@ -60,6 +60,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
     this.companyAdminService.getAdmins().subscribe({
       next: (admins: any[]) => {
         this.admins = admins.map(a => ({
+          companyId: a.companyId,
           id: a.adminId,
           name: `${a.adminFirstName} ${a.adminLastName || ''}`.trim(),
           email: a.adminEmail,

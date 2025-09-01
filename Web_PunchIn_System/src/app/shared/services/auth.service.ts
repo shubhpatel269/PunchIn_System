@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
@@ -9,7 +8,6 @@ import { MessageService } from 'primeng/api';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.apiUrl;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
 
   constructor(
