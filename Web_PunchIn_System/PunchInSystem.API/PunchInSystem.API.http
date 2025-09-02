@@ -1,6 +1,0 @@
-@PunchInSystem.API_HostAddress = http://localhost:5083
-
-GET {{PunchInSystem.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
