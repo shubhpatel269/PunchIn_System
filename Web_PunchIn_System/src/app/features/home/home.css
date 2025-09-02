@@ -2,8 +2,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: #fff;
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 2rem;
 }
 
 .p-card {
@@ -69,6 +70,8 @@
   color: #fff;
 }
 
+
+
 @media (max-width: 600px) {
   .p-card {
     padding: 1rem 0.5rem 1rem 0.5rem;
@@ -94,4 +97,6 @@
     padding: 0.6rem 1rem;
     /* background and color now handled by global styles */
   }
+
+
 }

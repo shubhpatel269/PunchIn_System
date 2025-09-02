@@ -1,0 +1,157 @@
+/* Custom styles for employee dashboard */
+
+/* Card hover effects */
+.p-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.p-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-to-r {
+  background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+/* Custom progress bar */
+.p-progressbar {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.p-progressbar .p-progressbar-value {
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 8px;
+}
+
+/* Chart container */
+.p-chart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Table styles */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Button styles */
+.p-button {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Tag styles */
+.p-tag {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Avatar styles */
+.p-avatar {
+  border: 2px solid #e5e7eb;
+}
+
+/* Header styles */
+.bg-white {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-cols-1.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex.justify-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.p-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Toast positioning */
+.p-toast {
+  z-index: 1100;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Status indicators */
+.status-present {
+  color: #10b981;
+}
+
+.status-absent {
+  color: #ef4444;
+}
+
+.status-late {
+  color: #f59e0b;
+}
+
+.status-half-day {
+  color: #3b82f6;
+}

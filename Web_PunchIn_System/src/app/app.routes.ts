@@ -6,9 +6,13 @@ import { Login } from './features/login/login';
 import { ManageDesignation } from './features/manage-designation/manage-designation';
 import { ManageEmployee } from './features/manage-employee/manage-employee';
 import { PunchIn } from './features/punch-in/punch-in';
+import { EmployeeLayoutComponent } from './features/employee-layout/employee-layout.component';
+import { EmployeeDashboardComponent } from './features/employee-dashboard/employee-dashboard.component';
+import { EmployeeProfileComponent } from './features/employee-profile/employee-profile.component';
+import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance.component';
+import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
 
 export const routes: Routes = [
-    { path: 'home', component: Home },
     { path: 'login', component: Login },
     { path: 'punchin', component: PunchIn },
     {
@@ -16,14 +20,23 @@ export const routes: Routes = [
             { path: 'dashboard', component: AttendanceDashboardComponent },
             { path: 'manage-user', component: ManageEmployee },
             { path: 'manage-designation', component: ManageDesignation },
-            {
-                path: 'manage-company-admin',
-                loadComponent: () => import('./features/manage-company-admin/manage-company-admin')
-                    .then(m => m.default)
-            },
+            { path: 'manage-company-admin', component: ManageCompanyAdmin },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+        ]
+    },
+    {
+        path: 'employee', component: EmployeeLayoutComponent, children: [
+            { path: 'dashboard', component: EmployeeDashboardComponent },
+            { path: 'profile', component: EmployeeProfileComponent },
+            { path: 'attendance', component: EmployeeAttendanceComponent },
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+        ]
+    },
+    {
+        path: 'home', component: EmployeeLayoutComponent, children: [
+            { path: '', component: Home }
         ]
     },
     { path: '**', redirectTo: 'login' }

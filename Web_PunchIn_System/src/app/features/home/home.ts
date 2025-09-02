@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { Router} from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { AvatarModule } from 'primeng/avatar';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-home',
@@ -15,7 +17,9 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
     CardModule, 
     ButtonModule,  
     ToastModule, 
-    ConfirmPopupModule
+    ConfirmPopupModule,
+    AvatarModule,
+    DividerModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './home.html',
@@ -44,13 +48,14 @@ export class Home implements OnInit {
       try {
         this.userData = JSON.parse(data);
         console.log('User data loaded:', this.userData);
+        // Stay on home page to show dashboard with navigation
       } catch (error) {
         console.error('Error parsing user data:', error);
-        this.router.navigate(['/']);
+        this.router.navigate(['/login']);
       }
     } else {
       console.warn('No user data found in localStorage');
-      this.router.navigate(['/']);
+      this.router.navigate(['/login']);
     }
   }
 
@@ -77,5 +82,17 @@ export class Home implements OnInit {
         this.onLogout();
       }
     });
+  }
+
+  goToEmployeeDashboard() {
+    this.router.navigate(['/employee/dashboard']);
+  }
+
+  goToEmployeeProfile() {
+    this.router.navigate(['/employee/profile']);
+  }
+
+  goToEmployeeAttendance() {
+    this.router.navigate(['/employee/attendance']);
   }
 }

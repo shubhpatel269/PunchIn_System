@@ -1,0 +1,347 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between py-4">
+        <div class="flex items-center space-x-4">
+          <p-button 
+            icon="pi pi-arrow-left" 
+            [text]="true" 
+            (onClick)="goBack()"
+            styleClass="text-gray-600 hover:text-blue-600">
+          </p-button>
+          <h1 class="text-2xl font-bold text-gray-900">My Attendance</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <p-button 
+            label="Export" 
+            icon="pi pi-download" 
+            (onClick)="exportAttendance()"
+            styleClass="bg-green-600 hover:bg-green-700">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Month/Year Selector -->
+    <div class="mb-8">
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center space-x-2">
+              <label class="text-sm font-medium text-gray-700">Month:</label>
+              <p-select 
+                [(ngModel)]="selectedMonth"
+                [options]="months"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="onMonthChange()"
+                styleClass="w-32">
+              </p-select>
+            </div>
+            <div class="flex items-center space-x-2">
+              <label class="text-sm font-medium text-gray-700">Year:</label>
+              <p-select 
+                [(ngModel)]="selectedYear"
+                [options]="years"
+                (onChange)="onYearChange()"
+                styleClass="w-24">
+              </p-select>
+            </div>
+            <div class="ml-auto">
+              <h2 class="text-lg font-semibold text-gray-900">
+                {{ months[selectedMonth].label }} {{ selectedYear }}
+              </h2>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Working Days -->
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
+              <i class="pi pi-calendar text-blue-600 text-xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.workingDays }}</h3>
+            <p class="text-sm text-gray-500">Working Days</p>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Present Days -->
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
+              <i class="pi pi-check-circle text-green-600 text-xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.presentDays }}</h3>
+            <p class="text-sm text-gray-500">Present Days</p>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Total Hours -->
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
+              <i class="pi pi-clock text-purple-600 text-xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.totalHours.toFixed(1) }}</h3>
+            <p class="text-sm text-gray-500">Total Hours</p>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Attendance Rate -->
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-3">
+              <i class="pi pi-percentage text-orange-600 text-xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.attendancePercentage.toFixed(1) }}%</h3>
+            <p class="text-sm text-gray-500">Attendance Rate</p>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Attendance Distribution -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900">Attendance Distribution</h3>
+            <p class="text-sm text-gray-500">Monthly attendance breakdown</p>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="h-64">
+            <p-chart 
+              type="doughnut" 
+              [data]="attendanceChartData" 
+              [options]="chartOptions">
+            </p-chart>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Weekly Hours Trend -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900">Weekly Hours Trend</h3>
+            <p class="text-sm text-gray-500">Hours worked per week</p>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="h-64">
+            <p-chart 
+              type="line" 
+              [data]="hoursChartData" 
+              [options]="chartOptions">
+            </p-chart>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Attendance Summary -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900">Attendance Summary</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Present Days:</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-semibold">{{ monthlyStats.presentDays }}</span>
+                <p-tag value="Present" severity="success" [icon]="'pi pi-check'"></p-tag>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Absent Days:</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-semibold">{{ monthlyStats.absentDays }}</span>
+                <p-tag value="Absent" severity="danger" [icon]="'pi pi-times'"></p-tag>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Late Days:</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-semibold">{{ monthlyStats.lateDays }}</span>
+                <p-tag value="Late" severity="warning" [icon]="'pi pi-clock'"></p-tag>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Half Days:</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-semibold">{{ monthlyStats.halfDays }}</span>
+                <p-tag value="Half Day" severity="info" [icon]="'pi pi-minus'"></p-tag>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Holidays:</span>
+              <div class="flex items-center space-x-2">
+                <span class="font-semibold">{{ monthlyStats.holidays }}</span>
+                <p-tag value="Holiday" severity="secondary" [icon]="'pi pi-calendar'"></p-tag>
+              </div>
+            </div>
+            <p-divider></p-divider>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span>Attendance Rate</span>
+                <span>{{ monthlyStats.attendancePercentage.toFixed(1) }}%</span>
+              </div>
+              <p-progressBar 
+                [value]="monthlyStats.attendancePercentage" 
+                styleClass="h-2">
+              </p-progressBar>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Hours Summary -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900">Hours Summary</h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Total Hours:</span>
+              <span class="font-semibold text-lg">{{ monthlyStats.totalHours.toFixed(1) }} hrs</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Average Hours/Day:</span>
+              <span class="font-semibold">{{ monthlyStats.averageHours.toFixed(1) }} hrs</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Overtime Hours:</span>
+              <span class="font-semibold text-orange-600">{{ monthlyStats.overtimeHours.toFixed(1) }} hrs</span>
+            </div>
+            <p-divider></p-divider>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-2">Expected vs Actual</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                  <span>Expected Hours:</span>
+                  <span>{{ (monthlyStats.workingDays * 8).toFixed(1) }} hrs</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span>Actual Hours:</span>
+                  <span>{{ monthlyStats.totalHours.toFixed(1) }} hrs</span>
+                </div>
+                <div class="flex justify-between text-sm font-medium">
+                  <span>Difference:</span>
+                  <span [class]="(monthlyStats.totalHours - (monthlyStats.workingDays * 8)) >= 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ (monthlyStats.totalHours - (monthlyStats.workingDays * 8)).toFixed(1) }} hrs
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <!-- Attendance Table -->
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold text-gray-900">Daily Attendance Records</h3>
+          <p class="text-sm text-gray-500">Detailed attendance for {{ months[selectedMonth].label }} {{ selectedYear }}</p>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="overflow-x-auto">
+          <p-table 
+            [value]="filteredRecords" 
+            [paginator]="true" 
+            [rows]="15"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+            styleClass="p-datatable-sm">
+            
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Hours</th>
+                <th>Overtime</th>
+                <th>Breaks</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-record>
+              <tr>
+                <td>{{ formatDate(record.date) }}</td>
+                <td>
+                  <span class="font-medium">{{ record.day }}</span>
+                </td>
+                <td>
+                  <span *ngIf="record.punchIn; else noPunchIn" class="font-medium">{{ record.punchIn }}</span>
+                  <ng-template #noPunchIn>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span *ngIf="record.punchOut; else noPunchOut" class="font-medium">{{ record.punchOut }}</span>
+                  <ng-template #noPunchOut>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span class="font-medium">{{ record.totalHours }}h</span>
+                </td>
+                <td>
+                  <span *ngIf="record.overtime > 0; else noOvertime" class="text-orange-600 font-medium">
+                    +{{ record.overtime }}h
+                  </span>
+                  <ng-template #noOvertime>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span class="font-medium">{{ record.breaks }}</span>
+                </td>
+                <td>
+                  <p-tag 
+                    [value]="record.status | titlecase" 
+                    [severity]="getStatusColor(record.status)"
+                    [icon]="getStatusIcon(record.status)">
+                  </p-tag>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Toast Messages -->
+  <p-toast></p-toast>
+</div>

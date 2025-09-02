@@ -691,7 +691,7 @@ export class Login implements AfterViewInit, OnDestroy {
           if (userRole === 'Admin') {
             this.router.navigate(['/admin']);
           } else {
-            this.router.navigate(['/home']);
+            this.router.navigate(['/employee/dashboard']);
           }
         });
       }

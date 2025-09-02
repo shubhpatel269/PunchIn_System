@@ -1,0 +1,82 @@
+/* Custom styles for employee layout */
+
+/* Sidebar styles */
+aside {
+  transition: all 0.3s ease;
+}
+
+/* Navigation hover effects */
+nav ul li a {
+  transition: all 0.2s ease;
+}
+
+nav ul li a:hover {
+  transform: translateX(2px);
+}
+
+/* Tooltip styles */
+.group:hover .group-hover\:block {
+  display: block;
+}
+
+/* Main content area */
+.flex-1 {
+  background-color: #f9fafb;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  aside {
+    width: 60px;
+  }
+  
+  .w-14 {
+    width: 3.5rem;
+  }
+}
+
+/* Animation for sidebar items */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+nav ul li {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Active state styling */
+.router-link-active {
+  background-color: #dbeafe !important;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Toast positioning */
+.p-toast {
+  z-index: 1100;
+}
+
+/* Custom scrollbar for main content */
+.flex-1::-webkit-scrollbar {
+  width: 6px;
+}
+
+.flex-1::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.flex-1::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.flex-1::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

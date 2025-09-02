@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar -->
+  <aside class="flex flex-col p-3 bg-white border-r border-gray-200 w-14">
+    <div class="space-y-3 flex-1">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold text-blue-700 hidden">Menu</h2>
+      </div>
+      <nav class="flex-1">
+        <ul class="pt-2 pb-4 space-y-1 text-sm z-20">
+          <li class="rounded-sm">
+            <a routerLink="/home" routerLinkActive="bg-blue-100"
+              class="flex items-center p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer group relative">
+              <i class="pi pi-home text-blue-600 text-xl"></i>
+              <span class="z-20 hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Home</span>
+            </a>
+          </li>
+          <li class="rounded-sm">
+            <a routerLink="/employee/dashboard" routerLinkActive="bg-blue-100"
+              class="flex items-center p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer group relative">
+              <i class="pi pi-chart-bar text-blue-600 text-xl"></i>
+              <span class="z-20 hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Dashboard</span>
+            </a>
+          </li>
+          <li class="rounded-sm">
+            <a routerLink="/employee/attendance" routerLinkActive="bg-blue-100"
+              class="flex items-center p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer group relative">
+              <i class="pi pi-calendar text-blue-600 text-xl"></i>
+              <span class="z-20 hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Attendance</span>
+            </a>
+          </li>
+          <li class="rounded-sm">
+            <a routerLink="/employee/profile" routerLinkActive="bg-blue-100"
+              class="flex items-center p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer group relative">
+              <i class="pi pi-user text-blue-600 text-xl"></i>
+              <span class="z-20 hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Profile</span>
+            </a>
+          </li>
+          <li class="rounded-sm">
+            <button (click)="confirmLogout($event)"
+              class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer bg-transparent border-0 outline-none group relative">
+              <i class="pi pi-sign-out text-blue-600 text-xl"></i>
+              <span class="z-20 hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Logout</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 h-screen overflow-y-auto">
+    <router-outlet></router-outlet>
+  </div>
+
+  <!-- Toast Messages -->
+  <p-toast></p-toast>
+  
+  <!-- Confirmation Popup -->
+  <p-confirmpopup></p-confirmpopup>
+</div>

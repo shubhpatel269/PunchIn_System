@@ -1,0 +1,274 @@
+/* Custom styles for employee attendance */
+
+/* Card hover effects */
+.p-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.p-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Chart container */
+.p-chart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Table styles */
+.p-datatable {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.p-datatable .p-datatable-header {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 0.75rem;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  transition: background-color 0.2s ease;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #f9fafb;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Paginator styles */
+.p-paginator {
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  padding: 1rem;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page {
+  border-radius: 6px;
+  margin: 0 2px;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Button styles */
+.p-button {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Tag styles */
+.p-tag {
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+/* Progress bar styles */
+.p-progressbar {
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #e5e7eb;
+}
+
+.p-progressbar .p-progressbar-value {
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 8px;
+}
+
+/* Select styles */
+.p-select {
+  border-radius: 6px;
+}
+
+.p-select .p-select-label {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Header styles */
+.bg-white {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.lg\\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .flex.justify-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .p-datatable {
+    font-size: 0.875rem;
+  }
+  
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-cols-1.lg\\:grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex.flex-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.p-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Status indicators */
+.status-present {
+  color: #10b981;
+}
+
+.status-absent {
+  color: #ef4444;
+}
+
+.status-late {
+  color: #f59e0b;
+}
+
+.status-half-day {
+  color: #3b82f6;
+}
+
+.status-holiday {
+  color: #6b7280;
+}
+
+/* Toast positioning */
+.p-toast {
+  z-index: 1100;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+.p-select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover effects for interactive elements */
+button:hover,
+.p-button:hover {
+  cursor: pointer;
+}
+
+/* Text selection */
+::selection {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Icon container styles */
+.flex.items-center.justify-center.w-12.h-12 {
+  transition: all 0.2s ease;
+}
+
+.flex.items-center.justify-center.w-12.h-12:hover {
+  transform: scale(1.05);
+}
+
+/* Chart legend customization */
+.p-chart .p-chart-legend {
+  display: none;
+}
+
+/* Table row striping */
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Custom badge styles for statistics */
+.bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+.bg-green-100 {
+  background-color: #dcfce7;
+}
+
+.bg-purple-100 {
+  background-color: #e9d5ff;
+}
+
+.bg-orange-100 {
+  background-color: #fed7aa;
+}

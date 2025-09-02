@@ -1,0 +1,203 @@
+/* Custom styles for employee profile */
+
+/* Card hover effects */
+.p-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.p-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Form input styles */
+input[readonly] {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+input:not([readonly]), textarea:not([readonly]) {
+  transition: all 0.2s ease;
+}
+
+input:not([readonly]):focus, textarea:not([readonly]):focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Avatar styles */
+.p-avatar {
+  border: 3px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.p-avatar:hover {
+  border-color: #3b82f6;
+}
+
+/* Button styles */
+.p-button {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Tag styles */
+.p-tag {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Select styles */
+.p-select {
+  width: 100%;
+}
+
+.p-select .p-select-label {
+  padding: 0.5rem 0.75rem;
+}
+
+/* DatePicker styles */
+.p-datepicker {
+  width: 100%;
+}
+
+.p-datepicker .p-inputtext {
+  width: 100%;
+}
+
+/* Profile image upload button */
+button[class*="absolute"] {
+  transition: all 0.2s ease;
+}
+
+button[class*="absolute"]:hover {
+  transform: scale(1.1);
+}
+
+/* Header styles */
+.bg-white {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-cols-1.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex.justify-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .text-center {
+    text-align: left;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.p-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Status indicators */
+.status-active {
+  color: #10b981;
+}
+
+.status-inactive {
+  color: #ef4444;
+}
+
+.status-on-leave {
+  color: #f59e0b;
+}
+
+/* Form validation styles */
+.ng-invalid.ng-touched {
+  border-color: #ef4444;
+}
+
+.ng-valid.ng-touched {
+  border-color: #10b981;
+}
+
+/* Toast positioning */
+.p-toast {
+  z-index: 1100;
+}
+
+/* Confirmation dialog */
+.p-confirmdialog {
+  z-index: 1200;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+textarea:focus,
+.p-select:focus,
+.p-datepicker:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover effects for interactive elements */
+button:hover,
+.p-button:hover {
+  cursor: pointer;
+}
+
+/* Text selection */
+::selection {
+  background-color: #3b82f6;
+  color: white;
+}

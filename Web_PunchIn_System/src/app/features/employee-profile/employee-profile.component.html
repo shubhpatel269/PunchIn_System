@@ -1,0 +1,290 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class=" mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between py-4">
+        <div class="flex items-center space-x-4">
+          <p-button 
+            icon="pi pi-arrow-left" 
+            [text]="true" 
+            (onClick)="goBack()"
+            styleClass="text-gray-600 hover:text-blue-600">
+          </p-button>
+          <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+          <p-button 
+            *ngIf="!isEditing"
+            label="Edit Profile" 
+            icon="pi pi-pencil" 
+            (onClick)="startEditing()"
+            styleClass="bg-blue-600 hover:bg-blue-700">
+          </p-button>
+          <p-button 
+            *ngIf="isEditing"
+            label="Save Changes" 
+            icon="pi pi-check" 
+            (onClick)="saveProfile()"
+            [loading]="isLoading"
+            styleClass="bg-green-600 hover:bg-green-700">
+          </p-button>
+          <p-button 
+            *ngIf="isEditing"
+            label="Cancel" 
+            icon="pi pi-times" 
+            [text]="true"
+            (onClick)="cancelEditing()"
+            styleClass="text-gray-600 hover:text-red-600">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Profile Card -->
+      <div class="lg:col-span-1">
+        <p-card styleClass="h-full">
+          <ng-template pTemplate="content">
+            <div class="text-center space-y-6">
+              <!-- Profile Image -->
+              <div class="relative inline-block">
+                <p-avatar 
+                  [image]="profile?.profileImage" 
+                  [label]="!profile?.profileImage ? ((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) : ''"
+                  size="xlarge" 
+                  styleClass="bg-blue-500 text-white font-semibold text-2xl">
+                </p-avatar>
+                <button 
+                  *ngIf="isEditing"
+                  (click)="uploadProfileImage()"
+                  class="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 hover:bg-blue-700 transition-colors">
+                  <i class="pi pi-camera text-sm"></i>
+                </button>
+              </div>
+
+              <!-- Basic Info -->
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">
+                  {{ profile?.employeeFirstName }} {{ profile?.employeeLastName }}
+                </h2>
+                <p class="text-gray-600">{{ profile?.employeePosition }}</p>
+                <p class="text-sm text-gray-500">{{ getDepartmentLabel(profile?.employeeDepartment || '') }}</p>
+              </div>
+
+              <!-- Status -->
+              <div>
+                <p-tag 
+                  [value]="profile?.employeeStatus" 
+                  [severity]="getStatusSeverity(profile?.employeeStatus || '')"
+                  [icon]="profile?.employeeStatus === 'Active' ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'">
+                </p-tag>
+              </div>
+
+              <!-- Employee ID -->
+              <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm text-gray-500">Employee ID</p>
+                <p class="font-semibold text-gray-900">{{ profile?.employeeId }}</p>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="space-y-2">
+                <p-button 
+                  label="Change Password" 
+                  icon="pi pi-key" 
+                  [text]="true"
+                  (onClick)="changePassword()"
+                  styleClass="w-full text-gray-600 hover:text-blue-600">
+                </p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-card>
+      </div>
+
+      <!-- Profile Details -->
+      <div class="lg:col-span-2">
+        <p-card>
+          <ng-template pTemplate="header">
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900">Personal Information</h3>
+              <p class="text-sm text-gray-500">Manage your personal details and contact information</p>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="content">
+            <div class="space-y-6">
+              <!-- Basic Information -->
+              <div>
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="profile?.employeeFirstName" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    <input 
+                      *ngIf="isEditing"
+                      type="text" 
+                      [(ngModel)]="editForm.employeeFirstName"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="profile?.employeeLastName" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    <input 
+                      *ngIf="isEditing"
+                      type="text" 
+                      [(ngModel)]="editForm.employeeLastName"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                </div>
+              </div>
+
+              <p-divider></p-divider>
+
+              <!-- Contact Information -->
+              <div>
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="email" 
+                      [value]="profile?.employeeEmail" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    <input 
+                      *ngIf="isEditing"
+                      type="email" 
+                      [(ngModel)]="editForm.employeeEmail"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="tel" 
+                      [value]="profile?.employeePhone" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    <input 
+                      *ngIf="isEditing"
+                      type="tel" 
+                      [(ngModel)]="editForm.employeePhone"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                  <textarea 
+                    *ngIf="!isEditing"
+                    [value]="profile?.employeeAddress" 
+                    readonly
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                  </textarea>
+                  <textarea 
+                    *ngIf="isEditing"
+                    [(ngModel)]="editForm.employeeAddress"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  </textarea>
+                </div>
+              </div>
+
+              <p-divider></p-divider>
+
+              <!-- Employment Information -->
+              <div>
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Employment Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="getDepartmentLabel(profile?.employeeDepartment || '')" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                                         <p-select 
+                       *ngIf="isEditing"
+                       [(ngModel)]="editForm.employeeDepartment"
+                       [options]="departments"
+                       placeholder="Select Department"
+                       styleClass="w-full">
+                     </p-select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="profile?.employeePosition" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                                         <p-select 
+                       *ngIf="isEditing"
+                       [(ngModel)]="editForm.employeePosition"
+                       [options]="positions"
+                       placeholder="Select Position"
+                       styleClass="w-full">
+                     </p-select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="profile?.employeeHireDate | date:'mediumDate'" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                                         <p-datepicker 
+                       *ngIf="isEditing"
+                       [(ngModel)]="editForm.employeeHireDate"
+                       dateFormat="mm/dd/yy"
+                       placeholder="Select Hire Date"
+                       styleClass="w-full">
+                     </p-datepicker>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <input 
+                      *ngIf="!isEditing"
+                      type="text" 
+                      [value]="profile?.employeeStatus" 
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                                         <p-select 
+                       *ngIf="isEditing"
+                       [(ngModel)]="editForm.employeeStatus"
+                       [options]="statuses"
+                       placeholder="Select Status"
+                       styleClass="w-full">
+                     </p-select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </p-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Messages -->
+  <p-toast></p-toast>
+  
+  <!-- Confirmation Dialog -->
+  <p-confirmDialog></p-confirmDialog>
+</div>
