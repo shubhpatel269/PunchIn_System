@@ -1,0 +1,438 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
+  <div class="container mx-auto px-4 max-w-4xl">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Register Your Company</h1>
+      <p class="text-gray-600">Join thousands of companies using PunchIn System</p>
+    </div>
+
+    <!-- Stepper -->
+    <p-stepper [value]="activeStep" class="mb-8">
+      <p-step-list>
+        <p-step [value]="0">Company Information</p-step>
+        <p-step [value]="1">Admin Information</p-step>
+        <p-step [value]="2">Registration Complete</p-step>
+      </p-step-list>
+      
+      <p-step-panels>
+        <!-- Step 1: Company Details -->
+        <p-step-panel [value]="0">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-6">Company Details</h2>
+              
+              <form [formGroup]="companyForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Company Name -->
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Company Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="companyName"
+                      placeholder="Enter your company name"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyName')"
+                      [maxlength]="100"
+                      autocomplete="organization">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyName')">
+                      {{ getFieldError(companyForm, 'companyName') }}
+                    </small>
+                  </div>
+
+                  <!-- Contact Number -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Number <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="tel" 
+                      pInputText 
+                      formControlName="contactNo"
+                      placeholder="10-digit phone number"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'contactNo')"
+                      [maxlength]="10"
+                      autocomplete="tel">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'contactNo')">
+                      {{ getFieldError(companyForm, 'contactNo') }}
+                    </small>
+                  </div>
+
+                  <!-- Company Email -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Company Email <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      pInputText 
+                      formControlName="companyEmail"
+                      placeholder="company@example.com"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyEmail')"
+                      autocomplete="email">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyEmail')">
+                      {{ getFieldError(companyForm, 'companyEmail') }}
+                    </small>
+                  </div>
+
+                  <!-- Company Type -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Company Type <span class="text-red-500">*</span>
+                    </label>
+                    <p-select 
+                      formControlName="companyType"
+                      [options]="companyTypes"
+                      placeholder="Select company type"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyType')"
+                      [showClear]="true"
+                      [checkmark]="true">
+                    </p-select>
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyType')">
+                      {{ getFieldError(companyForm, 'companyType') }}
+                    </small>
+                  </div>
+
+                  <!-- Company Address -->
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Company Address <span class="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                      pInputTextarea
+                      formControlName="companyAddress"
+                      placeholder="Enter complete company address"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyAddress')"
+                      [maxlength]="500"
+                      rows="3">
+                    </textarea>
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyAddress')">
+                      {{ getFieldError(companyForm, 'companyAddress') }}
+                    </small>
+                  </div>
+
+                  <!-- Company City -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      City <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="companyCity"
+                      placeholder="Enter city"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyCity')">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyCity')">
+                      {{ getFieldError(companyForm, 'companyCity') }}
+                    </small>
+                  </div>
+
+                  <!-- Company State -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      State <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="companyState"
+                      placeholder="Enter state"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(companyForm, 'companyState')">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(companyForm, 'companyState')">
+                      {{ getFieldError(companyForm, 'companyState') }}
+                    </small>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            <div class="flex pt-6 justify-end">
+              <button 
+                pButton 
+                label="Next" 
+                icon="pi pi-arrow-right" 
+                iconPos="right"
+                class="p-button-primary"
+                [disabled]="companyForm.invalid"
+                (click)="activateCallback(1)">
+              </button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+        
+        <!-- Step 2: Admin Details -->
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+              <h2 class="text-2xl font-semibold text-gray-900 mb-6">Admin Details</h2>
+              
+              <form [formGroup]="adminForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- First Name -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      First Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="adminFirstName"
+                      placeholder="Enter first name"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminFirstName')">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminFirstName')">
+                      {{ getFieldError(adminForm, 'adminFirstName') }}
+                    </small>
+                  </div>
+
+                  <!-- Middle Name -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Middle Name
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="adminMiddleName"
+                      placeholder="Enter middle name (optional)"
+                      class="w-full">
+                  </div>
+
+                  <!-- Last Name -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      pInputText 
+                      formControlName="adminLastName"
+                      placeholder="Enter last name"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminLastName')">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminLastName')">
+                      {{ getFieldError(adminForm, 'adminLastName') }}
+                    </small>
+                  </div>
+
+                  <!-- Admin Email -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Admin Email <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      pInputText 
+                      formControlName="adminEmail"
+                      placeholder="admin@example.com"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminEmail')"
+                      autocomplete="email">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminEmail')">
+                      {{ getFieldError(adminForm, 'adminEmail') }}
+                    </small>
+                  </div>
+
+                  <!-- Password -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Password <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="password" 
+                      pInputText 
+                      formControlName="adminPassword"
+                      placeholder="Enter password (min 6 characters)"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminPassword')"
+                      autocomplete="new-password"
+                      [minlength]="6">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminPassword')">
+                      {{ getFieldError(adminForm, 'adminPassword') }}
+                    </small>
+                  </div>
+
+                  <!-- Phone -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="tel" 
+                      pInputText 
+                      formControlName="adminPhone"
+                      placeholder="10-digit phone number"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminPhone')"
+                      [maxlength]="10"
+                      autocomplete="tel">
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminPhone')">
+                      {{ getFieldError(adminForm, 'adminPhone') }}
+                    </small>
+                  </div>
+
+                  <!-- Date of Birth -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth <span class="text-red-500">*</span>
+                    </label>
+                    <p-datepicker 
+                      formControlName="adminDob"
+                      placeholder="Select date of birth"
+                      [maxDate]="maxDate"
+                      dateFormat="yy-mm-dd"
+                      class="w-full"
+                      [class.ng-invalid]="isFieldInvalid(adminForm, 'adminDob')"
+                      [showIcon]="true"
+                      [showButtonBar]="true"
+                      [showClear]="true">
+                    </p-datepicker>
+                    <small 
+                      class="text-red-500 mt-1 block" 
+                      *ngIf="isFieldInvalid(adminForm, 'adminDob')">
+                      {{ getFieldError(adminForm, 'adminDob') }}
+                    </small>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            <div class="flex pt-6 justify-between">
+              <button 
+                pButton 
+                label="Back" 
+                severity="secondary" 
+                icon="pi pi-arrow-left"
+                (click)="activateCallback(0)">
+              </button>
+              <button 
+                pButton 
+                label="Complete Registration" 
+                icon="pi pi-check"
+                class="p-button-primary"
+                [disabled]="adminForm.invalid"
+                [loading]="isSubmitting"
+                (click)="submitRegistration()">
+              </button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+        
+        <!-- Step 3: Success -->
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+              <div class="mb-8">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <i class="pi pi-check text-4xl text-green-600"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
+                <p class="text-gray-600 text-lg mb-8">
+                  Your company has been registered successfully with PunchIn System.
+                </p>
+              </div>
+
+              <!-- Success Details -->
+              <div class="bg-gray-50 rounded-xl p-6 mb-8 text-left" *ngIf="registrationResponse">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Registration Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Company Name:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.companyName }}</p>
+                  </div>
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Company ID:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.companyId }}</p>
+                  </div>
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Admin Name:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.adminFirstName }} {{ registrationResponse.adminLastName }}</p>
+                  </div>
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Admin Email:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.adminEmail }}</p>
+                  </div>
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Admin ID:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.adminId }}</p>
+                  </div>
+                  <div>
+                    <span class="text-sm font-medium text-gray-500">Registered On:</span>
+                    <p class="text-gray-900 font-semibold">{{ registrationResponse.createdAt | date:'medium' }}</p>
+                  </div>
+                </div>
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <p class="text-blue-800 font-medium">{{ registrationResponse.message }}</p>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button 
+                  pButton 
+                  type="button"
+                  label="Go to Login"
+                  icon="pi pi-sign-in"
+                  class="p-button-success"
+                  (click)="goToLogin()">
+                </button>
+                <button 
+                  pButton 
+                  type="button"
+                  label="Back to Home"
+                  icon="pi pi-home"
+                  class="p-button-secondary"
+                  (click)="goToLanding()">
+                </button>
+              </div>
+              
+              <div class="flex pt-6 justify-start">
+                <button 
+                  pButton 
+                  label="Back" 
+                  icon="pi pi-arrow-left"
+                  (click)="activateCallback(1)">
+                </button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+  </div>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>

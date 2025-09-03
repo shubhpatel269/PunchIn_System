@@ -1,0 +1,152 @@
+<!-- Header Section -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center py-4">
+      <div class="flex flex-col">
+        <h1 class="text-2xl font-bold text-sky-500">PunchIn System</h1>
+        <span class="text-sm text-gray-500 font-medium">Smart Attendance Management</span>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button 
+          class="px-4 py-2 text-gray-600 border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:text-sky-500 hover:border-sky-500 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
+          (click)="navigateToLogin()">
+          <i class="pi pi-sign-in"></i>
+          Sign In
+        </button>
+        <button 
+          class="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 font-medium text-sm sm:text-base"
+          (click)="navigateToRegister()">
+          <i class="pi pi-plus"></i>
+          <span class="hidden sm:inline">Register Your Company</span>
+          <span class="sm:hidden">Register</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-br from-gray-50 to-blue-50 py-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class="animate-fade-in-left">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+          Transform Your Workforce Management with
+          <span class="text-sky-500">Smart Attendance Tracking</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+          Experience the future of employee attendance management with AI-powered face recognition, 
+          real-time tracking, and comprehensive analytics. Streamline your HR processes and boost productivity.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button 
+            class="px-8 py-4 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-3 font-semibold text-lg"
+            (click)="navigateToRegister()">
+            <i class="pi pi-rocket"></i>
+            Get Started Free
+          </button>
+          <button 
+            class="px-8 py-4 bg-white text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:text-sky-500 hover:border-sky-500 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg"
+            (click)="scrollToSection('features')">
+            <i class="pi pi-eye"></i>
+            See Features
+          </button>
+        </div>
+      </div>
+      <div class="flex justify-center animate-fade-in-right">
+        <div class="bg-white border border-gray-200 rounded-3xl p-12 text-center shadow-lg transform perspective-1000 hover:rotate-y-0 transition-transform duration-500" 
+             style="transform: perspective(1000px) rotateY(-10deg);">
+          <i class="pi pi-clock text-6xl text-sky-500 mb-4"></i>
+          <h3 class="text-2xl font-semibold text-gray-900 mb-2">Real-time Tracking</h3>
+          <p class="text-gray-600">Monitor attendance instantly</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="bg-white py-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features for Modern Businesses</h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Discover how our comprehensive suite of features can revolutionize your attendance management
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-lg hover:-translate-y-2 transition-all duration-300" 
+           *ngFor="let feature of features">
+        <div class="w-16 h-16 bg-gradient-to-r from-sky-500 to-sky-600 rounded-xl flex items-center justify-center mb-6">
+          <i [class]="feature.icon" class="text-2xl text-white"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">{{feature.title}}</h3>
+        <p class="text-gray-600 leading-relaxed">{{feature.description}}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Advantages Section -->
+<section class="bg-gray-50 py-24">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-gray-900 mb-4">Why Choose PunchIn System?</h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Join thousands of companies that have transformed their workforce management
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="relative bg-white border-2 border-gray-200 rounded-2xl p-8 hover:border-sky-500 hover:-translate-y-1 transition-all duration-300" 
+           *ngFor="let advantage of advantages; let i = index">
+        <div class="absolute -top-4 left-8 w-8 h-8 bg-gradient-to-r from-sky-500 to-sky-600 rounded-full flex items-center justify-center">
+          <span class="text-white font-bold text-sm">{{i + 1}}</span>
+        </div>
+        <div class="pt-4">
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">{{advantage.title}}</h3>
+          <p class="text-gray-600 leading-relaxed">{{advantage.description}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-gradient-to-r from-sky-500 to-sky-600 py-24">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
+    <p class="text-xl text-sky-100 mb-10 leading-relaxed">
+      Join thousands of companies already using PunchIn System to streamline their attendance management.
+      Start your free trial today!
+    </p>
+    <div class="flex flex-col sm:flex-row gap-6 justify-center">
+      <button 
+        class="px-8 py-4 bg-white text-sky-600 rounded-xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-3 font-semibold text-lg"
+        (click)="navigateToRegister()">
+        <i class="pi pi-plus"></i>
+        Register Your Company
+      </button>
+      <button 
+        class="px-8 py-4 bg-transparent text-white border-2 border-white rounded-xl hover:bg-white hover:text-sky-600 transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg"
+        (click)="navigateToLogin()">
+        <i class="pi pi-sign-in"></i>
+        Sign In
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-50 border-t border-gray-200 py-12">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+      <div class="mb-4 md:mb-0">
+        <h3 class="text-xl font-bold text-sky-500 mb-2">PunchIn System</h3>
+        <p class="text-gray-500">Smart Attendance Management Solution</p>
+      </div>
+      <div>
+        <p class="text-gray-400">&copy; 2024 PunchIn System. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</footer>

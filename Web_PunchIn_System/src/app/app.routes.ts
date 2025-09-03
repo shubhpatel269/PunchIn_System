@@ -11,9 +11,13 @@ import { EmployeeDashboardComponent } from './features/employee-dashboard/employ
 import { EmployeeProfileComponent } from './features/employee-profile/employee-profile.component';
 import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance.component';
 import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
-import ManageCompany from './features/add-admin/company-profile/company-profile';
+import ManageCompany from './features/company-profile/company-profile';
+import { Landing } from './features/landing/landing';
+import { CompanyRegister } from './features/company-register/company-register';
 
 export const routes: Routes = [
+    { path: '', component: Landing },
+    { path: 'register', component: CompanyRegister },
     { path: 'login', component: Login },
     { path: 'punchin', component: PunchIn },
     {
