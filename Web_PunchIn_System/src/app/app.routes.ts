@@ -11,6 +11,7 @@ import { EmployeeDashboardComponent } from './features/employee-dashboard/employ
 import { EmployeeProfileComponent } from './features/employee-profile/employee-profile.component';
 import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance.component';
 import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
+import ManageCompany from './features/add-admin/company-profile/company-profile';
 
 export const routes: Routes = [
     { path: 'login', component: Login },
@@ -21,6 +22,7 @@ export const routes: Routes = [
             { path: 'manage-user', component: ManageEmployee },
             { path: 'manage-designation', component: ManageDesignation },
             { path: 'manage-company-admin', component: ManageCompanyAdmin },
+            { path: 'manage-company-profile', component: ManageCompany },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
