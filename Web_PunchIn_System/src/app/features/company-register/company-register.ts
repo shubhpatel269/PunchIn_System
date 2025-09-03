@@ -83,6 +83,9 @@ export class CompanyRegister implements OnInit {
   // Success data
   registrationResponse: RegistrationResponse | null = null;
   
+  // Step completion tracking
+  completedSteps: Set<number> = new Set();
+  
   // Company types dropdown
   companyTypes = [
     { label: 'Technology', value: 'Technology' },
@@ -228,10 +231,16 @@ export class CompanyRegister implements OnInit {
     this.router.navigate(['/']);
   }
 
+  // Step completion validation
+  isStepCompleted(stepIndex: number): boolean {
+    return this.completedSteps.has(stepIndex);
+  }
+
   // New stepper navigation methods
   nextStep() {
     if (this.activeStep === 0) {
       if (this.companyForm.valid) {
+        this.completedSteps.add(0); // Mark step 0 as completed
         this.activeStep = 1;
       } else {
         this.markFormGroupTouched(this.companyForm);
@@ -243,6 +252,7 @@ export class CompanyRegister implements OnInit {
       }
     } else if (this.activeStep === 1) {
       if (this.adminForm.valid) {
+        this.completedSteps.add(1); // Mark step 1 as completed
         this.submitRegistration();
       } else {
         this.markFormGroupTouched(this.adminForm);
@@ -258,6 +268,28 @@ export class CompanyRegister implements OnInit {
   prevStep() {
     if (this.activeStep > 0) {
       this.activeStep--;
+    }
+  }
+
+  // Handle step click - only allow if step is completed or it's the current step
+  onStepClick(stepIndex: number) {
+    if (stepIndex === this.activeStep) {
+      return; // Already on this step
+    }
+    
+    if (stepIndex < this.activeStep) {
+      // Allow going back to previous steps
+      this.activeStep = stepIndex;
+    } else if (this.isStepCompleted(stepIndex - 1)) {
+      // Allow going forward only if previous step is completed
+      this.activeStep = stepIndex;
+    } else {
+      // Show warning message
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Step Locked',
+        detail: 'Please complete the previous step before proceeding.'
+      });
     }
   }
 

@@ -108,6 +108,10 @@ export class Login implements AfterViewInit, OnDestroy {
     this.router.navigate(['/dashboard/home']);
   }
 
+  goToLanding() {
+    this.router.navigate(['/']);
+  }
+
   switchToNoneTab() {
     this.activeTab = 'none';
     this.showAdminLogin = false;

@@ -9,9 +9,24 @@
     <!-- Stepper -->
     <p-stepper [value]="activeStep" class="mb-8">
       <p-step-list>
-        <p-step [value]="0">Company Information</p-step>
-        <p-step [value]="1">Admin Information</p-step>
-        <p-step [value]="2">Registration Complete</p-step>
+        <p-step 
+          [value]="0" 
+          [disabled]="false"
+          (click)="onStepClick(0)">
+          Company Information
+        </p-step>
+        <p-step 
+          [value]="1" 
+          [disabled]="!isStepCompleted(0)"
+          (click)="onStepClick(1)">
+          Admin Information
+        </p-step>
+        <p-step 
+          [value]="2" 
+          [disabled]="!isStepCompleted(1)"
+          (click)="onStepClick(2)">
+          Registration Complete
+        </p-step>
       </p-step-list>
       
       <p-step-panels>
@@ -176,7 +191,7 @@
                 iconPos="right"
                 class="p-button-primary"
                 [disabled]="companyForm.invalid"
-                (click)="activateCallback(1)">
+                (click)="nextStep()">
               </button>
             </div>
           </ng-template>
@@ -335,7 +350,7 @@
                 label="Back" 
                 severity="secondary" 
                 icon="pi pi-arrow-left"
-                (click)="activateCallback(0)">
+                (click)="prevStep()">
               </button>
               <button 
                 pButton 
@@ -344,7 +359,7 @@
                 class="p-button-primary"
                 [disabled]="adminForm.invalid"
                 [loading]="isSubmitting"
-                (click)="submitRegistration()">
+                (click)="nextStep()">
               </button>
             </div>
           </ng-template>
@@ -423,7 +438,7 @@
                   pButton 
                   label="Back" 
                   icon="pi pi-arrow-left"
-                  (click)="activateCallback(1)">
+                  (click)="prevStep()">
                 </button>
               </div>
             </div>
