@@ -47,8 +47,8 @@ interface AttendanceStats {
     ToastModule
   ],
   providers: [MessageService],
-  templateUrl: './employee-dashboard.component.html',
-  styleUrl: './employee-dashboard.component.css'
+  templateUrl: './employee-dashboard.html',
+  styleUrl: './employee-dashboard.css'
 })
 export class EmployeeDashboardComponent implements OnInit {
   user: any = null;

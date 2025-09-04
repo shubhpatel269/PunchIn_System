@@ -1,23 +1,21 @@
 import { Routes } from '@angular/router';
 import { AdminDashboard } from './features/admin-dashboard/admin-dashboard';
-import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard.component';
-import { Home } from './features/home/home';
 import { Login } from './features/login/login';
 import { ManageDesignation } from './features/manage-designation/manage-designation';
 import { ManageEmployee } from './features/manage-employee/manage-employee';
-import { EmployeeLayoutComponent } from './features/employee-layout/employee-layout.component';
-import { EmployeeDashboardComponent } from './features/employee-dashboard/employee-dashboard.component';
-import { EmployeeProfileComponent } from './features/employee-profile/employee-profile.component';
-import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance.component';
+import { EmployeeLayoutComponent } from './features/employee-layout/employee-layout';
+import { EmployeeDashboardComponent } from './features/employee-dashboard/employee-dashboard';
+import { EmployeeProfileComponent } from './features/employee-profile/employee-profile';
+import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance';
 import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
 import { Landing } from './features/landing/landing';
 import { CompanyRegister } from './features/company-register/company-register';
 import { NotFound } from './not-found/not-found';
 import ManageCompanyProfile from './features/company-profile/company-profile';
-import { AddAdmin } from './features/add-admin/add-admin';
-import { AddUser } from './features/add-user/add-user';
 import { AdminGuard } from './shared/guards/admin.guard';
 import { EmployeeGuard } from './shared/guards/employee.guard';
+import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard';
+import { Home } from './features/home/home';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -29,11 +27,9 @@ export const routes: Routes = [
         canActivate: [AdminGuard],
         children: [
             { path: 'dashboard', component: AttendanceDashboardComponent },
-            { path: 'add-admin', component: AddAdmin },
-            { path: 'add-user', component: AddUser },
-            { path: 'manage-user', component: ManageEmployee },
+            { path: 'manage-admin', component: ManageCompanyAdmin },
             { path: 'manage-designation', component: ManageDesignation },
-            { path: 'manage-company-admin', component: ManageCompanyAdmin },
+            { path: 'manage-employee', component: ManageEmployee },
             { path: 'manage-company-profile', component: ManageCompanyProfile },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },

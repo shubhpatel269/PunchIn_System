@@ -50,8 +50,8 @@ interface EmployeeProfile {
     ConfirmDialogModule
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './employee-profile.component.html',
-  styleUrl: './employee-profile.component.css'
+  templateUrl: './employee-profile.html',
+  styleUrl: './employee-profile.css'
 })
 export class EmployeeProfileComponent implements OnInit {
   user: any = null;

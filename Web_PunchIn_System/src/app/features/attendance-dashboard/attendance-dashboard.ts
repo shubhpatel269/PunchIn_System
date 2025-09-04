@@ -27,8 +27,8 @@ interface Employee {
 @Component({
   selector: 'app-attendance-dashboard',
   standalone: true,
-  templateUrl: './attendance-dashboard.component.html',
-  styleUrls: ['./attendance-dashboard.component.css'],
+  templateUrl: './attendance-dashboard.html',
+  styleUrls: ['./attendance-dashboard.css'],
   imports: [
     CommonModule,
     FormsModule,

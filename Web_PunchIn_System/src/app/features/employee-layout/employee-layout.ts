@@ -7,6 +7,7 @@ import { DividerModule } from 'primeng/divider';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-employee-layout',
@@ -22,8 +23,8 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
     ConfirmPopupModule
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './employee-layout.component.html',
-  styleUrl: './employee-layout.component.css'
+  templateUrl: './employee-layout.html',
+  styleUrl: './employee-layout.css'
 })
 export class EmployeeLayoutComponent implements OnInit {
   user: any = null;
@@ -31,7 +32,8 @@ export class EmployeeLayoutComponent implements OnInit {
   constructor(
     private router: Router,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -39,9 +41,9 @@ export class EmployeeLayoutComponent implements OnInit {
   }
 
   loadUserData() {
-    const userData = localStorage.getItem('punchInUser');
+    const userData = this.authService.getUserData();
     if (userData) {
-      this.user = JSON.parse(userData);
+      this.user = userData;
     } else {
       this.router.navigate(['/login']);
     }
@@ -64,10 +66,7 @@ export class EmployeeLayoutComponent implements OnInit {
   }
 
   logout() {
-    localStorage.removeItem('punchInUser');
-    localStorage.removeItem('todayPunchIn');
-    localStorage.removeItem('todayPunchOut');
-    this.router.navigate(['/login']);
+    this.authService.logout();
     this.messageService.add({
       severity: 'info',
       summary: 'Logged Out',

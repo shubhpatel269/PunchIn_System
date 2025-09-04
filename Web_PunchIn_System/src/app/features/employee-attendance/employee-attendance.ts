@@ -57,8 +57,8 @@ interface MonthlyStats {
     ToastModule
   ],
   providers: [MessageService],
-  templateUrl: './employee-attendance.component.html',
-  styleUrl: './employee-attendance.component.css'
+  templateUrl: './employee-attendance.html',
+  styleUrl: './employee-attendance.css'
 })
 export class EmployeeAttendanceComponent implements OnInit {
   user: any = null;
