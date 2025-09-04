@@ -30,8 +30,6 @@ export class DesignationService {
 
   // Get all designations
   getDesignations(): Observable<any> {
-    console.log('Making API call to:', this.apiUrl);
-    console.log('With headers:', this.getAuthHeaders());
     return this.http.get<any>(this.apiUrl, { headers: this.getAuthHeaders() }).pipe(
       catchError((error) => {
         console.error('Error in getDesignations:', error);
@@ -62,10 +60,6 @@ export class DesignationService {
 
   // Update existing designation
   updateDesignation(id: number, designation: Partial<Designation>): Observable<Designation> {
-    console.log('Service - Updating designation with ID:', id);
-    console.log('Service - Update payload:', designation);
-    console.log('Service - Full URL:', `${this.apiUrl}/${id}`);
-    
     return this.http.put<Designation>(`${this.apiUrl}/${id}`, designation, { headers: this.getAuthHeaders() }).pipe(
       catchError((error) => {
         console.error('Error in updateDesignation:', error);
