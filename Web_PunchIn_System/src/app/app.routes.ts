@@ -30,7 +30,7 @@ export const routes: Routes = [
             { path: 'manage-admin', component: ManageCompanyAdmin },
             { path: 'manage-designation', component: ManageDesignation },
             { path: 'manage-employee', component: ManageEmployee },
-            { path: 'manage-company-profile', component: ManageCompanyProfile },
+            // { path: 'manage-company-profile', component: ManageCompanyProfile },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
@@ -48,6 +48,6 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
-    { path: '404', component: NotFound },
-    { path: '**', redirectTo: '404'}
+    { path: 'notfound', component: NotFound },
+    { path: '**', redirectTo: 'notfound'}
 ];
