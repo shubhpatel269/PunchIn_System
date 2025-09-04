@@ -44,7 +44,7 @@ interface Company {
   templateUrl: './company-profile.html',
   styleUrls: ['./company-profile.css']
 })
-export default class ManageCompany implements OnInit {
+export default class ManageCompanyProfile implements OnInit {
   companies: Company[] = [
     {
       id: 1,

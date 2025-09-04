@@ -15,6 +15,7 @@ import ManageCompany from './features/company-profile/company-profile';
 import { Landing } from './features/landing/landing';
 import { CompanyRegister } from './features/company-register/company-register';
 import { NotFound } from './not-found/not-found';
+import ManageCompanyProfile from './features/company-profile/company-profile';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -27,7 +28,7 @@ export const routes: Routes = [
             { path: 'manage-user', component: ManageEmployee },
             { path: 'manage-designation', component: ManageDesignation },
             { path: 'manage-company-admin', component: ManageCompanyAdmin },
-            { path: 'manage-company-profile', component: ManageCompany },
+            { path: 'manage-company-profile', component: ManageCompanyProfile },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
