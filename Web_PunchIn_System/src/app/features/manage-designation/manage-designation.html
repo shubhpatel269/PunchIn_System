@@ -13,35 +13,60 @@
       label="Add Designation"></p-button>
   </div>
 
-  <p-table [value]="designations" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+  <p-table [value]="designations" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" [loading]="loading">
     <ng-template pTemplate="header">
-      <tr>
+      <tr >
         <th style="width: 80px">ID</th>
         <th>Name</th>
         <th>Description</th>
-        <th>Created At</th>
-        <th>Is Deleted</th>
-        <th>Deleted At</th>
-        <th>Deleted By id</th>
         <th>Actions</th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-designation>
+    <ng-template pTemplate="body" let-designation let-i="rowIndex">
       <tr>
-        <td>{{designation.id}}</td>
-        <td>{{designation.name}}</td>
-        <td>{{designation.description || '-'}}</td>
-        <td>{{designation.createdAt | date:'short'}}</td>
-        <td>{{designation.isDeleted ? 'Yes' : 'No'}}</td>
-        <td>{{designation.deletedAt ? (designation.deletedAt | date:'short') : '-'}}</td>
-        <td>{{designation.deletedById || '-'}}</td>
+        <td>{{i + 1}}</td>
         <td>
-          <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm"
-            (click)="editDesignation(designation)"></button>
-          <button pButton pRipple type="button" icon="pi pi-trash"
-            class="p-button-rounded p-button-text p-button-sm p-button-danger"
-            (click)="deleteDesignation(designation)"></button>
+          <input *ngIf="isEditing(designation)" 
+                 pInputText 
+                 [(ngModel)]="editingData.name" 
+                 class="w-full p-inputtext border-0 editable-field"
+                 placeholder="Enter designation name">
+          <span *ngIf="!isEditing(designation)">{{designation.name}}</span>
         </td>
+        <td>
+          <textarea *ngIf="isEditing(designation)" 
+                    [(ngModel)]="editingData.description" 
+                    class="w-full p-inputtext border-0" 
+                    rows="2"
+                    placeholder="Enter description"></textarea>
+          <span *ngIf="!isEditing(designation)">{{designation.description || '-'}}</span>
+        </td>
+        <td>
+          <div *ngIf="!isEditing(designation)" class="flex gap-2">
+            <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm"
+              (click)="editDesignation(designation)"></button>
+            <button pButton pRipple type="button" icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-sm p-button-danger"
+              (click)="deleteDesignation(designation)"></button>
+          </div>
+          <div *ngIf="isEditing(designation)" class="flex gap-2">
+            <button pButton pRipple type="button" icon="pi pi-check" class="p-button-rounded p-button-text p-button-sm p-button-success"
+              (click)="saveInlineEdit()" 
+              [disabled]="!editingData.name.trim()"></button>
+            <button pButton pRipple type="button" icon="pi pi-times" class="p-button-rounded p-button-text p-button-sm p-button-secondary"
+              (click)="cancelEdit()"></button>
+          </div>
+        </td>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center p-4">
+          <div class="text-gray-500">
+            <i class="pi pi-info-circle mr-2"></i>
+            No designations found. Click "Add Designation" to create your first designation.
+          </div>
+        </td>
+      </tr>
     </ng-template>
   </p-table>
 </div>
@@ -65,13 +90,14 @@
         </div>
       </div>
 
-      <!-- Email Field -->
-      <div class="flex items-center gap-4 mb-4">
-        <label for="email" class="font-semibold w-24">Email</label>
-        <input pInputText id="email" type="email" class="flex-auto" autocomplete="off"
-          [(ngModel)]="selectedDesignation.email">
-      </div>
 
+
+      <!-- Description Field -->
+      <div class="flex items-center gap-4 mb-4">
+        <label for="description" class="font-semibold w-24">Description</label>
+        <textarea id="description" class="flex-auto p-inputtext" autocomplete="off"
+          [(ngModel)]="selectedDesignation.description" rows="3" style="resize: vertical;"></textarea>
+      </div>
 
     </div>
   </div>

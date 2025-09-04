@@ -27,10 +27,10 @@ interface CompanyAdmin {
   standalone: true,
   imports: [
     CommonModule,
-    TableModule, 
-    ButtonModule, 
-    ConfirmDialogModule, 
-    ToastModule, 
+    TableModule,
+    ButtonModule,
+    ConfirmDialogModule,
+    ToastModule,
     RouterModule,
     TagModule,
     ProgressSpinnerModule,
@@ -45,18 +45,18 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
   loading: boolean = true;
   error: string | null = null;
   private dialogRef?: DynamicDialogRef;
-  
+
   constructor(
     public dialogService: DialogService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private companyAdminService: CompanyAdminService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.loading = true;
     this.error = null;
-    
+
     this.companyAdminService.getAdmins().subscribe({
       next: (admins: any[]) => {
         this.admins = admins.map(a => ({
@@ -72,7 +72,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error loading admins:', err);
-        
+
         if (err.status === 401) {
           this.error = 'Your session has expired. Please log in again.';
           // Optionally redirect to login
@@ -80,7 +80,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
         } else {
           this.error = 'Failed to load admin data. Please try again later.';
         }
-        
+
         this.loading = false;
         this.messageService.add({
           severity: 'error',
@@ -101,9 +101,9 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
   addAdmin() {
     this.dialogRef = this.dialogService.open(AddAdmin, {
       header: 'Add New Admin',
-      width: '50%',
-      contentStyle: { 'max-height': '90vh', 'overflow': 'auto' },
-      baseZIndex: 10000,
+      width: '35vw',
+      transitionOptions: '0ms',
+      styleClass: 'right-model', baseZIndex: 10000,
       data: { admin: null } // Initialize with null for new admin
     });
 
@@ -126,18 +126,19 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
   editAdmin(admin: CompanyAdmin) {
     this.dialogRef = this.dialogService.open(AddAdmin, {
       header: 'Edit Admin',
-      width: '50%',
+       width: '35vw',
+      styleClass: 'right-model',
       contentStyle: { 'max-height': '90vh', 'overflow': 'auto' },
       baseZIndex: 10000,
-      data: { 
-        admin: { 
+      data: {
+        admin: {
           adminId: admin.id,
           adminFirstName: admin.name.split(' ')[0],
           adminLastName: admin.name.split(' ').slice(1).join(' '),
           adminEmail: admin.email,
           adminPhone: admin.phone,
           isActive: admin.status === 'Active'
-        } 
+        }
       }
     });
 
