@@ -115,7 +115,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
     this.dialogRef.onClose.subscribe((result: any) => {
       if (result) {
         this.loadAdmins(); // Reload the admin list from API
-        this.showSuccess('Admin added successfully');
+        // Success message is already shown by the add-admin component
       }
     });
   }
@@ -143,7 +143,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
     this.dialogRef.onClose.subscribe((result: any) => {
       if (result) {
         this.loadAdmins(); // Reload the admin list from API
-        this.showSuccess('Admin updated successfully');
+        // Success message is already shown by the add-admin component
       }
     });
   }

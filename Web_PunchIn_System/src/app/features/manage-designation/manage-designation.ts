@@ -28,7 +28,8 @@ import { DesignationService, Designation } from '../../shared/services/designati
     CheckboxModule
   ],
   providers: [ConfirmationService, MessageService],
-  templateUrl: './manage-designation.html'
+  templateUrl: './manage-designation.html',
+  styleUrls: ['./manage-designation.css']
 })
 export class ManageDesignation implements OnInit {
   designations: Designation[] = [];
