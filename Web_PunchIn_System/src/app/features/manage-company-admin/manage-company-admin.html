@@ -35,36 +35,25 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th>Company ID</th>
+          <th>Admin ID</th>
           <th>Name</th>
           <th>Email</th>
           <th>Phone</th>
-          <th>Status</th>
-          <!-- <th>Last Login</th> -->
           <th style="width: 12rem">Actions</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-admin>
         <tr>
-          <td>{{admin.companyId}}</td>
+          <td>{{admin.displayId}}</td>
           <td>{{admin.name}}</td>
           <td>{{admin.email}}</td>
           <td>{{admin.phone}}</td>
-          <td>
-            <p-tag [value]="admin.status" [severity]="admin.status === 'Active' ? 'success' : 'danger'">
-            </p-tag>
-          </td>
-          <!-- <td>{{admin.lastLogin ? (admin.lastLogin | date:'medium') : 'Never'}}</td> -->
+          
           <td>
             <div class="flex gap-2">
               <button pButton pRipple type="button" icon="pi pi-pencil"
                 class="p-button-rounded p-button-text p-button-primary" (click)="editAdmin(admin)"></button>
-
-              <button pButton pRipple type="button"
-                [icon]="admin.status === 'Active' ? 'pi pi-lock' : 'pi pi-lock-open'"
-                [class]="'p-button-rounded p-button-text ' + (admin.status === 'Active' ? 'p-button-warning' : 'p-button-success')"
-                (click)="toggleStatus(admin)"></button>
 
               <button pButton pRipple type="button" icon="pi pi-trash"
                 class="p-button-rounded p-button-text p-button-danger" (click)="deleteAdmin(admin)"></button>

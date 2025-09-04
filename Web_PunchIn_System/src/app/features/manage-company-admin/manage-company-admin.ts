@@ -15,11 +15,14 @@ import { AddAdmin } from '../add-admin/add-admin';
 
 interface CompanyAdmin {
   id: number;
+  companyId: number;
   name: string;
   email: string;
   phone: string;
   status: 'Active' | 'Inactive';
   lastLogin?: Date;
+  dob?: string;
+  displayId: number; // Sequential display ID
 }
 
 @Component({
@@ -59,14 +62,16 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
 
     this.companyAdminService.getAdmins().subscribe({
       next: (admins: any[]) => {
-        this.admins = admins.map(a => ({
+        this.admins = admins.map((a, index) => ({
           companyId: a.companyId,
           id: a.adminId,
           name: `${a.adminFirstName} ${a.adminLastName || ''}`.trim(),
           email: a.adminEmail,
           phone: a.adminPhone,
           status: a.isActive ? 'Active' : 'Inactive',
-          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined
+          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined,
+          dob: a.adminDob,
+          displayId: index + 1 // Sequential display ID starting from 1
         }));
         this.loading = false;
       },
@@ -100,24 +105,16 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
 
   addAdmin() {
     this.dialogRef = this.dialogService.open(AddAdmin, {
-      header: 'Add New Admin',
       width: '35vw',
       transitionOptions: '0ms',
-      styleClass: 'right-model', baseZIndex: 10000,
+      styleClass: 'right-model', 
+      baseZIndex: 10000,
       data: { admin: null } // Initialize with null for new admin
     });
 
     this.dialogRef.onClose.subscribe((result: any) => {
       if (result) {
-        const newAdmin: CompanyAdmin = {
-          id: this.getNextId(),
-          name: result.name,
-          email: result.email,
-          phone: result.phone,
-          status: 'Active' as const,
-          lastLogin: new Date()
-        };
-        this.admins = [...this.admins, newAdmin];
+        this.loadAdmins(); // Reload the admin list from API
         this.showSuccess('Admin added successfully');
       }
     });
@@ -125,18 +122,19 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
 
   editAdmin(admin: CompanyAdmin) {
     this.dialogRef = this.dialogService.open(AddAdmin, {
-      header: 'Edit Admin',
-       width: '35vw',
+      width: '35vw',
       styleClass: 'right-model',
       contentStyle: { 'max-height': '90vh', 'overflow': 'auto' },
       baseZIndex: 10000,
       data: {
         admin: {
           adminId: admin.id,
+          companyId: admin.companyId,
           adminFirstName: admin.name.split(' ')[0],
           adminLastName: admin.name.split(' ').slice(1).join(' '),
           adminEmail: admin.email,
           adminPhone: admin.phone,
+          adminDob: admin.dob || '',
           isActive: admin.status === 'Active'
         }
       }
@@ -144,18 +142,8 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
 
     this.dialogRef.onClose.subscribe((result: any) => {
       if (result) {
-        this.loading = true;
-        this.companyAdminService.updateAdmin(result).subscribe({
-          next: () => {
-            this.loadAdmins();
-            this.showSuccess('Admin updated successfully');
-          },
-          error: (err) => {
-            console.error('Error updating admin:', err);
-            this.showError('Failed to update admin');
-            this.loading = false;
-          }
-        });
+        this.loadAdmins(); // Reload the admin list from API
+        this.showSuccess('Admin updated successfully');
       }
     });
   }
@@ -183,28 +171,6 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
     });
   }
 
-  toggleStatus(admin: CompanyAdmin) {
-    const newStatus = admin.status === 'Active' ? 'Inactive' : 'Active';
-    const updatedAdmin = {
-      ...admin,
-      isActive: newStatus === 'Active'
-    };
-
-    this.companyAdminService.updateAdmin(updatedAdmin).subscribe({
-      next: () => {
-        admin.status = newStatus;
-        this.showSuccess(`Admin status changed to ${newStatus}`);
-      },
-      error: (err) => {
-        console.error('Error updating admin status:', err);
-        this.showError('Failed to update admin status');
-      }
-    });
-  }
-
-  public getNextId(): number {
-    return this.admins.length > 0 ? Math.max(...this.admins.map(a => a.id)) + 1 : 1;
-  }
 
   private showSuccess(message: string) {
     this.messageService.add({
@@ -228,13 +194,16 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
     this.loading = true;
     this.companyAdminService.getAdmins().subscribe({
       next: (admins: any[]) => {
-        this.admins = admins.map(a => ({
+        this.admins = admins.map((a, index) => ({
+          companyId: a.companyId,
           id: a.adminId,
           name: `${a.adminFirstName} ${a.adminLastName || ''}`.trim(),
           email: a.adminEmail,
           phone: a.adminPhone,
           status: a.isActive ? 'Active' : 'Inactive',
-          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined
+          lastLogin: a.adminUpdatedAt ? new Date(a.adminUpdatedAt) : undefined,
+          dob: a.adminDob,
+          displayId: index + 1 // Sequential display ID starting from 1
         }));
         this.loading = false;
       },

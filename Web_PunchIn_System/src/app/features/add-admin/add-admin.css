@@ -1,109 +1,139 @@
-.register-card {
-    max-width: 400px;
-    margin: 2rem auto;
-    transform: scale(1.07);
-  }
-  
-  .p-field {
-    margin-bottom: 0.5rem;
-  }
-  
-  .upload-hint {
-    color: #888;
-  }
-  
-  .register-card button {
-    width: 100%;
-  }
-  
-  .required:after {
-    content: " *";
-    color: red;
-  }
-  
-  
-  .p-field label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-  
-  .p-field input {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .p-field input.p-inputtext {
-    transition: border-color 0.2s;
-  }
-  
-  .p-fileupload {
-    width: 100%;
-  }
-  
-  .error-text {
-    color: #e53935;
-    font-size: .8em;
-    display: block;
-  }
-  
-  .location-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
-  
-  .location-row input {
-    flex: 1 1 0%;
-    font-size: 1rem;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    box-sizing: border-box;
-    height: auto;
-  }
-  
-  .location-row button {
-    height: auto;
-    display: flex;
-    align-items: center;
-  }
-  
-  .upload-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .uploaded-file-name-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .remove-image-btn {
-    background: none;
-    border: none;
-    color: #e53935;
-    font-size: 1.2em;
-    cursor: pointer;
-  }
-  
-  .camera-btn-row {
-    display: flex;
-    align-content: space-around;
-    flex-wrap: wrap;
-    gap: 1em;
-    justify-content: center;
-    margin: 5px 0 5px 0;
-  }
-  
-  .image-preview {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 8px;
-    max-width: 100px;
-    max-height: 100px;
-  }
+
+.d-head {
+  padding: 0.5rem 0.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-heading {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.d-body {
+  padding: 1rem 0.5rem;
+}
+
+.d-footer {
+  padding: 1rem 0.5rem ;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.p-field {
+  margin-bottom: 1rem;
+}
+
+.p-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.p-field input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.p-field input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.p-field input.p-inputtext {
+  transition: border-color 0.2s;
+}
+
+.required:after {
+  content: " *";
+  color: #ef4444;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+/* Calendar specific styles */
+.p-calendar {
+  width: 100%;
+}
+
+.p-calendar .p-inputtext {
+  width: 100%;
+}
+
+/* Checkbox styles */
+input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+/* Button styles */
+.p-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.p-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.p-button-secondary {
+  background-color: #6b7280;
+  border-color: #6b7280;
+  color: white;
+}
+
+.p-button-secondary:hover:not(:disabled) {
+  background-color: #4b5563;
+  border-color: #4b5563;
+}
+
+/* Readonly field styling */
+.p-field input[readonly] {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #d1d5db;
+}
+
+/* Info text styling */
+.info-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  display: block;
+  margin-top: 0.25rem;
+  font-style: italic;
+}

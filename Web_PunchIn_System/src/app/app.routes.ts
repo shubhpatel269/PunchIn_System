@@ -41,11 +41,6 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
-    {
-        path: 'home', component: EmployeeLayoutComponent, children: [
-            { path: '', component: Home }
-        ]
-    },
     { path: '404', component: NotFound },
-    { path: '**', redirectTo: '404' }
+    { path: '**', redirectTo: '404'}
 ];
