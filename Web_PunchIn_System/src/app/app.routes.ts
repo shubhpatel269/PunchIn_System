@@ -14,6 +14,7 @@ import ManageCompanyAdmin from './features/manage-company-admin/manage-company-a
 import ManageCompany from './features/company-profile/company-profile';
 import { Landing } from './features/landing/landing';
 import { CompanyRegister } from './features/company-register/company-register';
+import { NotFound } from './not-found/not-found';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -45,5 +46,6 @@ export const routes: Routes = [
             { path: '', component: Home }
         ]
     },
-    { path: '**', redirectTo: 'login' }
+    { path: '404', component: NotFound },
+    { path: '**', redirectTo: '404' }
 ];
