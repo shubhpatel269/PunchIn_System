@@ -16,10 +16,12 @@ import { AdminGuard } from './shared/guards/admin.guard';
 import { EmployeeGuard } from './shared/guards/employee.guard';
 import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard';
 import { Home } from './features/home/home';
+import { AddNewProfileComponent } from './features/add-new-profile/add-new-profile';
 
 export const routes: Routes = [
     { path: '', component: Landing },
     { path: 'register', component: CompanyRegister },
+    
     { path: 'login', component: Login },
     {
         path: 'admin', 
@@ -29,7 +31,8 @@ export const routes: Routes = [
             { path: 'dashboard', component: AttendanceDashboardComponent },
             { path: 'manage-admin', component: ManageCompanyAdmin },
             { path: 'manage-designation', component: ManageDesignation },
-            { path: 'manage-employee', component: ManageEmployee },
+            { path: 'manage-employee', component: ManageEmployee },   
+            { path: 'add-employee', component: AddNewProfileComponent },
             // { path: 'manage-company-profile', component: ManageCompanyProfile },
             { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },

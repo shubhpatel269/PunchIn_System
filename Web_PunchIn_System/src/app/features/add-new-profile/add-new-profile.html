@@ -1,0 +1,275 @@
+<div class="add-profile-container">
+  <!-- Toast for notifications -->
+  <p-toast></p-toast>
+  
+  <!-- Header -->
+  <div class="header">
+    <h1 class="page-title">Add Employee</h1>
+    
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Profile Picture Section -->
+    <div class="profile-picture-section">
+      <div class="profile-picture-container">
+        <div class="profile-picture" (click)="onImageClick()">
+          @if (profileForm.get('image')?.value) {
+            <img [src]="profileForm.get('image')?.value" alt="Profile Picture" class="profile-image">
+          } @else {
+            <div class="profile-placeholder">
+              <i class="pi pi-user"></i>
+            </div>
+          }
+        </div>
+        <div class="camera-icon" (click)="openUploadDialog()">
+          <i class="pi pi-camera"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="form-section">
+      <form [formGroup]="profileForm" (ngSubmit)="onSave()">
+        <!-- Employee Information Section -->
+        <div class="form-section-group">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="employeeId">Employee ID</label>
+              <input 
+                type="text" 
+                id="employeeId" 
+                formControlName="employeeId"
+                class="form-input"
+                [class.error]="profileForm.get('employeeId')?.touched && profileForm.get('employeeId')?.invalid"
+              >
+              @if (profileForm.get('employeeId')?.touched && profileForm.get('employeeId')?.hasError('required')) {
+                <span class="error-text">Employee ID is required</span>
+              }
+            </div>
+            
+            <div class="form-field">
+              <label for="firstName">First Name</label>
+              <input 
+                type="text" 
+                id="firstName" 
+                formControlName="firstName"
+                class="form-input"
+                [class.error]="profileForm.get('firstName')?.touched && profileForm.get('firstName')?.invalid"
+              >
+              @if (profileForm.get('firstName')?.touched && profileForm.get('firstName')?.hasError('required')) {
+                <span class="error-text">First Name is required</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="middleName">Middle Name</label>
+              <input 
+                type="text" 
+                id="middleName" 
+                formControlName="middleName"
+                class="form-input"
+                [class.error]="profileForm.get('middleName')?.touched && profileForm.get('middleName')?.invalid"
+              >
+              @if (profileForm.get('middleName')?.touched && profileForm.get('middleName')?.hasError('required')) {
+                <span class="error-text">Middle Name is required</span>
+              }
+            </div>
+            
+            <div class="form-field">
+              <label for="lastName">Last Name</label>
+              <input 
+                type="text" 
+                id="lastName" 
+                formControlName="lastName"
+                class="form-input"
+                [class.error]="profileForm.get('lastName')?.touched && profileForm.get('lastName')?.invalid"
+              >
+              @if (profileForm.get('lastName')?.touched && profileForm.get('lastName')?.hasError('required')) {
+                <span class="error-text">Last Name is required</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Information Section -->
+        <div class="additional-info-section">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="designation">Designation</label>
+              <div class="designation-container">
+                <select 
+                  id="designation" 
+                  formControlName="designation"
+                  class="form-select"
+                  [class.error]="profileForm.get('designation')?.touched && profileForm.get('designation')?.invalid"
+                  [disabled]="loadingDesignations"
+                >
+                  <option value="">
+                    {{ loadingDesignations ? 'Loading designations...' : 'Select Designation' }}
+                  </option>
+                  @for (option of designationOptions; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+                <button 
+                  type="button" 
+                  class="refresh-btn" 
+                  (click)="refreshDesignations()"
+                  [disabled]="loadingDesignations"
+                  title="Refresh Designations"
+                >
+                  <i class="pi pi-refresh" [class.pi-spin]="loadingDesignations"></i>
+                </button>
+              </div>
+              @if (profileForm.get('designation')?.touched && profileForm.get('designation')?.hasError('required')) {
+                <span class="error-text">Designation is required</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input 
+                type="email" 
+                id="email" 
+                formControlName="email"
+                class="form-input"
+                [class.error]="profileForm.get('email')?.touched && profileForm.get('email')?.invalid"
+              >
+              @if (profileForm.get('email')?.touched && profileForm.get('email')?.hasError('required')) {
+                <span class="error-text">Email is required</span>
+              }
+              @if (profileForm.get('email')?.touched && profileForm.get('email')?.hasError('email')) {
+                <span class="error-text">Please enter a valid email address</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="phone">Phone</label>
+              <input 
+                type="tel" 
+                id="phone" 
+                formControlName="phone"
+                class="form-input"
+                [class.error]="profileForm.get('phone')?.touched && profileForm.get('phone')?.invalid"
+              >
+              @if (profileForm.get('phone')?.touched && profileForm.get('phone')?.hasError('required')) {
+                <span class="error-text">Phone is required</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="dob">Date of Birth</label>
+              <p-datepicker  
+                id="dob" 
+                formControlName="dob"
+                placeholder="Select Date of Birth"
+                dateFormat="yy-mm-dd"
+                [maxDate]="maxDate"
+                [minDate]="minDate"
+                [showIcon]="true"
+                [showButtonBar]="true"
+                [class.error]="profileForm.get('dob')?.touched && profileForm.get('dob')?.invalid"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+              ></p-datepicker>
+              @if (profileForm.get('dob')?.touched && profileForm.get('dob')?.hasError('required')) {
+                <span class="error-text">Date of Birth is required</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="location">Location</label>
+            <input 
+              type="text" 
+              id="location" 
+              formControlName="location"
+              class="form-input"
+              placeholder="Enter city, state, country"
+              [class.error]="profileForm.get('location')?.touched && profileForm.get('location')?.invalid"
+            >
+            @if (profileForm.get('location')?.touched && profileForm.get('location')?.hasError('required')) {
+              <span class="error-text">Location is required</span>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button type="button" class="btn btn-secondary" (click)="onReset()" [disabled]="isSubmitting">
+      <i class="pi pi-refresh" style="margin-right: 0.5rem;"></i>
+      Reset
+    </button>
+    <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        <i class="pi pi-spin pi-spinner" style="margin-right: 0.5rem;"></i>
+        Creating...
+      } @else {
+        Save
+      }
+    </button>
+  </div>
+
+  <!-- Upload Options Dialog -->
+  <p-dialog 
+    header="Add Profile Photo" 
+    [(visible)]="showUploadDialog" 
+    [modal]="true" 
+    [closable]="true"
+    [style]="{width: '400px'}" 
+    (onHide)="closeUploadDialog()">
+    <div class="upload-dialog-content">
+      <div class="upload-options">
+        <div class="upload-option" (click)="onFileSelect()">
+          <i class="pi pi-upload upload-icon"></i>
+          <h3>Upload from Device</h3>
+          <p>Choose a photo from your computer or mobile device</p>
+        </div>
+        <div class="upload-option" (click)="openCamera()">
+          <i class="pi pi-camera upload-icon"></i>
+          <h3>Take a Picture</h3>
+          <p>Use your camera to take a new photo</p>
+        </div>
+      </div>
+      @if (profileForm.get('image')?.value) {
+        <div class="current-image-section">
+          <h4>Current Photo:</h4>
+          <div class="current-image-preview">
+            <img [src]="profileForm.get('image')?.value" alt="Current Photo" class="current-image">
+            <button type="button" (click)="removeImage(); closeUploadDialog()" class="remove-current-btn">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </p-dialog>
+
+  <!-- Camera Dialog -->
+  <p-dialog 
+    header="Take a Picture" 
+    [(visible)]="showCameraDialog" 
+    [modal]="true" 
+    [closable]="true"
+    [style]="{width: '350px'}" 
+    (onHide)="closeCamera()">
+    @if (showCameraDialog) {
+      <div class="camera-dialog-content">
+        <video #video width="300" height="225" autoplay></video>
+        <canvas #canvas width="300" height="225" style="display:none"></canvas>
+        <div class="camera-btn-row">
+          <button pButton type="button" label="Capture" (click)="capturePhoto(video, canvas)"></button>
+          <button pButton type="button" label="Close" class="p-button-secondary" (click)="closeCamera()"></button>
+        </div>
+      </div>
+    }
+  </p-dialog>
+</div>

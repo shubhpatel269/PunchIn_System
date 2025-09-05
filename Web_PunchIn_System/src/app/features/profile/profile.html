@@ -1,11 +1,15 @@
 <div class="min-h-screen bg-gray-50 p-0">
   <!-- Main Content -->
+  <p-toast></p-toast>
+
   <div class="w-full h-full">
     <div class="bg-white h-screen overflow-y-auto">
       <!-- Form Header with Action Buttons -->
-      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start p-4 lg:p-6 pb-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+      <div
+        class="flex flex-col lg:flex-row lg:justify-between lg:items-start p-4 lg:p-6 pb-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
         <div class="flex items-center gap-4 mb-0 lg:mb-0">
-          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+          <div
+            class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
             <i class="pi pi-building text-white text-lg"></i>
           </div>
           <div>
@@ -14,16 +18,15 @@
           </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3">
-          <button type="button" 
-                  class="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-200 hover:text-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  (click)="resetForm()" 
-                  [disabled]="companyForm.pristine">
+          <button type="button"
+            class="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-200 hover:text-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            (click)="resetForm()" [disabled]="companyForm.pristine">
             <i class="pi pi-refresh"></i>
             Reset
           </button>
-          <button type="submit" 
-                  class="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 hover:shadow-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                  [disabled]="companyForm.invalid || companyForm.pristine || isUpdating">
+          <button type="submit"
+            class="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 hover:shadow-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            (click)="onSubmit()" [disabled]="companyForm.invalid || companyForm.pristine || isUpdating">
             <i class="pi pi-check" *ngIf="!isUpdating"></i>
             <i class="pi pi-spin pi-spinner" *ngIf="isUpdating"></i>
             {{ isUpdating ? 'Updating...' : 'Update' }}
@@ -47,15 +50,12 @@
                 Company Name
                 <span class="text-red-500">*</span>
               </label>
-              <input id="companyName" 
-                     type="text" 
-                     pInputText 
-                     formControlName="companyName"
-                     placeholder="Enter your company name" 
-                     class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                     [class.border-red-500]="companyForm.get('companyName')?.invalid && companyForm.get('companyName')?.touched" />
-              <div *ngIf="companyForm.get('companyName')?.invalid && companyForm.get('companyName')?.touched" 
-                   class="flex items-center gap-1 text-sm text-red-600">
+              <input id="companyName" type="text" pInputText formControlName="companyName"
+                placeholder="Enter your company name"
+                class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                [class.border-red-500]="companyForm.get('companyName')?.invalid && companyForm.get('companyName')?.touched" />
+              <div *ngIf="companyForm.get('companyName')?.invalid && companyForm.get('companyName')?.touched"
+                class="flex items-center gap-1 text-sm text-red-600">
                 <i class="pi pi-exclamation-triangle"></i>
                 Company name is required
               </div>
@@ -68,15 +68,11 @@
                 Contact Number
                 <span class="text-red-500">*</span>
               </label>
-              <input id="contactNo" 
-                     type="tel" 
-                     pInputText 
-                     formControlName="contactNo" 
-                     placeholder="Enter contact number"
-                     class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                     [class.border-red-500]="companyForm.get('contactNo')?.invalid && companyForm.get('contactNo')?.touched" />
-              <div *ngIf="companyForm.get('contactNo')?.invalid && companyForm.get('contactNo')?.touched" 
-                   class="flex items-center gap-1 text-sm text-red-600">
+              <input id="contactNo" type="tel" pInputText formControlName="contactNo" placeholder="Enter contact number"
+                class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                [class.border-red-500]="companyForm.get('contactNo')?.invalid && companyForm.get('contactNo')?.touched" />
+              <div *ngIf="companyForm.get('contactNo')?.invalid && companyForm.get('contactNo')?.touched"
+                class="flex items-center gap-1 text-sm text-red-600">
                 <i class="pi pi-exclamation-triangle"></i>
                 Contact number is required
               </div>
@@ -89,15 +85,12 @@
                 Company Email
                 <span class="text-red-500">*</span>
               </label>
-              <input id="companyEmail" 
-                     type="email" 
-                     pInputText 
-                     formControlName="companyEmail"
-                     placeholder="Enter company email"
-                     class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                     [class.border-red-500]="companyForm.get('companyEmail')?.invalid && companyForm.get('companyEmail')?.touched" />
-              <div *ngIf="companyForm.get('companyEmail')?.invalid && companyForm.get('companyEmail')?.touched" 
-                   class="flex items-center gap-1 text-sm text-red-600">
+              <input id="companyEmail" type="email" pInputText formControlName="companyEmail"
+                placeholder="Enter company email"
+                class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                [class.border-red-500]="companyForm.get('companyEmail')?.invalid && companyForm.get('companyEmail')?.touched" />
+              <div *ngIf="companyForm.get('companyEmail')?.invalid && companyForm.get('companyEmail')?.touched"
+                class="flex items-center gap-1 text-sm text-red-600">
                 <i class="pi pi-exclamation-triangle"></i>
                 <span *ngIf="companyForm.get('companyEmail')?.errors?.['required']">Email is required</span>
                 <span *ngIf="companyForm.get('companyEmail')?.errors?.['email']">Please enter a valid email</span>
@@ -111,15 +104,12 @@
                 Company Type
                 <span class="text-red-500">*</span>
               </label>
-              <input id="companyType" 
-                     type="text" 
-                     pInputText 
-                     formControlName="companyType"
-                     placeholder="e.g., Technology, Healthcare, Finance"
-                     class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                     [class.border-red-500]="companyForm.get('companyType')?.invalid && companyForm.get('companyType')?.touched" />
-              <div *ngIf="companyForm.get('companyType')?.invalid && companyForm.get('companyType')?.touched" 
-                   class="flex items-center gap-1 text-sm text-red-600">
+              <input id="companyType" type="text" pInputText formControlName="companyType"
+                placeholder="e.g., Technology, Healthcare, Finance"
+                class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                [class.border-red-500]="companyForm.get('companyType')?.invalid && companyForm.get('companyType')?.touched" />
+              <div *ngIf="companyForm.get('companyType')?.invalid && companyForm.get('companyType')?.touched"
+                class="flex items-center gap-1 text-sm text-red-600">
                 <i class="pi pi-exclamation-triangle"></i>
                 Company type is required
               </div>
@@ -141,15 +131,12 @@
                 Company Address
                 <span class="text-red-500">*</span>
               </label>
-              <textarea id="companyAddress" 
-                        pInputText 
-                        formControlName="companyAddress"
-                        placeholder="Enter complete company address"
-                        rows="3"
-                        class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-vertical text-base"
-                        [class.border-red-500]="companyForm.get('companyAddress')?.invalid && companyForm.get('companyAddress')?.touched"></textarea>
-              <div *ngIf="companyForm.get('companyAddress')?.invalid && companyForm.get('companyAddress')?.touched" 
-                   class="flex items-center gap-1 text-sm text-red-600">
+              <textarea id="companyAddress" pInputText formControlName="companyAddress"
+                placeholder="Enter complete company address" rows="3"
+                class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-vertical text-base"
+                [class.border-red-500]="companyForm.get('companyAddress')?.invalid && companyForm.get('companyAddress')?.touched"></textarea>
+              <div *ngIf="companyForm.get('companyAddress')?.invalid && companyForm.get('companyAddress')?.touched"
+                class="flex items-center gap-1 text-sm text-red-600">
                 <i class="pi pi-exclamation-triangle"></i>
                 Company address is required
               </div>
@@ -163,15 +150,11 @@
                   City
                   <span class="text-red-500">*</span>
                 </label>
-                <input id="companyCity" 
-                       type="text" 
-                       pInputText 
-                       formControlName="companyCity" 
-                       placeholder="Enter city"
-                       class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                       [class.border-red-500]="companyForm.get('companyCity')?.invalid && companyForm.get('companyCity')?.touched" />
-                <div *ngIf="companyForm.get('companyCity')?.invalid && companyForm.get('companyCity')?.touched" 
-                     class="flex items-center gap-1 text-sm text-red-600">
+                <input id="companyCity" type="text" pInputText formControlName="companyCity" placeholder="Enter city"
+                  class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                  [class.border-red-500]="companyForm.get('companyCity')?.invalid && companyForm.get('companyCity')?.touched" />
+                <div *ngIf="companyForm.get('companyCity')?.invalid && companyForm.get('companyCity')?.touched"
+                  class="flex items-center gap-1 text-sm text-red-600">
                   <i class="pi pi-exclamation-triangle"></i>
                   City is required
                 </div>
@@ -184,15 +167,11 @@
                   State
                   <span class="text-red-500">*</span>
                 </label>
-                <input id="companyState" 
-                       type="text" 
-                       pInputText 
-                       formControlName="companyState" 
-                       placeholder="Enter state"
-                       class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
-                       [class.border-red-500]="companyForm.get('companyState')?.invalid && companyForm.get('companyState')?.touched" />
-                <div *ngIf="companyForm.get('companyState')?.invalid && companyForm.get('companyState')?.touched" 
-                     class="flex items-center gap-1 text-sm text-red-600">
+                <input id="companyState" type="text" pInputText formControlName="companyState" placeholder="Enter state"
+                  class="w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-base"
+                  [class.border-red-500]="companyForm.get('companyState')?.invalid && companyForm.get('companyState')?.touched" />
+                <div *ngIf="companyForm.get('companyState')?.invalid && companyForm.get('companyState')?.touched"
+                  class="flex items-center gap-1 text-sm text-red-600">
                   <i class="pi pi-exclamation-triangle"></i>
                   State is required
                 </div>

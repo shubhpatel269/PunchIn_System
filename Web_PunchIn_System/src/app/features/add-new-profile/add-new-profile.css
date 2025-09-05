@@ -1,0 +1,670 @@
+.add-profile-container {
+  background: white;
+  min-height: 100vh;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.step-indicator {
+  display: flex;
+  gap: 1rem;
+}
+
+.step {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #999;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.step-completed {
+  color: #999;
+}
+
+.step-current {
+  color: #333;
+  border-bottom: 2px solid #333;
+}
+
+.step-pending {
+  color: #ccc;
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+
+/* Profile Picture Section */
+.profile-picture-section {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-picture-container {
+  position: relative;
+  cursor: pointer;
+  width: 200px;
+  height: 200px;
+}
+
+.profile-picture {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-placeholder {
+  font-size: 1.5rem;
+  color: #999;
+}
+
+.camera-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.camera-icon i {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Upload Dialog */
+.upload-dialog-content {
+  padding: 1rem 0;
+}
+
+.upload-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-option:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  color: #007bff;
+}
+
+.upload-option h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.upload-option p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.current-image-section {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+.current-image-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.current-image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.current-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+
+.remove-current-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-current-btn:hover {
+  background: #c82333;
+}
+
+/* Camera Dialog */
+.camera-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.camera-btn-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Form Section */
+.form-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-field label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.form-input,
+.form-select {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+  background: white;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-input.error,
+.form-select.error {
+  border-color: #dc3545;
+}
+
+.dropdown-container {
+  position: relative;
+}
+
+.form-select {
+  appearance: none;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666;
+}
+
+.date-input-container {
+  position: relative;
+}
+
+.date-input {
+  padding-right: 2.5rem;
+}
+
+.date-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #666;
+}
+
+/* Additional Information Section */
+.additional-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.additional-info-section .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 1rem 0;
+}
+
+/* Form Select Styles */
+.form-select {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+  background: white;
+  width: 100%;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.form-select.error {
+  border-color: #dc3545;
+}
+
+.form-select optgroup {
+  font-weight: 600;
+  color: #333;
+  background: #f8f9fa;
+}
+
+.form-select option {
+  padding: 0.5rem;
+  color: #333;
+}
+
+/* Designation Container */
+.designation-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.designation-container .form-select {
+  flex: 1;
+  padding-right: 2.5rem;
+}
+
+.refresh-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn i {
+  font-size: 0.9rem;
+}
+
+/* Error Text */
+.error-text {
+  font-size: 0.8rem;
+  color: #dc3545;
+  margin-top: 0.25rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 100px;
+}
+
+.btn-secondary {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.btn-secondary:hover {
+  background: #e9ecef;
+  border-color: #d0d7de;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-primary:active {
+  background: #004085;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .form-row,
+  .additional-info-section .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .profile-picture-container {
+    align-self: center;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .add-profile-container {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .step-indicator {
+    align-self: flex-end;
+  }
+}
+
+/* PrimeNG DatePicker Styles */
+:host ::ng-deep .p-datepicker {
+  width: 100%;
+}
+
+:host ::ng-deep .p-datepicker .p-inputtext {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .p-datepicker .p-inputtext:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+:host ::ng-deep .p-datepicker .p-inputtext.error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+:host ::ng-deep .p-datepicker .p-datepicker-trigger {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: 1px solid #007bff;
+  border-left: none;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .p-datepicker .p-datepicker-trigger:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+:host ::ng-deep .p-datepicker .p-datepicker-trigger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+/* DatePicker Popup Styles */
+:host ::ng-deep .p-datepicker-panel {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  background: white;
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-datepicker-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-datepicker-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+:host ::ng-deep .p-datepicker-prev,
+:host ::ng-deep .p-datepicker-next {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+:host ::ng-deep .p-datepicker-prev:hover,
+:host ::ng-deep .p-datepicker-next:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+}
+
+:host ::ng-deep .p-datepicker-month,
+:host ::ng-deep .p-datepicker-year {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+:host ::ng-deep .p-datepicker-calendar th {
+  background: #f8f9fa;
+  color: #666;
+  font-weight: 600;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+:host ::ng-deep .p-datepicker-calendar td {
+  padding: 0.25rem;
+}
+
+:host ::ng-deep .p-datepicker-calendar td > span {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #333;
+}
+
+:host ::ng-deep .p-datepicker-calendar td > span:hover {
+  background: #e3f2fd;
+  color: #007bff;
+  transform: scale(1.1);
+}
+
+:host ::ng-deep .p-datepicker-calendar td.p-datepicker-today > span {
+  background: #007bff;
+  color: white;
+  font-weight: 600;
+}
+
+:host ::ng-deep .p-datepicker-calendar td.p-datepicker-selected > span {
+  background: #28a745;
+  color: white;
+  font-weight: 600;
+}
+
+:host ::ng-deep .p-datepicker-calendar td.p-datepicker-other-month > span {
+  color: #ccc;
+}
+
+:host ::ng-deep .p-datepicker-calendar td.p-datepicker-other-month > span:hover {
+  background: #f8f9fa;
+  color: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  :host ::ng-deep .p-datepicker .p-inputtext {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  :host ::ng-deep .p-datepicker .p-datepicker-trigger {
+    padding: 0.75rem;
+  }
+  
+  :host ::ng-deep .p-datepicker-calendar td > span {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.9rem;
+  }
+}

@@ -7,7 +7,7 @@ import { AddUser } from '../add-user/add-user';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 
 @Component({
@@ -25,7 +25,8 @@ export class ManageEmployee implements OnInit, OnDestroy {
     private employeeService: Employee,
     public dialogService: DialogService,
     private messageService: MessageService,
-    public confirmationService: ConfirmationService
+    public confirmationService: ConfirmationService,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -59,20 +60,7 @@ export class ManageEmployee implements OnInit, OnDestroy {
   }
 
   addEmployee(){
-     this.dialogRef = this.dialogService.open(AddUser, {
-      width: '35vw',
-      styleClass: 'right-model',
-      transitionOptions: '0ms',
-      closable: false,
-      showHeader: false,
-    });
-    this.dialogRef.onClose.subscribe((result) => {
-      if (result === 'updated') {
-        this.employeeService.getEmployees().subscribe((data) => {
-          this.employees = data;
-        });
-      }
-    });
+    this.router.navigate(['/admin/add-employee']);
   }
 
   confirmDelete(event: Event, employee: any) {
