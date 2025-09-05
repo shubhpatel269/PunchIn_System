@@ -429,6 +429,9 @@ export class AddNewProfileComponent implements OnInit {
         const faceDescriptorArray = this.faceDescriptor ? Array.from(this.faceDescriptor) : [];
         const faceId = faceDescriptorArray.length > 0 ? JSON.stringify(faceDescriptorArray).replace(/\n/g, '') : '';
         
+        // Format DOB to YYYY-MM-DD format
+        const formattedDob = this.formatDateForAPI(formData.dob);
+        
         // Prepare employee data according to API structure
         const employeeData: Employee = {
           employeeId: formData.employeeId,
@@ -438,7 +441,7 @@ export class AddNewProfileComponent implements OnInit {
           employeeMiddleName: formData.middleName || null,
           employeeLastName: formData.lastName,
           employeeEmail: formData.email,
-          employeeDob: formData.dob, // Date should be in YYYY-MM-DD format
+          employeeDob: formattedDob, // Date in YYYY-MM-DD format
           employeePhone: formData.phone,
           employeeFaceImage: formData.image,
           employeeFaceId: faceId,
@@ -560,6 +563,43 @@ export class AddNewProfileComponent implements OnInit {
     } catch (error) {
       // User data parsing failed
       return 0; // Default fallback
+    }
+  }
+
+  private formatDateForAPI(dateValue: any): string {
+    if (!dateValue) {
+      return '';
+    }
+    
+    try {
+      // Handle different date input types
+      let date: Date;
+      
+      if (typeof dateValue === 'string') {
+        // If it's already a string, try to parse it
+        date = new Date(dateValue);
+      } else if (dateValue instanceof Date) {
+        // If it's already a Date object
+        date = dateValue;
+      } else {
+        // Fallback to current date
+        date = new Date();
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      
+      // Format as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
     }
   }
 

@@ -24,8 +24,8 @@
         <td>{{ employee.name }}</td>
         <td>{{ employee.phone || employee.phoneNo }}</td>
         <td>
-          <button type="button" pButton icon="pi pi-user-edit" class="p-button-text p-button-sm"
-            (click)="onEdit(employee)" title="Edit"></button>
+          <!-- <button type="button" pButton icon="pi pi-user-edit" class="p-button-text p-button-sm"
+            (click)="onEdit(employee)" title="Edit"></button> -->
             
           <button type="button" pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
             (click)="confirmDelete($event, employee)" title="Delete"></button>

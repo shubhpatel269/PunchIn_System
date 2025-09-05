@@ -3,7 +3,6 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { Employee } from '../../shared/services/employee';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { AddUser } from '../add-user/add-user';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -41,23 +40,23 @@ export class ManageEmployee implements OnInit, OnDestroy {
     }
   }
 
-  onEdit(employee: any) {
-    this.dialogRef = this.dialogService.open(AddUser, {
-      data: { employee },
-      width: '35vw',
-      styleClass: 'right-model',
-      transitionOptions: '0ms',
-      closable: false,
-      showHeader: false,
-    });
-    this.dialogRef.onClose.subscribe((result) => {
-      if (result === 'updated') {
-        this.employeeService.getEmployees().subscribe((data) => {
-          this.employees = data;
-        });
-      }
-    });
-  }
+  // onEdit(employee: any) {
+  //   this.dialogRef = this.dialogService.open(AddUser, {
+  //     data: { employee },
+  //     width: '35vw',
+  //     styleClass: 'right-model',
+  //     transitionOptions: '0ms',
+  //     closable: false,
+  //     showHeader: false,
+  //   });
+  //   this.dialogRef.onClose.subscribe((result) => {
+  //     if (result === 'updated') {
+  //       this.employeeService.getEmployees().subscribe((data) => {
+  //         this.employees = data;
+  //       });
+  //     }
+  //   });
+  // }
 
   addEmployee(){
     this.router.navigate(['/admin/add-employee']);
