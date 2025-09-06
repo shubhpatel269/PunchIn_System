@@ -113,7 +113,10 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   switchToNoneTab() {
-    this.activeTab = 'none';
+    if(this.activeTab == 'user'){
+      this.stopVideo();
+      }  
+      this.activeTab = 'none';
     this.showAdminLogin = false;
     this.showSignIn = false;
     if (this.isFaceDetected) {
