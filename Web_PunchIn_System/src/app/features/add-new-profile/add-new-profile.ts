@@ -12,6 +12,7 @@ import { ImageModule } from 'primeng/image';
 import { DatePicker } from 'primeng/datepicker';
 import { DesignationService, Designation } from '../../shared/services/designation.service';
 import { EmployeeService, Employee } from '../../shared/services/employee.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 
 
@@ -37,11 +38,15 @@ export class AddNewProfileComponent implements OnInit {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-
   designationOptions: { label: string; value: number }[] = [];
   designations: Designation[] = [];
   loadingDesignations = false;
   isSubmitting = false;
+  
+  // Edit mode properties
+  isEditMode = false;
+  editingEmployee: Employee | null = null;
+  pageTitle = 'Add Employee';
   
   // Date picker constraints
   maxDate = new Date();
@@ -51,7 +56,9 @@ export class AddNewProfileComponent implements OnInit {
     private fb: FormBuilder,
     private messageService: MessageService,
     private designationService: DesignationService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.profileForm = this.fb.group({
       employeeId: ['', Validators.required],
@@ -68,11 +75,75 @@ export class AddNewProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Initialize with default profile image
-    this.selectedImage = 'assets/images/default-profile.png';
+    // Check if we're in edit mode based on route parameters
+    const employeeId = this.route.snapshot.paramMap.get('id');
+    if (employeeId) {
+      this.isEditMode = true;
+      this.pageTitle = 'Edit Employee';
+      this.loadEmployeeForEdit(employeeId);
+    } else {
+      // Initialize with default profile image for new employee
+      this.selectedImage = 'assets/images/default-profile.png';
+    }
     
     // Load designations from service
     this.loadDesignations();
+  }
+
+  loadEmployeeForEdit(employeeId: string): void {
+    this.employeeService.getEmployeeById(employeeId).subscribe({
+      next: (employee) => {
+        this.editingEmployee = employee;
+        this.populateFormForEdit();
+      },
+      error: (error) => {
+        console.error('Error loading employee for edit:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load employee data for editing'
+        });
+        this.router.navigate(['/admin/manage-employee']);
+      }
+    });
+  }
+
+  populateFormForEdit(): void {
+    if (this.editingEmployee) {
+      // Update form validation for edit mode (image not required)
+      this.profileForm.get('image')?.clearValidators();
+      this.profileForm.get('image')?.updateValueAndValidity();
+
+      // Set the form values
+      this.profileForm.patchValue({
+        employeeId: this.editingEmployee.employeeId,
+        firstName: this.editingEmployee.employeeFirstName,
+        middleName: this.editingEmployee.employeeMiddleName || '',
+        lastName: this.editingEmployee.employeeLastName,
+        designation: this.editingEmployee.employeeDesignationId,
+        email: this.editingEmployee.employeeEmail,
+        phone: this.editingEmployee.employeePhone,
+        dob: this.editingEmployee.employeeDob ? new Date(this.editingEmployee.employeeDob) : '',
+        location: this.editingEmployee.employeeLocationHome,
+        image: this.editingEmployee.employeeFaceImage
+      });
+
+      // Set the image if it exists
+      if (this.editingEmployee.employeeFaceImage) {
+        this.selectedImage = this.editingEmployee.employeeFaceImage;
+        this.uploadedFileName = 'existing-image.png';
+      }
+
+      // Parse face descriptor if it exists
+      if (this.editingEmployee.employeeFaceId) {
+        try {
+          const faceArray = JSON.parse(this.editingEmployee.employeeFaceId);
+          this.faceDescriptor = new Float32Array(faceArray);
+        } catch (error) {
+          console.error('Error parsing face descriptor:', error);
+        }
+      }
+    }
   }
 
   loadDesignations(): void {
@@ -373,9 +444,6 @@ export class AddNewProfileComponent implements OnInit {
     }
   }
 
-  onBack(): void {
-    // Navigate back or handle back action
-  }
 
   onReset(): void {
     // Reset all form values to initial state
@@ -452,23 +520,31 @@ export class AddNewProfileComponent implements OnInit {
         
         
         
-        // Call API to create employee
-        this.employeeService.createEmployee(employeeData).subscribe({
+        // Call API to create or update employee
+        const apiCall = this.isEditMode 
+          ? this.employeeService.updateEmployee(this.editingEmployee!.employeeId, employeeData)
+          : this.employeeService.createEmployee(employeeData);
+          
+        apiCall.subscribe({
           next: (response) => {
             this.isSubmitting = false;
             this.messageService.add({ 
               severity: 'success', 
               summary: 'Success', 
-              detail: 'Employee created successfully!' 
+              detail: this.isEditMode ? 'Employee updated successfully!' : 'Employee created successfully!' 
             });
             
-            // Reset form after successful creation
-            this.resetForm();
+            // Navigate back to manage employee page for edit mode, reset form for create mode
+            if (this.isEditMode) {
+              this.router.navigate(['/admin/manage-employee']);
+            } else {
+              this.resetForm();
+            }
           },
           error: (error) => {
             this.isSubmitting = false;
             
-            let errorMessage = 'Failed to create employee. Please try again.';
+            let errorMessage = this.isEditMode ? 'Failed to update employee. Please try again.' : 'Failed to create employee. Please try again.';
             let errorSummary = 'Error';
             
             // Handle specific error types
@@ -628,5 +704,9 @@ export class AddNewProfileComponent implements OnInit {
     } else {
       return 'step-pending';
     }
+  }
+
+  onBack(): void {
+    this.router.navigate(['/admin/manage-employee']);
   }
 }

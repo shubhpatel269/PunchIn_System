@@ -1,8 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { Employee } from '../../shared/services/employee';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { EmployeeService, Employee } from '../../shared/services/employee.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -15,57 +14,58 @@ import { RouterModule, Router } from '@angular/router';
   imports: [TableModule, ButtonModule, ConfirmDialogModule, Toast, RouterModule],
   templateUrl: './manage-employee.html',
   styleUrl: './manage-employee.css',
-  providers: [Employee, DialogService, ConfirmationService, MessageService]
+  providers: [ConfirmationService, MessageService]
 })
 export class ManageEmployee implements OnInit, OnDestroy {
-  employees: any[] = [];
-  private dialogRef?: DynamicDialogRef;
+  employees: Employee[] = [];
+  loading = false;
+  
   constructor(
-    private employeeService: Employee,
-    public dialogService: DialogService,
+    private employeeService: EmployeeService,
     private messageService: MessageService,
     public confirmationService: ConfirmationService,
     private router: Router
   ) { }
 
   ngOnInit() {
-    this.employeeService.getEmployees().subscribe((data) => {
-      this.employees = data;
+    this.loadEmployees();
+  }
+
+  loadEmployees() {
+    this.loading = true;
+    this.employeeService.getEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading employees:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load employees'
+        });
+      }
     });
   }
 
   ngOnDestroy() {
-    if (this.dialogRef) {
-      this.dialogRef.close();
-    }
+    // No dialog cleanup needed
   }
 
-  // onEdit(employee: any) {
-  //   this.dialogRef = this.dialogService.open(AddUser, {
-  //     data: { employee },
-  //     width: '35vw',
-  //     styleClass: 'right-model',
-  //     transitionOptions: '0ms',
-  //     closable: false,
-  //     showHeader: false,
-  //   });
-  //   this.dialogRef.onClose.subscribe((result) => {
-  //     if (result === 'updated') {
-  //       this.employeeService.getEmployees().subscribe((data) => {
-  //         this.employees = data;
-  //       });
-  //     }
-  //   });
-  // }
+  onEdit(employee: Employee) {
+    this.router.navigate(['/admin/edit-employee', employee.employeeId]);
+  }
 
   addEmployee(){
     this.router.navigate(['/admin/add-employee']);
   }
 
-  confirmDelete(event: Event, employee: any) {
+  confirmDelete(event: Event, employee: Employee) {
     this.confirmationService.confirm({
       target: event.target as EventTarget,
-      message: 'Are you sure you want to delete this user?',
+      message: `Are you sure you want to delete ${employee.employeeFirstName} ${employee.employeeLastName}?`,
       header: 'Delete Confirmation',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Delete',
@@ -80,15 +80,14 @@ export class ManageEmployee implements OnInit, OnDestroy {
         outlined: true,
       },
       accept: () => {
-        this.employeeService.deleteEmployee(employee.id || employee.employeeId).subscribe({
+        this.employeeService.deleteEmployee(employee.employeeId).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'User deleted successfully.' });
-            this.employeeService.getEmployees().subscribe((data) => {
-              this.employees = data;
-            });
+            this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Employee deleted successfully.' });
+            this.loadEmployees();
           },
-          error: () => {
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete user.' });
+          error: (error) => {
+            console.error('Delete error:', error);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete employee.' });
           }
         });
       },

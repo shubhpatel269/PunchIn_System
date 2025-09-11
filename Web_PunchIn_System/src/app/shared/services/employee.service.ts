@@ -42,6 +42,34 @@ export class EmployeeService {
       );
   }
 
+  getEmployees(): Observable<Employee[]> {
+    return this.http.get<Employee[]>(this.apiUrl, { headers: this.getAuthHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  getEmployeeById(employeeId: string): Observable<Employee> {
+    return this.http.get<Employee>(`${this.apiUrl}/${employeeId}`, { headers: this.getAuthHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  updateEmployee(employeeId: string, employee: Employee): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${employeeId}`, employee, { headers: this.getAuthHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  deleteEmployee(employeeId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${employeeId}`, { headers: this.getAuthHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
   private handleError(error: any): Observable<never> {
     return throwError(() => error);
   }

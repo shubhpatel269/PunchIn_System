@@ -4,8 +4,13 @@
   
   <!-- Header -->
   <div class="header">
-    <h1 class="page-title">Add Employee</h1>
-    
+    <div class="header-left">
+      @if (isEditMode) {
+        <button type="button" pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm back-button" 
+                (click)="onBack()" title="Back to Employee List"></button>
+      }
+      <h1 class="page-title">{{ pageTitle }}</h1>
+    </div>
   </div>
 
   <!-- Main Content -->
