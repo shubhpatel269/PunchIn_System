@@ -15,7 +15,7 @@
     <ng-template pTemplate="header">
       <tr>
         <th class="w-20">ID</th>
-        <th>Name</th>
+        <th>Designation</th>
         <th>Description</th>
         <th>Actions</th>
       </tr>
@@ -78,7 +78,7 @@
     <div class="mb-6">
       <!-- Name Field -->
       <div class="flex items-center gap-4 mb-6">
-        <label for="username" class="font-semibold w-24 block mb-2">Name</label>
+        <label for="username" class="font-semibold w-24 block mb-2">Designation</label>
         <div class="flex-auto">
           <input pInputText id="username" type="text" class="w-full" autocomplete="off"
             [(ngModel)]="selectedDesignation.name" required autofocus
