@@ -422,9 +422,6 @@ export class Login implements AfterViewInit, OnDestroy {
         // Send to backend for verification
         this.authService.faceLogin(faceDescriptor).subscribe({
           next: (response) => {
-            // Stop all detection processes
-            this.stopVideo();
-            
             // Get user data from response
             const user = response.user;
             const userName = `${user.employeeFirstName} ${user.employeeLastName}`;
@@ -439,8 +436,13 @@ export class Login implements AfterViewInit, OnDestroy {
             this.detectedUser = `User: ${userName}`;
             this.detectedEmployee = user;
             
-            // Capture snapshot and get location
+            // Capture snapshot BEFORE stopping video
             const imageData = this.captureSnapshot();
+            
+            // Stop all detection processes AFTER capturing snapshot
+            this.stopVideo();
+            
+            // Process the captured snapshot and get location
             this.requestLocationAndSave(imageData);
           },
           error: (error) => {
