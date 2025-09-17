@@ -15,6 +15,7 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { AuthService } from '../../shared/services/auth.service';
 import { PunchService } from '../../shared/services/punch.service';
 import { SessionService } from '../../shared/services/session.service';
+import { LocationLogService } from '../../shared/services/location-log.service';
 
 
 
@@ -108,7 +109,8 @@ export class Login implements AfterViewInit, OnDestroy {
     private ngZone: NgZone,
     private authService: AuthService,
     private punchService: PunchService,
-    private sessionService: SessionService
+    private sessionService: SessionService,
+    private locationLogService: LocationLogService
   ) { }
 
   login() {
@@ -872,8 +874,6 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   trackUserLocation() {
-
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const log: LocationLog = {
@@ -890,6 +890,31 @@ export class Login implements AfterViewInit, OnDestroy {
           detail: `Lat: ${log.lat}, Long: ${log.long}`,
           life: 3000
         });
+
+        try {
+          const sessionIdStr = localStorage.getItem('activeSessionId');
+          const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+          const employeeId = this.detectedEmployee?.employeeId || JSON.parse(localStorage.getItem('punchInUser') || '{}')?.employeeId;
+          if (sessionId && employeeId) {
+            const payload = {
+              sessionId: sessionId,
+              employeeId: employeeId,
+              logTimestamp: new Date().toISOString(),
+              locationLong: log.long,
+              locationLat: log.lat
+            };
+            this.locationLogService.createLog(payload).subscribe({
+              next: () => {
+                // Optional: silent success
+              },
+              error: (err) => {
+                console.warn('Failed to send location log:', err);
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('Location log payload build failed:', e);
+        }
       },
       (error) => {
         this.messageService.add({
