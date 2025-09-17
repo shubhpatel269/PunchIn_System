@@ -129,13 +129,22 @@
               styleClass="w-full"
               severity="warn">
             </p-button>
-            <p-button 
-              label="Take Break" 
-              icon="pi pi-pause" 
-              (onClick)="takeBreak()"
-              styleClass="w-full"
-              severity="info">
-            </p-button>
+            <div class="grid grid-cols-1 pt-2 sm:grid-cols-2 items-center">
+              <div class="sm:col-span-1">
+                <select [(ngModel)]="currentBreakType" class="w-40 p-2 border rounded">
+                  <option *ngFor="let t of breakTypes" [ngValue]="t.value">{{ t.label }}</option>
+                </select>
+              </div>
+              <div class="sm:col-span-1">
+                <p-button 
+                  [label]="isOnBreak ? 'End Break' : 'Start Break'" 
+                  [icon]="isOnBreak ? 'pi pi-play' : 'pi pi-pause'" 
+                  (onClick)="takeBreak()"
+                  styleClass="w-full"
+                  [severity]="isOnBreak ? 'success' : 'info'">
+                </p-button>
+              </div>
+            </div>
             <p-button 
               label="View Attendance" 
               icon="pi pi-calendar" 

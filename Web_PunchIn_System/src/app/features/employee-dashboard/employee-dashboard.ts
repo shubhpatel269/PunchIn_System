@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -9,9 +10,12 @@ import { ChartModule } from 'primeng/chart';
 import { DividerModule } from 'primeng/divider';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
+// Removed p-dropdown usage in favor of native select
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../shared/services/auth.service';
+import { SessionService } from '../../shared/services/session.service';
+import { BreakService } from '../../shared/services/break.service';
 
 interface AttendanceRecord {
   date: string;
@@ -36,6 +40,7 @@ interface AttendanceStats {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     CardModule,
     ButtonModule,
     BadgeModule,
@@ -81,7 +86,9 @@ export class EmployeeDashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private messageService: MessageService,
-    private authService: AuthService
+    private authService: AuthService,
+    private sessionService: SessionService,
+    private breakService: BreakService
   ) {
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
@@ -235,25 +242,94 @@ export class EmployeeDashboardComponent implements OnInit {
     const diffHours = diffMs / (1000 * 60 * 60);
     
     this.todayAttendance.totalHours = Math.round(diffHours * 10) / 10;
+    const totalHours = this.todayAttendance ? this.todayAttendance.totalHours : 0;
 
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Punch Out Successful',
-      detail: `You punched out at ${punchOutTime}. Total hours: ${this.todayAttendance.totalHours}`,
-      life: 4000
-    });
+    const sessionIdStr = localStorage.getItem('activeSessionId');
+    const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+    const payload = {
+      sessionStatus: 'completed',
+      sessionEndTime: new Date().toISOString(),
+      sessionBreakTime: null
+    };
 
-    // Save to localStorage
-    localStorage.setItem('todayPunchOut', punchOutTime);
+    if (sessionId) {
+      this.sessionService.endSession(sessionId, payload).subscribe({
+        next: () => {
+          localStorage.removeItem('activeSessionId');
+          localStorage.removeItem('activePunchId');
+          localStorage.removeItem('punchInUser');
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Punch Out Successful',
+            detail: `You punched out at ${punchOutTime}. Total hours: ${totalHours}`,
+            life: 3000
+          });
+          this.router.navigate(['/login']);
+        },
+        error: () => {
+          // Navigate even if session end fails
+          this.router.navigate(['/login']);
+        }
+      });
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
+  private activeBreakId: number | null = null;
+  isOnBreak: boolean = false;
+  currentBreakType: string = 'general';
+  breakTypes = [
+    { label: 'General', value: 'general' },
+    { label: 'Lunch', value: 'lunch' },
+    { label: 'Tea/Coffee', value: 'tea' },
+    { label: 'Personal', value: 'personal' }
+  ];
+
   takeBreak() {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Break Started',
-      detail: 'Your break has been recorded. Remember to return on time!',
-      life: 3000
-    });
+    const sessionIdStr = localStorage.getItem('activeSessionId');
+    const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+    const employeeId = this.user?.employeeId || JSON.parse(localStorage.getItem('punchInUser') || '{}')?.employeeId;
+
+    if (!sessionId || !employeeId) {
+      this.messageService.add({ severity: 'warn', summary: 'Cannot Start Break', detail: 'No active session found.', life: 3000 });
+      return;
+    }
+
+    if (!this.isOnBreak) {
+      const payload = {
+        sessionId,
+        employeeId,
+        breakStart: new Date().toISOString(),
+        breakEnd: null,
+        breakType: this.currentBreakType
+      };
+      this.breakService.startBreak(payload).subscribe({
+        next: (res) => {
+          this.activeBreakId = res?.breakId ?? res?.id ?? null;
+          this.isOnBreak = true;
+          this.messageService.add({ severity: 'info', summary: 'Break Started', detail: 'Enjoy your break!', life: 3000 });
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Break Failed', detail: 'Could not start break.', life: 3000 });
+        }
+      });
+    } else if (this.activeBreakId) {
+      const payload = {
+        breakEnd: new Date().toISOString(),
+        breakType: this.currentBreakType
+      };
+      this.breakService.endBreak(this.activeBreakId, payload).subscribe({
+        next: () => {
+          this.isOnBreak = false;
+          this.activeBreakId = null;
+          this.messageService.add({ severity: 'success', summary: 'Break Ended', detail: 'Welcome back!', life: 3000 });
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Break End Failed', detail: 'Could not end break.', life: 3000 });
+        }
+      });
+    }
   }
 
   viewAttendance() {
