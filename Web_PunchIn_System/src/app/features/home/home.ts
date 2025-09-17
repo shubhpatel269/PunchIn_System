@@ -60,13 +60,41 @@ export class Home implements OnInit {
   }
 
   onLogout() {
+    const activePunchIdStr = localStorage.getItem('activePunchId');
+    const punchId = activePunchIdStr ? parseInt(activePunchIdStr, 10) : null;
+    const userData = this.userData;
+    const employeeId = userData?.employeeId;
+    const sessionIdStr = localStorage.getItem('activeSessionId');
+    const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+    const lat = 0;
+    const long = 0;
+
+    const proceed = () => {
     localStorage.removeItem('punchInUser');
-    
-    this.router.navigateByUrl('/login', { skipLocationChange: false }).then(() => {
-    }).catch(err => {
+      localStorage.removeItem('activePunchId');
+      this.router.navigateByUrl('/login', { skipLocationChange: false }).catch(err => {
       console.error('Navigation error:', err);
       window.location.href = '/login';
     });
+    };
+
+    if (sessionId) {
+      // Lazy import to avoid tight coupling; service is providedIn root
+      import('../../shared/services/session.service').then(({ SessionService }) => {
+        const injector = (window as any).ng && (window as any).ng.getInjector && (window as any).ng.getInjector(this as any);
+        // Fallback: proceed if injector not available in this context
+        if (!injector) { proceed(); return; }
+        const sessionService = injector.get(SessionService);
+        const payload = {
+          sessionStatus: 'completed',
+          sessionEndTime: new Date().toISOString(),
+          sessionBreakTime: null
+        };
+        sessionService.endSession(sessionId, payload).subscribe({ next: proceed, error: proceed });
+      }).catch(() => proceed());
+    } else {
+      proceed();
+    }
   }
 
   confirmBackToLogin(event: Event) {

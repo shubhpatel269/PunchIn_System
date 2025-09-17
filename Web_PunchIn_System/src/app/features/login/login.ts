@@ -82,6 +82,7 @@ export class Login implements AfterViewInit, OnDestroy {
   lastFaceNotRecognizedTime: number = 0;
   private lastFaceDescriptor: number[] | null = null;
   private nextRoute: string[] | null = null;
+  private activePunchId: number | null = null;
   detectedUser: string = "";
   faceDetectionInterval: any = null;
 
@@ -204,6 +205,7 @@ export class Login implements AfterViewInit, OnDestroy {
 
   async ngOnInit() {
     await this.loadModels();
+    localStorage.clear();
   }
 
 
@@ -670,6 +672,10 @@ export class Login implements AfterViewInit, OnDestroy {
           this.punchService.punchIn(punchPayload).subscribe({
             next: (punchResponse) => {
               const punchId = punchResponse?.punchId ?? punchResponse?.id ?? 0;
+              this.activePunchId = punchId || null;
+              if (this.activePunchId) {
+                localStorage.setItem('activePunchId', String(this.activePunchId));
+              }
               if (!punchId) {
                 console.warn('PunchIn response missing punchId. Response:', punchResponse);
               }
@@ -677,7 +683,7 @@ export class Login implements AfterViewInit, OnDestroy {
               const sessionPayload = {
                 punchId: punchId,
                 employeeId: this.detectedEmployee.employeeId,
-                sessionStatus: 'Active',
+                sessionStatus: 'active',
                 sessionStartTime: new Date().toISOString(),
                 sessionEndTime: null,
                 sessionLocationLong: long || 0,
@@ -686,14 +692,18 @@ export class Login implements AfterViewInit, OnDestroy {
               };
 
               this.sessionService.startSession(sessionPayload).subscribe({
-                next: () => {
-                  this.messageService.add({
-                    severity: 'success',
-                    summary: 'Punch-In Successful',
+                next: (sessionResponse) => {
+                  const sessionId = sessionResponse?.sessionId ?? sessionResponse?.id ?? null;
+                  if (sessionId) {
+                    localStorage.setItem('activeSessionId', String(sessionId));
+                  }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Punch-In Successful',
                     detail: `Welcome ${userData.name}!`,
                     life: 3000
-                  });
-                  this.startSession();
+          });
+          this.startSession();
                   // set next route and start countdown (do not navigate immediately)
                   this.nextRoute = ['/employee/dashboard'];
                   this.startNavigationCountdown();

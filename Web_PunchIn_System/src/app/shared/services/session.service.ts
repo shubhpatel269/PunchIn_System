@@ -14,6 +14,12 @@ export interface SessionTimeRequest {
   sessionBreakTime: string | null;
 }
 
+export interface SessionEndRequest {
+  sessionStatus: string;
+  sessionEndTime: string;
+  sessionBreakTime: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SessionService {
   private apiUrl = 'https://localhost:7127/api/SessionTime';
@@ -32,5 +38,10 @@ export class SessionService {
     return this.http.post<any>(this.apiUrl, payload, { headers: this.getAuthHeaders() })
       .pipe(catchError(error => throwError(() => error)));
   }
-}
 
+  endSession(punchId: number, payload: SessionEndRequest): Observable<any> {
+    // Update the existing session for given punchId
+    return this.http.put<any>(`${this.apiUrl}/${punchId}`, payload, { headers: this.getAuthHeaders() })
+      .pipe(catchError(error => throwError(() => error)));
+  }
+}
