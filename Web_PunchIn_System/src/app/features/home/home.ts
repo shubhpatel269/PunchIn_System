@@ -42,19 +42,19 @@ export class Home implements OnInit {
   ) { }
 
   ngOnInit() {
-    console.log('Home component initialized');
+    
     const data = localStorage.getItem('punchInUser');
     if (data) {
       try {
         this.userData = JSON.parse(data);
-        console.log('User data loaded:', this.userData);
+        
         // Stay on home page to show dashboard with navigation
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        
         this.router.navigate(['/login']);
       }
     } else {
-      console.warn('No user data found in localStorage');
+      
       this.router.navigate(['/login']);
     }
   }
@@ -73,7 +73,7 @@ export class Home implements OnInit {
     localStorage.removeItem('punchInUser');
       localStorage.removeItem('activePunchId');
       this.router.navigateByUrl('/login', { skipLocationChange: false }).catch(err => {
-      console.error('Navigation error:', err);
+        
       window.location.href = '/login';
     });
     };
@@ -98,7 +98,7 @@ export class Home implements OnInit {
   }
 
   confirmBackToLogin(event: Event) {
-    console.log('Confirmation dialog triggered');
+    
     
     this.confirmationService.confirm({
       target: event.target as HTMLElement,

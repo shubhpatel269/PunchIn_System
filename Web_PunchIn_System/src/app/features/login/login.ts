@@ -228,7 +228,7 @@ export class Login implements AfterViewInit, OnDestroy {
       // Start the blink detection loop
       this.detectFaceWithBlink();
     } catch (error) {
-      console.error('Error initializing face recognition:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Initialization Error',
@@ -255,7 +255,7 @@ export class Login implements AfterViewInit, OnDestroy {
         numFaces: 1
       });
     } catch (error) {
-      console.error('Error initializing MediaPipe:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -300,7 +300,7 @@ export class Login implements AfterViewInit, OnDestroy {
       return Promise.resolve();
 
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      
       this.camera_permission = false;
       this.messageService.add({
         severity: 'warn',
@@ -373,7 +373,7 @@ export class Login implements AfterViewInit, OnDestroy {
             this.showBlinkInstruction = false;
           }
         } catch (error) {
-          console.error('Error in face detection loop:', error);
+          
           // Continue detection even if there's an error
         }
       }
@@ -457,7 +457,7 @@ export class Login implements AfterViewInit, OnDestroy {
             this.requestLocationAndSave(imageData);
           },
           error: (error) => {
-            console.error('Face login failed:', error);
+            
             this.messageService.add({
               severity: 'warn',
               summary: 'Face Not Recognized',
@@ -488,7 +488,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.showBlinkInstruction = true;
       }
     } catch (error) {
-      console.error('Error in face recognition:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Recognition Error',
@@ -560,7 +560,7 @@ export class Login implements AfterViewInit, OnDestroy {
           this.detectedEmployee = null;
         }
       } catch (error) {
-        console.error('Error in face detection:', error);
+        
         // Clear interval on error
         clearInterval(this.faceDetectionInterval);
         this.faceDetectionInterval = null;
@@ -571,11 +571,11 @@ export class Login implements AfterViewInit, OnDestroy {
   // Find best matching face from database using face descriptor
   findBestMatch(queryDescriptor: Float32Array) {
     if (!queryDescriptor || queryDescriptor.length === 0) {
-      console.error('Invalid query descriptor');
+      
       return null;
     }
 
-    console.log('Starting face matching with', this.employeeDescriptors.length, 'stored descriptors');
+    
 
     let minDistance = 0.6; // Increased threshold to be more permissive
     let bestMatch = null;
@@ -583,24 +583,24 @@ export class Login implements AfterViewInit, OnDestroy {
     for (const emp of this.employeeDescriptors) {
       try {
         if (!emp.descriptor || !(emp.descriptor instanceof Float32Array)) {
-          console.warn('Invalid descriptor for employee:', emp.name);
+          
           continue;
         }
 
         const distance = faceapi.euclideanDistance(emp.descriptor, queryDescriptor);
-        console.log(`Distance to ${emp.name} (ID: ${emp.id}):`, distance);
+        
 
         if (distance < minDistance) {
           minDistance = distance;
           bestMatch = emp;
-          console.log(`New best match found: ${emp.name} with distance ${distance}`);
+          
         }
       } catch (error) {
-        console.error(`Error comparing with employee ${emp.name}:`, error);
+        
       }
     }
 
-    console.log('Best match:', bestMatch ? `${bestMatch.name} (distance: ${minDistance})` : 'No match found');
+    
     return bestMatch;
   }
 
@@ -618,7 +618,7 @@ export class Login implements AfterViewInit, OnDestroy {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = canvas.toDataURL('image/jpeg');
-      console.log('Snapshot taken');
+      
       return imageData;
     }
 
@@ -679,7 +679,7 @@ export class Login implements AfterViewInit, OnDestroy {
                 localStorage.setItem('activePunchId', String(this.activePunchId));
               }
               if (!punchId) {
-                console.warn('PunchIn response missing punchId. Response:', punchResponse);
+                
               }
 
               const sessionPayload = {
@@ -711,7 +711,7 @@ export class Login implements AfterViewInit, OnDestroy {
                   this.startNavigationCountdown();
                 },
                 error: (err) => {
-                  console.error('Session start API failed:', err);
+                  
                   this.messageService.add({
                     severity: 'error',
                     summary: 'Session Start Failed',
@@ -722,7 +722,7 @@ export class Login implements AfterViewInit, OnDestroy {
               });
             },
             error: (err) => {
-              console.error('PunchIn API failed:', err);
+              
               this.messageService.add({
                 severity: 'error',
                 summary: 'Punch-In Failed',
@@ -825,7 +825,7 @@ export class Login implements AfterViewInit, OnDestroy {
           this.videoRef.nativeElement.srcObject = null;
           this.videoRef.nativeElement.pause();
         } catch (e) {
-          console.warn('Error while stopping video tracks:', e);
+          
         }
       }
       
@@ -835,7 +835,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.videoRef.nativeElement.load();
       }
     } catch (error) {
-      console.error('Error stopping video:', error);
+      
     }
   }
 
@@ -844,33 +844,16 @@ export class Login implements AfterViewInit, OnDestroy {
     this.sessionActive = true;
     this.sessionStartTime = new Date();
 
-    // Log when setInterval is scheduled
-    const intervalScheduledAt = performance.now();
-    console.log('setInterval scheduled at:', intervalScheduledAt);
 
     this.locationInterval = setInterval(() => {
-      const intervalCallbackAt = performance.now();
-      console.log(
-        'setInterval callback at:', intervalCallbackAt,
-        '| Delay since scheduled:', (intervalCallbackAt - intervalScheduledAt).toFixed(2), 'ms'
-      );
       this.trackUserLocation();
-    }, 10 * 1000); // 10 sec for fast check
+    }, 30 * 60 * 1000); // 30 min 
 
-    // Log when setTimeout is scheduled
-    const timeoutScheduledAt = performance.now();
-    console.log('setTimeout scheduled at:', timeoutScheduledAt);
 
     this.sessionTimer = setTimeout(() => {
-      const timeoutCallbackAt = performance.now();
-      console.log(
-        'setTimeout callback at:', timeoutCallbackAt,
-        '| Delay since scheduled:', (timeoutCallbackAt - timeoutScheduledAt).toFixed(2), 'ms'
-      );
       this.endSession();
-    }, 60 * 60 * 1000); // 1 hour
+    }, 4 * 60 * 60 * 1000); // 4 hours
 
-    console.log("WFH session tracking started.");
   }
 
   trackUserLocation() {
@@ -882,7 +865,7 @@ export class Login implements AfterViewInit, OnDestroy {
           long: position.coords.longitude
         };
         this.locationLogs.push(log);
-        console.log(" Location logged:", log);
+        
 
         this.messageService.add({
           severity: 'info',
@@ -908,12 +891,12 @@ export class Login implements AfterViewInit, OnDestroy {
                 // Optional: silent success
               },
               error: (err) => {
-                console.warn('Failed to send location log:', err);
+                
               }
             });
           }
         } catch (e) {
-          console.warn('Location log payload build failed:', e);
+          
         }
       },
       (error) => {
@@ -1013,7 +996,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.timerWorker.postMessage('stop');
         this.timerWorker.terminate();
       } catch (e) {
-        console.warn('Error terminating timer worker:', e);
+        
       } finally {
         this.timerWorker = undefined;
       }
