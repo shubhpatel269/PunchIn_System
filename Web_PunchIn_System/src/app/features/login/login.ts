@@ -13,6 +13,8 @@ import { Employee } from '../../shared/services/employee';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { AuthService } from '../../shared/services/auth.service';
+import { PunchService } from '../../shared/services/punch.service';
+import { SessionService } from '../../shared/services/session.service';
 
 
 
@@ -78,6 +80,8 @@ export class Login implements AfterViewInit, OnDestroy {
   isLoadingDescriptors: boolean = true;
   detectedEmployee: any = null;
   lastFaceNotRecognizedTime: number = 0;
+  private lastFaceDescriptor: number[] | null = null;
+  private nextRoute: string[] | null = null;
   detectedUser: string = "";
   faceDetectionInterval: any = null;
 
@@ -101,7 +105,9 @@ export class Login implements AfterViewInit, OnDestroy {
     private employeeService: Employee,
     private confirmationService: ConfirmationService,
     private ngZone: NgZone,
-    private authService: AuthService
+    private authService: AuthService,
+    private punchService: PunchService,
+    private sessionService: SessionService
   ) { }
 
   login() {
@@ -418,6 +424,7 @@ export class Login implements AfterViewInit, OnDestroy {
       if (result) {
         // Convert Float32Array to regular array for JSON serialization
         const faceDescriptor = Array.from(result.descriptor);
+        this.lastFaceDescriptor = faceDescriptor;
         
         // Send to backend for verification
         this.authService.faceLogin(faceDescriptor).subscribe({
@@ -621,7 +628,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.longitude = position.coords.longitude;
         const lat: number = this.latitude;
         const long: number = this.longitude;
-        const timestamp: string = new Date().toLocaleString();
+        const timestamp: string = new Date().toISOString();
 
         // Store punch data
         const punch: Punch = {
@@ -634,7 +641,7 @@ export class Login implements AfterViewInit, OnDestroy {
         };
 
         this.punchData.push(punch);
-        // Store user details in localStorage
+        // Store user details in localStorage and call PunchIn API
         if (this.detectedEmployee) {
           const userData = {
             name: `${this.detectedEmployee.employeeFirstName} ${this.detectedEmployee.employeeLastName}`,
@@ -642,23 +649,76 @@ export class Login implements AfterViewInit, OnDestroy {
             employeeId: this.detectedEmployee.employeeId,
             companyId: this.detectedEmployee.companyId,
             location: lat && long ? `${lat}, ${long}` : '',
-            punchedTime: timestamp,
+            punchedTime: new Date().toLocaleString(),
             mobile: this.detectedEmployee.employeePhone
           };
 
           // Save user data to localStorage
           localStorage.setItem('punchInUser', JSON.stringify(userData));
 
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Punch-In Successful',
-            detail: `Welcome ${userData.name}! You punched in at ${timestamp}`,
-            life: 4000
-          });
+          // Prepare punch payload
+          const punchPayload = {
+            employeeId: this.detectedEmployee.employeeId,
+            punchTimestamp: timestamp,
+            punchFaceUrl: imageData,
+            punchFaceId: JSON.stringify(this.lastFaceDescriptor || []),
+            punchLocationLong: long || 0,
+            punchLocationLat: lat || 0
+          };
 
-          // Navigate to home after a short delay
-          this.startNavigationCountdown();
-          this.startSession();
+          // Call PunchIn API; on success start session, then start countdown
+          this.punchService.punchIn(punchPayload).subscribe({
+            next: (punchResponse) => {
+              const punchId = punchResponse?.punchId ?? punchResponse?.id ?? 0;
+              if (!punchId) {
+                console.warn('PunchIn response missing punchId. Response:', punchResponse);
+              }
+
+              const sessionPayload = {
+                punchId: punchId,
+                employeeId: this.detectedEmployee.employeeId,
+                sessionStatus: 'Active',
+                sessionStartTime: new Date().toISOString(),
+                sessionEndTime: null,
+                sessionLocationLong: long || 0,
+                sessionLocationLat: lat || 0,
+                sessionBreakTime: null
+              };
+
+              this.sessionService.startSession(sessionPayload).subscribe({
+                next: () => {
+                  this.messageService.add({
+                    severity: 'success',
+                    summary: 'Punch-In Successful',
+                    detail: `Welcome ${userData.name}!`,
+                    life: 3000
+                  });
+                  this.startSession();
+                  // set next route and start countdown (do not navigate immediately)
+                  this.nextRoute = ['/employee/dashboard'];
+                  this.startNavigationCountdown();
+                },
+                error: (err) => {
+                  console.error('Session start API failed:', err);
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'Session Start Failed',
+                    detail: 'Could not start your work session. Please try again.',
+                    life: 4000
+                  });
+                }
+              });
+            },
+            error: (err) => {
+              console.error('PunchIn API failed:', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Punch-In Failed',
+                detail: 'Could not record punch. Please try again.',
+                life: 4000
+              });
+            }
+          });
         }
       },
       (error) => {
@@ -695,7 +755,13 @@ export class Login implements AfterViewInit, OnDestroy {
       } else {
         this.timerRequestId = null;
         this.ngZone.run(() => {
-          // Navigate to the appropriate dashboard based on user role
+          // Use nextRoute if provided; otherwise fallback to role-based navigation
+          if (this.nextRoute) {
+            const route = this.nextRoute;
+            this.nextRoute = null;
+            this.router.navigate(route);
+            return;
+          }
           const userRole = localStorage.getItem('user_role');
           if (userRole === 'Admin') {
             this.router.navigate(['/admin']);
