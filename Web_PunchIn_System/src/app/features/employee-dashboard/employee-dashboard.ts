@@ -16,13 +16,14 @@ import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../shared/services/auth.service';
 import { SessionService } from '../../shared/services/session.service';
 import { BreakService } from '../../shared/services/break.service';
+import { AttendanceService } from '../../shared/services/attendance.service';
 
 interface AttendanceRecord {
   date: string;
-  punchIn: string | null;
-  punchOut: string | null;
-  totalHours: number;
-  status: 'present' | 'absent' | 'late' | 'half-day';
+  sessionStart: string | null;
+  sessionEnd: string | null;
+  totalHours: string;
+  totalBreak: string;
 }
 
 interface AttendanceStats {
@@ -74,21 +75,16 @@ export class EmployeeDashboardComponent implements OnInit {
   hoursChartData: any;
   chartOptions: any;
 
-  // Mock data for demonstration
-  recentAttendance: AttendanceRecord[] = [
-    { date: '2024-01-15', punchIn: '09:00 AM', punchOut: '06:00 PM', totalHours: 8, status: 'present' },
-    { date: '2024-01-14', punchIn: '09:15 AM', punchOut: '05:45 PM', totalHours: 7.5, status: 'late' },
-    { date: '2024-01-13', punchIn: '08:45 AM', punchOut: '06:15 PM', totalHours: 8.5, status: 'present' },
-    { date: '2024-01-12', punchIn: '09:00 AM', punchOut: '05:30 PM', totalHours: 7.5, status: 'present' },
-    { date: '2024-01-11', punchIn: null, punchOut: null, totalHours: 0, status: 'absent' }
-  ];
+  // Recent attendance data from API
+  recentAttendance: AttendanceRecord[] = [];
 
   constructor(
     private router: Router,
     private messageService: MessageService,
     private authService: AuthService,
     private sessionService: SessionService,
-    private breakService: BreakService
+    private breakService: BreakService,
+    private attendanceService: AttendanceService
   ) {
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
@@ -97,6 +93,7 @@ export class EmployeeDashboardComponent implements OnInit {
   ngOnInit() {
     this.loadUserData();
     this.loadTodayAttendance();
+    this.loadRecentAttendance();
     this.loadAttendanceStats();
     this.initializeCharts();
   }
@@ -122,22 +119,44 @@ export class EmployeeDashboardComponent implements OnInit {
       if (punchInTime) {
         this.todayAttendance = {
           date: today,
-          punchIn: punchInTime,
-          punchOut: null,
-          totalHours: 0,
-          status: 'present'
+          sessionStart: punchInTime,
+          sessionEnd: null,
+          totalHours: '00:00:00',
+          totalBreak: '00:00:00'
         };
       }
+    }
+  }
+
+  loadRecentAttendance() {
+    const employeeId = this.user?.employeeId;
+    if (employeeId) {
+      this.attendanceService.getRecentAttendance(employeeId).subscribe({
+        next: (data) => {
+          this.recentAttendance = data;
+          this.loadAttendanceStats();
+          this.initializeCharts();
+        },
+        error: (err) => {
+          console.error('Failed to load recent attendance:', err);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Data Load Failed',
+            detail: 'Could not load recent attendance data.',
+            life: 3000
+          });
+        }
+      });
     }
   }
 
   loadAttendanceStats() {
     // Calculate stats from recent attendance
     const totalDays = this.recentAttendance.length;
-    const presentDays = this.recentAttendance.filter(r => r.status === 'present' || r.status === 'late').length;
-    const absentDays = this.recentAttendance.filter(r => r.status === 'absent').length;
-    const lateDays = this.recentAttendance.filter(r => r.status === 'late').length;
-    const totalHours = this.recentAttendance.reduce((sum, r) => sum + r.totalHours, 0);
+    const presentDays = this.recentAttendance.filter(r => r.sessionStart && r.sessionEnd).length;
+    const absentDays = this.recentAttendance.filter(r => !r.sessionStart && !r.sessionEnd).length;
+    const lateDays = this.recentAttendance.filter(r => r.sessionStart && this.isLate(r.sessionStart)).length;
+    const totalHours = this.recentAttendance.reduce((sum, r) => sum + this.parseHours(r.totalHours), 0);
 
     this.attendanceStats = {
       totalDays,
@@ -148,6 +167,27 @@ export class EmployeeDashboardComponent implements OnInit {
       totalHours,
       averageHours: totalDays > 0 ? totalHours / totalDays : 0
     };
+  }
+
+  private isLate(sessionStart: string): boolean {
+    // Check if session start is after 9:00 AM
+    const startTime = new Date(sessionStart);
+    const lateTime = new Date(startTime);
+    lateTime.setHours(9, 0, 0, 0);
+    return startTime > lateTime;
+  }
+
+  private parseHours(timeString: string): number {
+    if (!timeString) return 0;
+    // Parse HH:MM:SS format to decimal hours
+    const parts = timeString.split(':');
+    if (parts.length >= 3) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      const seconds = parseFloat(parts[2]);
+      return hours + (minutes / 60) + (seconds / 3600);
+    }
+    return 0;
   }
 
   initializeCharts() {
@@ -207,42 +247,37 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   punchOut() {
-    if (!this.todayAttendance?.punchIn) {
+    if (!this.todayAttendance?.sessionStart) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'No Punch In',
-        detail: 'You need to punch in first before punching out.',
+        summary: 'No Session Start',
+        detail: 'You need to start a session first before ending it.',
         life: 3000
       });
       return;
     }
 
-    if (this.todayAttendance.punchOut) {
+    if (this.todayAttendance.sessionEnd) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Already Punched Out',
-        detail: 'You have already punched out for today.',
+        summary: 'Already Ended Session',
+        detail: 'You have already ended your session for today.',
         life: 3000
       });
       return;
     }
 
-    const punchOutTime = new Date().toLocaleTimeString('en-US', { 
-      hour12: true, 
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
-
-    this.todayAttendance.punchOut = punchOutTime;
+    const sessionEndTime = new Date().toISOString();
+    this.todayAttendance.sessionEnd = sessionEndTime;
     
     // Calculate total hours
-    const punchInTime = new Date(`2000-01-01 ${this.todayAttendance.punchIn}`);
-    const punchOutTimeDate = new Date(`2000-01-01 ${punchOutTime}`);
-    const diffMs = punchOutTimeDate.getTime() - punchInTime.getTime();
+    const sessionStartTime = new Date(this.todayAttendance.sessionStart);
+    const sessionEndTimeDate = new Date(sessionEndTime);
+    const diffMs = sessionEndTimeDate.getTime() - sessionStartTime.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
     
-    this.todayAttendance.totalHours = Math.round(diffHours * 10) / 10;
-    const totalHours = this.todayAttendance ? this.todayAttendance.totalHours : 0;
+    this.todayAttendance.totalHours = this.formatTimeSpan(diffHours);
+    const totalHours = this.todayAttendance ? this.formatHours(this.todayAttendance.totalHours) : '0h';
 
     const sessionIdStr = localStorage.getItem('activeSessionId');
     const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
@@ -261,7 +296,7 @@ export class EmployeeDashboardComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Punch Out Successful',
-            detail: `You punched out at ${punchOutTime}. Total hours: ${totalHours}`,
+            detail: `You ended session at ${this.formatTime(sessionEndTime)}. Total hours: ${totalHours}`,
             life: 3000
           });
           this.router.navigate(['/login']);
@@ -342,24 +377,25 @@ export class EmployeeDashboardComponent implements OnInit {
 
 
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'present': return 'success';
-      case 'absent': return 'danger';
-      case 'late': return 'warning';
-      case 'half-day': return 'info';
-      default: return 'secondary';
-    }
+  getStatusColor(record: AttendanceRecord): string {
+    if (!record.sessionStart && !record.sessionEnd) return 'danger'; // absent
+    if (record.sessionStart && this.isLate(record.sessionStart)) return 'warning'; // late
+    if (record.sessionStart && record.sessionEnd) return 'success'; // present
+    return 'info'; // partial
   }
 
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'present': return 'pi pi-check-circle';
-      case 'absent': return 'pi pi-times-circle';
-      case 'late': return 'pi pi-clock';
-      case 'half-day': return 'pi pi-minus-circle';
-      default: return 'pi pi-question-circle';
-    }
+  getStatusIcon(record: AttendanceRecord): string {
+    if (!record.sessionStart && !record.sessionEnd) return 'pi pi-times-circle';
+    if (record.sessionStart && this.isLate(record.sessionStart)) return 'pi pi-clock';
+    if (record.sessionStart && record.sessionEnd) return 'pi pi-check-circle';
+    return 'pi pi-minus-circle';
+  }
+
+  getStatusText(record: AttendanceRecord): string {
+    if (!record.sessionStart && !record.sessionEnd) return 'Absent';
+    if (record.sessionStart && this.isLate(record.sessionStart)) return 'Late';
+    if (record.sessionStart && record.sessionEnd) return 'Present';
+    return 'Partial';
   }
 
   getCurrentDate(): string {
@@ -377,5 +413,41 @@ export class EmployeeDashboardComponent implements OnInit {
       day: 'numeric', 
       year: 'numeric' 
     });
+  }
+
+  formatTime(timeString: string | null | undefined): string {
+    if (!timeString) return '-';
+    // If it's already in HH:MM AM/PM format, return as is
+    if (timeString.includes('AM') || timeString.includes('PM')) {
+      return timeString;
+    }
+    // If it's in ISO format or other format, try to parse and format
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString('en-US', { 
+        hour12: true, 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch {
+      return timeString; // Return original if parsing fails
+    }
+  }
+
+  formatHours(hours: string): string {
+    if (!hours || hours === '0' || hours === '00:00:00') return '0h';
+    // If it's already in HH:MM:SS format, convert to decimal hours
+    const decimalHours = this.parseHours(hours);
+    if (decimalHours < 1) {
+      return `${Math.round(decimalHours * 100) / 100}h`;
+    }
+    return `${Math.round(decimalHours * 10) / 10}h`;
+  }
+
+  private formatTimeSpan(hours: number): string {
+    const h = Math.floor(hours);
+    const m = Math.floor((hours - h) * 60);
+    const s = Math.floor(((hours - h) * 60 - m) * 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
 }
