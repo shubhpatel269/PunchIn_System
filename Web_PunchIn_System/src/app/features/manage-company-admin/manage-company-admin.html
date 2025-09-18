@@ -13,11 +13,6 @@
   </div>
 
   <div class="card">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="flex justify-content-center p-5">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-    <!-- hello -->
     <!-- Error State -->
     <div *ngIf="error && !loading" class="p-3">
       <p-message severity="error">
@@ -26,7 +21,7 @@
     </div>
 
     <!-- Table -->
-    <p-table [value]="admins" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" [loading]="loading"
+    <p-table [value]="loading ? skeletonRows : admins" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
       [lazy]="false" [showLoader]="false"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
       [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '60rem'}"
@@ -42,23 +37,35 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-admin>
-        <tr>
-          <td>{{admin.displayId}}</td>
-          <td>{{admin.name}}</td>
-          <td>{{admin.email}}</td>
-          <td>{{admin.phone}}</td>
-
+      <ng-template pTemplate="body" let-row>
+        <tr *ngIf="loading; else adminRow">
+          <td class="skeleton-cell"><p-skeleton width="4rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="10rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="14rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="8rem" height="1rem"></p-skeleton></td>
           <td>
             <div class="flex gap-2">
-              <button pButton pRipple type="button" icon="pi pi-pencil"
-                class="p-button-rounded p-button-text p-button-primary" (click)="editAdmin(admin)"></button>
-
-              <button pButton pRipple type="button" icon="pi pi-trash"
-                class="p-button-rounded p-button-text p-button-danger" (click)="deleteAdmin(admin)"></button>
+              <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
+              <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
             </div>
           </td>
         </tr>
+        <ng-template #adminRow>
+          <tr>
+            <td>{{row.displayId}}</td>
+            <td>{{row.name}}</td>
+            <td>{{row.email}}</td>
+            <td>{{row.phone}}</td>
+            <td>
+              <div class="flex gap-2">
+                <button pButton pRipple type="button" icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-primary" (click)="editAdmin(row)"></button>
+                <button pButton pRipple type="button" icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger" (click)="deleteAdmin(row)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">

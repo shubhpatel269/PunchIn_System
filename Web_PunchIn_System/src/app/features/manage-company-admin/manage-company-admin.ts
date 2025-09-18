@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CompanyAdminService } from '../../shared/services/company-admin.service';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
+import { SkeletonModule } from 'primeng/skeleton';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
@@ -37,6 +38,7 @@ interface CompanyAdmin {
     RouterModule,
     TagModule,
     ProgressSpinnerModule,
+    SkeletonModule,
     MessageModule
   ],
   templateUrl: './manage-company-admin.html',
@@ -48,6 +50,7 @@ export default class ManageCompanyAdmin implements OnInit, OnDestroy {
   loading: boolean = true;
   error: string | null = null;
   private dialogRef?: DynamicDialogRef;
+  skeletonRows: any[] = Array(5).fill({});
 
   constructor(
     public dialogService: DialogService,

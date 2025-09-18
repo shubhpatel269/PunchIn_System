@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SkeletonModule } from 'primeng/skeleton';
 import { DesignationService, Designation } from '../../shared/services/designation.service';
 
 @Component({
@@ -25,7 +26,8 @@ import { DesignationService, Designation } from '../../shared/services/designati
     TagModule,
     ToastModule,
     ConfirmDialogModule,
-    CheckboxModule
+    CheckboxModule,
+    SkeletonModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './manage-designation.html',
@@ -34,6 +36,7 @@ import { DesignationService, Designation } from '../../shared/services/designati
 export class ManageDesignation implements OnInit {
   designations: Designation[] = [];
   loading = false;
+  skeletonRows: any[] = Array(5).fill({});
   
   selectedDesignation: Designation = this.createEmptyDesignation();
   displayDialog = false;

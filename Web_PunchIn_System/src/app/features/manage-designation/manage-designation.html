@@ -11,7 +11,7 @@
   </div>
 
   <div class="card">
-    <p-table [value]="designations" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" [loading]="loading">
+    <p-table [value]="loading ? skeletonRows : designations" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
     <ng-template pTemplate="header">
       <tr>
         <th class="w-20">ID</th>
@@ -20,41 +20,56 @@
         <th>Actions</th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-designation let-i="rowIndex">
-      <tr>
-        <td>{{i + 1}}</td>
+    <ng-template pTemplate="body" let-row let-i="rowIndex">
+      <tr *ngIf="loading; else designationRow">
+        <td class="skeleton-cell"><p-skeleton width="3rem" height="1rem"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="10rem" height="1rem"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="16rem" height="1rem"></p-skeleton></td>
         <td>
-          <input *ngIf="isEditing(designation)" 
-                 pInputText 
-                 [(ngModel)]="editingData.name" 
-                 class="w-full p-inputtext border-0 outline-none text-base p-0 font-['Poppins']"
-                 placeholder="Enter designation name">
-          <span *ngIf="!isEditing(designation)">{{designation.name}}</span>
-        </td>
-        <td>
-          <textarea *ngIf="isEditing(designation)" 
-                    [(ngModel)]="editingData.description" 
-                    class="w-full p-inputtext border-0 outline-none text-base p-0 font-['Poppins']" 
-                    rows="1"
-                    placeholder="Enter description"></textarea>
-          <span *ngIf="!isEditing(designation)">{{designation.description || '-'}}</span>
-        </td>
-        <td>
-          <div *ngIf="!isEditing(designation)" class="flex gap-2">
-            <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm mr-2"
-              (click)="editDesignation(designation)"></button>
-            <button pButton pRipple type="button" icon="pi pi-trash"
-              class="p-button-rounded p-button-text p-button-sm p-button-danger"
-              (click)="deleteDesignation(designation)"></button>
-          </div>
-          <div *ngIf="isEditing(designation)" class="flex gap-2">
-            <button pButton pRipple type="button" icon="pi pi-check" class="p-button-rounded p-button-text p-button-sm p-button-success"
-              (click)="saveInlineEdit()" 
-              [disabled]="!editingData.name.trim()"></button>
-            <button pButton pRipple type="button" icon="pi pi-times" class="p-button-rounded p-button-text p-button-sm p-button-secondary"
-              (click)="cancelEdit()"></button>
+          <div class="flex gap-2">
+            <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
+            <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
           </div>
         </td>
+      </tr>
+      <ng-template #designationRow>
+        <tr>
+          <td>{{i + 1}}</td>
+          <td>
+            <input *ngIf="isEditing(row)" 
+                   pInputText 
+                   [(ngModel)]="editingData.name" 
+                   class="w-full p-inputtext border-0 outline-none text-base p-0 font-['Poppins']"
+                   placeholder="Enter designation name">
+            <span *ngIf="!isEditing(row)">{{row.name}}</span>
+          </td>
+          <td>
+            <textarea *ngIf="isEditing(row)" 
+                      [(ngModel)]="editingData.description" 
+                      class="w-full p-inputtext border-0 outline-none text-base p-0 font-['Poppins']" 
+                      rows="1"
+                      placeholder="Enter description"></textarea>
+            <span *ngIf="!isEditing(row)">{{row.description || '-'}}
+            </span>
+          </td>
+          <td>
+            <div *ngIf="!isEditing(row)" class="flex gap-2">
+              <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-sm mr-2"
+                (click)="editDesignation(row)"></button>
+              <button pButton pRipple type="button" icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-sm p-button-danger"
+                (click)="deleteDesignation(row)"></button>
+            </div>
+            <div *ngIf="isEditing(row)" class="flex gap-2">
+              <button pButton pRipple type="button" icon="pi pi-check" class="p-button-rounded p-button-text p-button-sm p-button-success"
+                (click)="saveInlineEdit()" 
+                [disabled]="!editingData.name.trim()"></button>
+              <button pButton pRipple type="button" icon="pi pi-times" class="p-button-rounded p-button-text p-button-sm p-button-secondary"
+                (click)="cancelEdit()"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
