@@ -16,33 +16,7 @@ import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
-interface CompanyRegistrationData {
-  companyName: string;
-  contactNo: string;
-  companyEmail: string;
-  companyType: string;
-  companyAddress: string;
-  companyCity: string;
-  companyState: string;
-  adminFirstName: string;
-  adminMiddleName: string | null;
-  adminLastName: string;
-  adminEmail: string;
-  adminPassword: string;
-  adminPhone: string;
-  adminDob: string;
-}
-
-interface RegistrationResponse {
-  companyId: number;
-  companyName: string;
-  adminId: number;
-  adminEmail: string;
-  adminFirstName: string;
-  adminLastName: string;
-  createdAt: string;
-  message: string;
-}
+import { CompanyService, CompanyRegistrationData, RegistrationResponse } from '../../shared/services/company.service';
 
 @Component({
   selector: 'app-company-register',
@@ -101,9 +75,10 @@ export class CompanyRegister implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    // private http: HttpClient, // replaced by CompanyService
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private companyService: CompanyService
   ) {}
 
   ngOnInit() {
@@ -167,10 +142,7 @@ export class CompanyRegister implements OnInit {
 
       console.log('Sending registration data:', registrationData);
 
-      const response = await this.http.post<RegistrationResponse>(
-        'https://localhost:7127/api/Company/register',
-        registrationData
-      ).toPromise();
+      const response = await this.companyService.registerCompany(registrationData).toPromise();
 
       this.registrationResponse = response!;
       this.activeStep = 2;

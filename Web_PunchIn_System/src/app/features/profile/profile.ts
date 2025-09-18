@@ -8,32 +8,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../shared/services/auth.service';
+import { CompanyService, CompanyProfile, CompanyUpdateRequest } from '../../shared/services/company.service';
 
-interface CompanyProfile {
-  companyId: number;
-  companyName: string;
-  contactNo: string;
-  companyEmail: string;
-  companyType: string;
-  companyAddress: string;
-  companyCity: string;
-  companyState: string;
-  companyCreatedAt: string;
-  companyCreatedBySuperadminId: number;
-  companyIsDeleted: boolean;
-  companyDeletedAt: string;
-  companyDeletedBySuperadminId: number;
-}
-
-interface CompanyUpdateRequest {
-  companyName: string;
-  contactNo: string;
-  companyEmail: string;
-  companyType: string;
-  companyAddress: string;
-  companyCity: string;
-  companyState: string;
-}
+// Interfaces are imported from CompanyService
 
 @Component({
   selector: 'app-profile',
@@ -58,9 +35,10 @@ export class Profile implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    // private http: HttpClient, // removed direct HttpClient usage
     private messageService: MessageService,
-    private authService: AuthService
+    private authService: AuthService,
+    private companyService: CompanyService
   ) {
     this.companyForm = this.fb.group({
       companyName: ['', [Validators.required, Validators.minLength(2)]],
@@ -79,25 +57,7 @@ export class Profile implements OnInit {
 
   loadCompanyProfile() {
     this.loading = true;
-    const token = this.authService.getToken();
-    
-    if (!token) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Authentication Error',
-        detail: 'No authentication token found. Please login again.',
-        life: 5000
-      });
-      this.loading = false;
-      return;
-    }
-    
-    this.http.get<CompanyProfile | CompanyProfile[]>('https://localhost:7127/api/Company', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }).subscribe({
+    this.companyService.getCompany().subscribe({
       next: (data) => {
         // Handle array response - take the first item
         const companyData = Array.isArray(data) ? data[0] : data;
@@ -160,7 +120,6 @@ export class Profile implements OnInit {
   onSubmit() {
     if (this.companyForm.valid) {
       this.isUpdating = true;
-      const token = this.authService.getToken();
       const updateData: CompanyUpdateRequest = this.companyForm.value;
 
       // Check if we have company data with ID
@@ -177,12 +136,7 @@ export class Profile implements OnInit {
 
       const companyId = this.companyData.companyId;
 
-      this.http.put(`https://localhost:7127/api/Company/${companyId}`, updateData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).subscribe({
+      this.companyService.updateCompany(companyId, updateData).subscribe({
         next: (response) => {
           this.messageService.add({
             severity: 'success',
