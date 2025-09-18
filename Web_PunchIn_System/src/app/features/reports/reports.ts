@@ -117,9 +117,10 @@ export class Reports implements OnInit {
       { day: 'S', duration: 10 }
     ],
     teamComparisonData: {
-      employeeBreaks: 70,
-      teamAverageBreaks: 80,
-      employeeBreakDuration: 80,
+
+      employeeBreaks: 65,
+      teamAverageBreaks: 55,
+      employeeBreakDuration: 55,
       teamBreakDuration: 75
     }
   };
