@@ -36,6 +36,8 @@ export class ManageEmployee implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    // Start in loading state to show skeletons and avoid early empty message
+    this.loading = true;
     // Load designations first, then employees
     this.loadDesignations();
   }

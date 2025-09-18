@@ -36,8 +36,19 @@
 
       <!-- Form Section -->
       <form [formGroup]="companyForm" (ngSubmit)="onSubmit()" class="p-4 lg:p-8">
+        <!-- Skeletons while loading -->
+        <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div class="space-y-2" *ngFor="let i of [1,2,3,4,5,6]">
+            <p-skeleton width="8rem" height="1rem"></p-skeleton>
+            <p-skeleton height="2.75rem" borderRadius="0.5rem"></p-skeleton>
+          </div>
+          <div class="md:col-span-2 lg:col-span-3 space-y-3">
+            <p-skeleton width="10rem" height="1rem"></p-skeleton>
+            <p-skeleton height="6.5rem" borderRadius="0.5rem"></p-skeleton>
+          </div>
+        </div>
         <!-- Basic Information Section -->
-        <div class="mb-6">
+        <div class="mb-6" *ngIf="!loading">
           <h3 class="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-6">
             <i class="pi pi-briefcase text-blue-500"></i>
             Basic Information
@@ -118,7 +129,7 @@
         </div>
 
         <!-- Address Information Section -->
-        <div class="mb-8">
+        <div class="mb-8" *ngIf="!loading">
           <h3 class="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-6">
             <i class="pi pi-map-marker text-blue-500"></i>
             Address Information

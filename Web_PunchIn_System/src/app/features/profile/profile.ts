@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../shared/services/auth.service';
 import { CompanyService, CompanyProfile, CompanyUpdateRequest } from '../../shared/services/company.service';
+import { SkeletonModule } from 'primeng/skeleton';
 
 // Interfaces are imported from CompanyService
 
@@ -20,7 +21,8 @@ import { CompanyService, CompanyProfile, CompanyUpdateRequest } from '../../shar
     CardModule,
     InputTextModule,
     ButtonModule,
-    ToastModule
+    ToastModule,
+    SkeletonModule
   ],
   providers: [MessageService],
   templateUrl: './profile.html'
