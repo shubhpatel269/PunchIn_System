@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
+import { SkeletonModule } from 'primeng/skeleton';
 import { EmployeeService, Employee } from '../../shared/services/employee.service';
 import { DesignationService, Designation } from '../../shared/services/designation.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -12,7 +14,7 @@ import { RouterModule, Router } from '@angular/router';
 @Component({
   selector: 'app-manage-employee',
   standalone: true,
-  imports: [TableModule, ButtonModule, ConfirmDialogModule, Toast, RouterModule],
+  imports: [CommonModule, TableModule, ButtonModule, ConfirmDialogModule, Toast, RouterModule, SkeletonModule],
   templateUrl: './manage-employee.html',
   styleUrl: './manage-employee.css',
   providers: [ConfirmationService, MessageService]
@@ -23,6 +25,7 @@ export class ManageEmployee implements OnInit, OnDestroy {
   designationMap: { [key: number]: string } = {};
   loading = false;
   loadingDesignations = false;
+  skeletonRows: any[] = Array(5).fill({});
   
   constructor(
     private employeeService: EmployeeService,

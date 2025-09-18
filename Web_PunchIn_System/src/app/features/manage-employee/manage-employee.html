@@ -9,7 +9,7 @@
     <p-confirmDialog></p-confirmDialog>
   </div>
   
-  <p-table [value]="employees" [loading]="loading" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" 
+  <p-table [value]="loading ? skeletonRows : employees" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" 
            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries">
     <ng-template pTemplate="header">
       <tr>
@@ -22,27 +22,37 @@
         <th>Actions</th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-employee>
-      <tr>
-        <td>{{ employee.employeeId }}</td>
-        <td>{{ employee.employeeFirstName }} {{ employee.employeeMiddleName }} {{ employee.employeeLastName }}</td>
-        <td>{{ employee.employeeEmail }}</td>
-        <td>{{ employee.employeePhone }}</td>
-        <td [class]="loadingDesignations ? 'loading-designation' : ''">{{ getDesignationName(employee.employeeDesignationId || employee.designationId || employee.designation) }}</td>
-        <!-- <td>
-          <span [class]="employee.employeeIsActive ? 'badge badge-success' : 'badge badge-danger'">
-            {{ employee.employeeIsActive ? 'Active' : 'Inactive' }}
-          </span>
-        </td> -->
+    <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+      <tr *ngIf="loading; else dataRow">
+        <td class="skeleton-cell"><p-skeleton width="5rem" height="1rem" borderRadius="8px"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="10rem" height="1rem" borderRadius="8px"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="12rem" height="1rem" borderRadius="8px"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="7rem" height="1rem" borderRadius="8px"></p-skeleton></td>
+        <td class="skeleton-cell"><p-skeleton width="9rem" height="1rem" borderRadius="8px"></p-skeleton></td>
         <td>
           <div class="action-buttons">
-            <button type="button" pButton icon="pi pi-user-edit" class="p-button-text p-button-sm p-button-info"
-              (click)="onEdit(employee)" title="Edit Employee"></button>
-            <button type="button" pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
-              (click)="confirmDelete($event, employee)" title="Delete Employee"></button>
+            <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
+            <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
           </div>
         </td>
       </tr>
+      <ng-template #dataRow>
+        <tr>
+          <td>{{ row.employeeId }}</td>
+          <td>{{ row.employeeFirstName }} {{ row.employeeMiddleName }} {{ row.employeeLastName }}</td>
+          <td>{{ row.employeeEmail }}</td>
+          <td>{{ row.employeePhone }}</td>
+          <td [class]="loadingDesignations ? 'loading-designation' : ''">{{ getDesignationName(row.employeeDesignationId || row.designationId || row.designation) }}</td>
+          <td>
+            <div class="action-buttons">
+              <button type="button" pButton icon="pi pi-user-edit" class="p-button-text p-button-sm p-button-info"
+                (click)="onEdit(row)" title="Edit Employee"></button>
+              <button type="button" pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                (click)="confirmDelete($event, row)" title="Delete Employee"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
