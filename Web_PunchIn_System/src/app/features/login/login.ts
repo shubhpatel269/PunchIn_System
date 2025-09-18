@@ -9,7 +9,6 @@ import { ImageModule } from 'primeng/image';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { Employee } from '../../shared/services/employee';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { AuthService } from '../../shared/services/auth.service';
@@ -104,7 +103,6 @@ export class Login implements AfterViewInit, OnDestroy {
 
   constructor(private router: Router,
     private messageService: MessageService,
-    private employeeService: Employee,
     private confirmationService: ConfirmationService,
     private ngZone: NgZone,
     private authService: AuthService,

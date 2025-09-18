@@ -16,7 +16,7 @@ export interface Designation {
   providedIn: 'root'
 })
 export class DesignationService {
-  private apiUrl = 'https://localhost:7127/api/Designation';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Designation';
 
   constructor(private http: HttpClient) { }
 

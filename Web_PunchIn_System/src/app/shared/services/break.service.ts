@@ -18,7 +18,7 @@ export interface BreakEndRequest {
 
 @Injectable({ providedIn: 'root' })
 export class BreakService {
-  private apiUrl = 'https://localhost:7127/api/Break';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Break';
 
   constructor(private http: HttpClient) {}
 

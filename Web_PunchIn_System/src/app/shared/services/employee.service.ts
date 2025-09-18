@@ -23,7 +23,7 @@ export interface Employee {
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = 'https://localhost:7127/api/Employee';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Employee';
 
   constructor(private http: HttpClient) { }
 

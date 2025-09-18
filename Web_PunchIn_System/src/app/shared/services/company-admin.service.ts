@@ -4,7 +4,7 @@ import { Observable, catchError, throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class CompanyAdminService {
-  private apiUrl = 'https://localhost:7127/api/Admin';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Admin';
 
   constructor(private http: HttpClient) {}
 

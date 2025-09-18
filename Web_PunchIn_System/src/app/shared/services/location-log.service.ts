@@ -13,7 +13,7 @@ export interface LocationLogRequest {
 
 @Injectable({ providedIn: 'root' })
 export class LocationLogService {
-  private apiUrl = 'https://localhost:7127/api/LocationLog';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/LocationLog';
 
   constructor(private http: HttpClient) {}
 

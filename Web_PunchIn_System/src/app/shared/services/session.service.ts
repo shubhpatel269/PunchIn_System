@@ -22,7 +22,7 @@ export interface SessionEndRequest {
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-  private apiUrl = 'https://localhost:7127/api/SessionTime';
+  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/SessionTime';
 
   constructor(private http: HttpClient) {}
 
