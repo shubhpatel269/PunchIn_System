@@ -630,7 +630,10 @@ export class Login implements AfterViewInit, OnDestroy {
         this.longitude = position.coords.longitude;
         const lat: number = this.latitude;
         const long: number = this.longitude;
-        const timestamp: string = new Date().toISOString();
+        
+        // Create timestamp that's slightly in the past to avoid "future timestamp" error
+        const now = new Date();
+        const timestamp: string = new Date(now.getTime() - 1000).toISOString(); // 1 second in the past
 
         // Store punch data
         const punch: Punch = {
@@ -659,13 +662,26 @@ export class Login implements AfterViewInit, OnDestroy {
           localStorage.setItem('punchInUser', JSON.stringify(userData));
 
           // Prepare punch payload
+          const faceDescriptorString = JSON.stringify(this.lastFaceDescriptor || []);
+          
+          // Check if face descriptor is valid
+          if (!this.lastFaceDescriptor || this.lastFaceDescriptor.length === 0) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Face Recognition Error',
+              detail: 'Face descriptor not available. Please try again.',
+              life: 4000
+            });
+            return;
+          }
+          
           const punchPayload = {
-            employeeId: this.detectedEmployee.employeeId,
+            employeeId: String(this.detectedEmployee.employeeId),
             punchTimestamp: timestamp,
             punchFaceUrl: imageData,
-            punchFaceId: JSON.stringify(this.lastFaceDescriptor || []),
-            punchLocationLong: long || 0,
-            punchLocationLat: lat || 0
+            punchFaceId: faceDescriptorString,
+            punchLocationLong: Number(long || 0),
+            punchLocationLat: Number(lat || 0)
           };
 
           // Call PunchIn API; on success start session, then start countdown

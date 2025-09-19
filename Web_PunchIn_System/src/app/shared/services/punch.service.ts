@@ -7,7 +7,7 @@ export interface PunchRecordRequest {
   employeeId: string;
   punchTimestamp: string;
   punchFaceUrl: string;
-  punchFaceId: string; // face descriptor serialized as string
+  punchFaceId: string; 
   punchLocationLong: number;
   punchLocationLat: number;
 }
@@ -20,16 +20,8 @@ export class PunchService {
 
   constructor(private http: HttpClient) {}
 
-  private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('jwt_token');
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
-    });
-  }
-
   punchIn(payload: PunchRecordRequest): Observable<any> {
-    return this.http.post<any>(this.apiUrl, payload, { headers: this.getAuthHeaders() })
+    return this.http.post<any>(this.apiUrl, payload)
       .pipe(catchError(error => throwError(() => error)));
   }
 }
