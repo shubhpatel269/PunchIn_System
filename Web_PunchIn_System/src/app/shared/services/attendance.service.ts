@@ -11,9 +11,36 @@ export interface AttendanceRecord {
   totalBreak: string;
 }
 
+// New interfaces for attendance summary API
+export interface SessionRecord {
+  sessionId: number;
+  punchId: number;
+  sessionStatus: string;
+  sessionStartTime: string;
+  sessionEndTime: string | null;
+  sessionLocationLong: number;
+  sessionLocationLat: number;
+  sessionBreakTime: string | null;
+  sessionDuration: string;
+  breakCount: number;
+  totalBreakDuration: string;
+}
+
+export interface AttendanceRecordDTO {
+  date: string;
+  day: string;
+  sessions: SessionRecord[];
+}
+
+export interface AttendanceSummaryResponse {
+  employeeId: string;
+  records: AttendanceRecordDTO[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
-  private apiUrl = 'https://localhost:7127/api/Attendance/Recent';
+  // private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Attendance';
+  private apiUrl = 'https://localhost:7127/api/Attendance';
 
   constructor(private http: HttpClient) {}
 
@@ -26,7 +53,26 @@ export class AttendanceService {
   }
 
   getRecentAttendance(employeeId: string): Observable<AttendanceRecord[]> {
-    return this.http.get<AttendanceRecord[]>(`${this.apiUrl}/${employeeId}`, { headers: this.getAuthHeaders() })
+    return this.http.get<AttendanceRecord[]>(`${this.apiUrl}/Recent/${employeeId}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(error => throwError(() => error)));
+  }
+
+  getAttendanceSummary(employeeId: string, from?: Date, to?: Date): Observable<AttendanceSummaryResponse> {
+    let url = `${this.apiUrl}/Summary/${employeeId}`;
+    const params = new URLSearchParams();
+    
+    if (from) {
+      params.append('from', from.toISOString().split('T')[0]);
+    }
+    if (to) {
+      params.append('to', to.toISOString().split('T')[0]);
+    }
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    return this.http.get<AttendanceSummaryResponse>(url, { headers: this.getAuthHeaders() })
       .pipe(catchError(error => throwError(() => error)));
   }
 }

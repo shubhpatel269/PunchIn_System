@@ -13,6 +13,7 @@ import { DividerModule } from 'primeng/divider';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { AttendanceService, AttendanceRecordDTO, SessionRecord } from '../../shared/services/attendance.service';
 
 interface AttendanceRecord {
   date: string;
@@ -20,9 +21,17 @@ interface AttendanceRecord {
   punchIn: string | null;
   punchOut: string | null;
   totalHours: number;
+  totalHoursFormatted: string;
   status: 'present' | 'absent' | 'late' | 'half-day' | 'holiday';
   overtime: number;
-  breaks: number;
+  breakCount: number;
+  totalBreak: number;
+  totalBreakFormatted: string;
+  sessionId?: number;
+  punchId?: number;
+  sessionStatus?: string;
+  isFirstSession?: boolean;
+  isLastSession?: boolean;
 }
 
 interface MonthlyStats {
@@ -107,7 +116,8 @@ export class EmployeeAttendanceComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private attendanceService: AttendanceService
   ) {}
 
   ngOnInit() {
@@ -126,95 +136,218 @@ export class EmployeeAttendanceComponent implements OnInit {
   }
 
   loadAttendanceData() {
-    // Mock attendance data for the selected month
-    this.attendanceRecords = this.generateMockAttendanceData();
-    this.filteredRecords = [...this.attendanceRecords];
-    this.calculateMonthlyStats();
+    if (!this.user?.employeeId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Employee ID not found',
+        life: 3000
+      });
+      return;
+    }
+
+    // Calculate date range for the selected month
+    const startDate = new Date(this.selectedYear, this.selectedMonth, 1);
+    const endDate = new Date(this.selectedYear, this.selectedMonth + 1, 0);
+
+    this.attendanceService.getAttendanceSummary(this.user.employeeId, startDate, endDate)
+      .subscribe({
+        next: (response) => {
+          this.attendanceRecords = this.transformApiDataToRecords(response.records);
+          this.filteredRecords = [...this.attendanceRecords];
+          this.calculateMonthlyStats();
+          this.initializeCharts();
+        },
+        error: (error) => {
+          console.error('Error loading attendance data:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load attendance data',
+            life: 3000
+          });
+          // Fallback to empty data
+          this.attendanceRecords = [];
+          this.filteredRecords = [];
+          this.calculateMonthlyStats();
+        }
+      });
   }
 
-  generateMockAttendanceData(): AttendanceRecord[] {
-    const year = this.selectedYear;
-    const month = this.selectedMonth;
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const records: AttendanceRecord[] = [];
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dayOfWeek = date.getDay();
+  transformApiDataToRecords(apiRecords: AttendanceRecordDTO[]): AttendanceRecord[] {
+    const allRecords: AttendanceRecord[] = [];
+    
+    apiRecords.forEach(record => {
+      const sessions = record.sessions || [];
       
-      // Skip weekends (Saturday = 6, Sunday = 0)
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        records.push({
-          date: date.toISOString().split('T')[0],
-          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      if (sessions.length === 0) {
+        // No sessions for this day - add absent record
+        allRecords.push({
+          date: record.date,
+          day: record.day,
           punchIn: null,
           punchOut: null,
           totalHours: 0,
-          status: 'holiday',
+          totalHoursFormatted: '0h',
+          status: 'absent',
           overtime: 0,
-          breaks: 0
+          breakCount: 0,
+          totalBreak: 0,
+          totalBreakFormatted: '-'
         });
-        continue;
+        return;
       }
-
-      // Generate random attendance data for weekdays
-      const isPresent = Math.random() > 0.1; // 90% attendance rate
-      const isLate = isPresent && Math.random() > 0.8; // 20% late rate
-      const isHalfDay = isPresent && Math.random() > 0.95; // 5% half day rate
-
-      let status: AttendanceRecord['status'] = 'absent';
-      let punchIn: string | null = null;
-      let punchOut: string | null = null;
-      let totalHours = 0;
-      let overtime = 0;
-
-      if (isPresent) {
-        if (isHalfDay) {
+      
+      // Create a record for each session
+      sessions.forEach((session, index) => {
+        const isFirstSession = index === 0;
+        const isLastSession = index === sessions.length - 1;
+        
+        const sessionHours = session.sessionDuration ? this.parseTimeSpan(session.sessionDuration) : 0;
+        const sessionBreakHours = session.totalBreakDuration ? this.parseTimeSpan(session.totalBreakDuration) : 0;
+        
+        // Determine status based on session
+        let status: AttendanceRecord['status'] = 'present';
+        if (sessionHours > 0 && sessionHours < 6) {
           status = 'half-day';
-          punchIn = '09:00 AM';
-          punchOut = '01:00 PM';
-          totalHours = 4;
-        } else if (isLate) {
-          status = 'late';
-          punchIn = '09:30 AM';
-          punchOut = '06:30 PM';
-          totalHours = 8;
-          overtime = 0.5;
-        } else {
-          status = 'present';
-          punchIn = '09:00 AM';
-          punchOut = '06:00 PM';
-          totalHours = 8;
         }
-      }
-
-      records.push({
-        date: date.toISOString().split('T')[0],
-        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        punchIn,
-        punchOut,
-        totalHours,
-        status,
-        overtime,
-        breaks: isPresent ? Math.floor(Math.random() * 3) : 0
+        
+        allRecords.push({
+          date: record.date,
+          day: record.day,
+          punchIn: this.formatTime(session.sessionStartTime),
+          punchOut: session.sessionEndTime ? this.formatTime(session.sessionEndTime) : null,
+          totalHours: Math.round(sessionHours * 100) / 100,
+          totalHoursFormatted: this.formatWorkTime(sessionHours),
+          status,
+          overtime: sessionHours > 8 ? Math.round((sessionHours - 8) * 100) / 100 : 0,
+          breakCount: session.breakCount || 0,
+          totalBreak: Math.round(sessionBreakHours * 100) / 100,
+          totalBreakFormatted: this.formatBreakTime(sessionBreakHours),
+          sessionId: session.sessionId,
+          punchId: session.punchId,
+          sessionStatus: session.sessionStatus,
+          isFirstSession,
+          isLastSession
+        });
       });
-    }
+    });
+    
+    return allRecords;
+  }
 
-    return records;
+  private parseTimeSpan(timeSpanString: string): number {
+    // Parse TimeSpan string like "08:30:00" to hours
+    const parts = timeSpanString.split(':');
+    if (parts.length >= 2) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      return hours + (minutes / 60);
+    }
+    return 0;
+  }
+
+  private formatTime(dateTimeString: string): string {
+    const date = new Date(dateTimeString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  }
+
+  private formatBreakTime(hours: number): string {
+    if (hours === 0) {
+      return '-';
+    }
+    
+    // Convert hours to total seconds for more precise calculation
+    const totalSeconds = Math.round(hours * 3600);
+    
+    if (totalSeconds < 60) {
+      // Less than 1 minute, show in seconds
+      return `${totalSeconds}s`;
+    } else if (totalSeconds < 3600) {
+      // Less than 1 hour, show in minutes and seconds
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      
+      if (seconds === 0) {
+        return `${minutes}m`;
+      } else {
+        return `${minutes}m ${seconds}s`;
+      }
+    } else {
+      // 1 hour or more, show in hours, minutes, and seconds
+      const wholeHours = Math.floor(totalSeconds / 3600);
+      const remainingSeconds = totalSeconds % 3600;
+      const minutes = Math.floor(remainingSeconds / 60);
+      const seconds = remainingSeconds % 60;
+      
+      let result = `${wholeHours}h`;
+      
+      if (minutes > 0) {
+        result += ` ${minutes}m`;
+      }
+      
+      if (seconds > 0) {
+        result += ` ${seconds}s`;
+      }
+      
+      return result;
+    }
+  }
+
+  private formatWorkTime(hours: number): string {
+    if (hours === 0) {
+      return '0h';
+    }
+    
+    // For work time, always show hours with decimal places for precision
+    return `${Math.round(hours * 100) / 100}h`;
   }
 
   calculateMonthlyStats() {
-    const workingDays = this.attendanceRecords.filter(r => r.status !== 'holiday').length;
-    const presentDays = this.attendanceRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-    const absentDays = this.attendanceRecords.filter(r => r.status === 'absent').length;
-    const lateDays = this.attendanceRecords.filter(r => r.status === 'late').length;
-    const halfDays = this.attendanceRecords.filter(r => r.status === 'half-day').length;
-    const holidays = this.attendanceRecords.filter(r => r.status === 'holiday').length;
+    // Group records by date to calculate daily statistics
+    const dailyRecords = new Map<string, AttendanceRecord[]>();
+    
+    this.attendanceRecords.forEach(record => {
+      if (!dailyRecords.has(record.date)) {
+        dailyRecords.set(record.date, []);
+      }
+      dailyRecords.get(record.date)!.push(record);
+    });
+
+    const uniqueDays = dailyRecords.size;
+    const workingDays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.some(r => r.status !== 'holiday' && r.status !== 'absent')
+    ).length;
+    
+    const presentDays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.some(r => r.status === 'present' || r.status === 'late')
+    ).length;
+    
+    const absentDays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.every(r => r.status === 'absent')
+    ).length;
+    
+    const lateDays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.some(r => r.status === 'late')
+    ).length;
+    
+    const halfDays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.some(r => r.status === 'half-day')
+    ).length;
+    
+    const holidays = Array.from(dailyRecords.values()).filter(dayRecords => 
+      dayRecords.every(r => r.status === 'holiday')
+    ).length;
+    
     const totalHours = this.attendanceRecords.reduce((sum, r) => sum + r.totalHours, 0);
     const overtimeHours = this.attendanceRecords.reduce((sum, r) => sum + r.overtime, 0);
 
     this.monthlyStats = {
-      totalDays: this.attendanceRecords.length,
+      totalDays: uniqueDays,
       workingDays,
       presentDays,
       absentDays,

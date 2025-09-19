@@ -286,20 +286,36 @@
               <tr>
                 <th>Date</th>
                 <th>Day</th>
+                <th>Session</th>
                 <th>Punch In</th>
                 <th>Punch Out</th>
                 <th>Hours</th>
-                <th>Overtime</th>
-                <th>Breaks</th>
+                <th>Break Count</th>
+                <th>Total Break</th>
                 <th>Status</th>
               </tr>
             </ng-template>
             
             <ng-template pTemplate="body" let-record>
-              <tr>
-                <td>{{ formatDate(record.date) }}</td>
+              <tr [class.bg-gray-50]="record.isFirstSession" [class.border-t-2]="record.isFirstSession">
                 <td>
-                  <span class="font-medium">{{ record.day }}</span>
+                  <span *ngIf="record.isFirstSession; else emptyDate" class="font-medium">{{ formatDate(record.date) }}</span>
+                  <ng-template #emptyDate>
+                    <span class="text-gray-400">↳</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span *ngIf="record.isFirstSession; else emptyDay" class="font-medium">{{ record.day }}</span>
+                  <ng-template #emptyDay>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <div class="session-indicator">
+                    <span class="text-sm font-medium">Session {{ record.sessionId || 'N/A' }}</span>
+                    <span *ngIf="record.isFirstSession" class="session-badge first">First</span>
+                    <span *ngIf="record.isLastSession && !record.isFirstSession" class="session-badge last">Last</span>
+                  </div>
                 </td>
                 <td>
                   <span *ngIf="record.punchIn; else noPunchIn" class="font-medium">{{ record.punchIn }}</span>
@@ -314,18 +330,15 @@
                   </ng-template>
                 </td>
                 <td>
-                  <span class="font-medium">{{ record.totalHours }}h</span>
+                  <span class="font-medium">{{ record.totalHoursFormatted }}</span>
                 </td>
                 <td>
-                  <span *ngIf="record.overtime > 0; else noOvertime" class="text-orange-600 font-medium">
-                    +{{ record.overtime }}h
+                  <span class="font-medium">{{ record.breakCount }}</span>
+                </td>
+                <td>
+                  <span class="font-medium">
+                    {{ record.totalBreakFormatted }}
                   </span>
-                  <ng-template #noOvertime>
-                    <span class="text-gray-400">-</span>
-                  </ng-template>
-                </td>
-                <td>
-                  <span class="font-medium">{{ record.breaks }}</span>
                 </td>
                 <td>
                   <p-tag 
