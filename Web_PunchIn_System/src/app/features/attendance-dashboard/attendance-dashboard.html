@@ -95,6 +95,10 @@
         <div class="p-4">
           <h3 class="text-lg font-semibold text-gray-900">Recent Employee Attendance</h3>
           <p class="text-sm text-gray-500">Latest attendance records from all employees</p>
+          <p class="text-xs text-gray-400 mt-1" *ngIf="userTimezone">
+            <i class="pi pi-clock mr-1"></i>
+            Times displayed in {{ userTimezone }} timezone
+          </p>
         </div>
       </ng-template>
       <ng-template pTemplate="content">
@@ -102,7 +106,8 @@
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Employee</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Employee ID</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Employee Name</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch In</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch Out</th>
@@ -111,41 +116,55 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let record of recentAttendance" class="border-b border-gray-100 hover:bg-gray-50">
-                <td class="py-3 px-4">
-                  <div class="flex items-center space-x-3">
-                    <p-avatar 
-                      [label]="record.employeeName?.charAt(0) || 'E'" 
-                      size="normal" 
-                      styleClass="bg-blue-500 text-white">
-                    </p-avatar>
-                    <span class="font-medium">{{ record.employeeName || 'Employee' }}</span>
+              <!-- Loading State -->
+              <tr *ngIf="loadingRecentAttendance">
+                <td colspan="7" class="py-8 px-4 text-center">
+                  <div class="flex items-center justify-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span class="text-gray-500">Loading recent attendance...</span>
                   </div>
                 </td>
+              </tr>
+              
+              <!-- Data Rows -->
+              <tr *ngFor="let record of recentAttendance" class="border-b border-gray-100 hover:bg-gray-50">
                 <td class="py-3 px-4">
-                  {{ formatDate(record.date) }}
+                  <span class="font-mono text-sm text-gray-600">{{ record.employeeId }}</span>
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.sessionStart; else noSessionStart">{{ formatTime(record.sessionStart) }}</span>
+                  <span class="font-medium">{{ record.employeeName || 'Employee' }}</span>
+                </td>
+                <td class="py-3 px-4">
+                  {{ formatDate(record.punchTimestamp) }}
+                </td>
+                <td class="py-3 px-4">
+                  <span *ngIf="record.sessionStartTime; else noSessionStart">{{ formatTime(record.sessionStartTime) }}</span>
                   <ng-template #noSessionStart>
                     <span class="text-gray-400">-</span>
                   </ng-template>
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.sessionEnd; else noSessionEnd">{{ formatTime(record.sessionEnd) }}</span>
+                  <span *ngIf="record.sessionEndTime; else noSessionEnd">{{ formatTime(record.sessionEndTime) }}</span>
                   <ng-template #noSessionEnd>
                     <span class="text-gray-400">-</span>
                   </ng-template>
                 </td>
                 <td class="py-3 px-4">
-                  <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
+                  <span class="font-medium">{{ formatDynamicDuration(record.sessionDuration, record.sessionStartTime, record.sessionEndTime) }}</span>
                 </td>
                 <td class="py-3 px-4">
                   <p-tag 
-                    [value]="record.status" 
-                    [severity]="getStatusColor(record.status)"
-                    [icon]="getStatusIcon(record.status)">
+                    [value]="getSessionStatusText(record.sessionStatus)" 
+                    [severity]="getStatusColor(record.sessionStatus)"
+                    [icon]="getStatusIcon(record.sessionStatus)">
                   </p-tag>
+                </td>
+              </tr>
+              
+              <!-- Empty State -->
+              <tr *ngIf="!loadingRecentAttendance && recentAttendance.length === 0">
+                <td colspan="7" class="py-8 px-4 text-center text-gray-500">
+                  No recent attendance records found
                 </td>
               </tr>
             </tbody>
@@ -155,3 +174,6 @@
     </p-card>
   </div>
 </div>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>

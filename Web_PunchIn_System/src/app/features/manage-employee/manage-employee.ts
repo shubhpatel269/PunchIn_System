@@ -46,14 +46,10 @@ export class ManageEmployee implements OnInit, OnDestroy {
     this.loadingDesignations = true;
     this.designationService.getDesignations().subscribe({
       next: (response) => {
-        console.log('Designations API Response:', response);
-        
         // Handle different response structures
         const designations = response.data || response || [];
-        console.log('Designations array:', designations);
         
         this.designations = designations.filter((d: any) => !d.isDeleted);
-        console.log('Filtered designations:', this.designations);
         
         // Create mapping for quick lookup - handle multiple possible property names
         this.designationMap = {};
@@ -69,18 +65,14 @@ export class ManageEmployee implements OnInit, OnDestroy {
                       designation.label ||
                       'Unknown';
           
-          console.log(`Mapping designation: ID=${id}, Name=${name}`);
           this.designationMap[id] = name;
         });
-        
-        console.log('Final designation map:', this.designationMap);
         this.loadingDesignations = false;
         
         // Load employees after designations are loaded
         this.loadEmployees();
       },
       error: (error) => {
-        console.error('Error loading designations:', error);
         this.loadingDesignations = false;
         this.messageService.add({
           severity: 'error',
@@ -98,24 +90,11 @@ export class ManageEmployee implements OnInit, OnDestroy {
     this.loading = true;
     this.employeeService.getEmployees().subscribe({
       next: (data) => {
-        console.log('Employees API Response:', data);
         this.employees = data;
-        
-        // Log each employee's designation-related properties
-        this.employees.forEach((employee, index) => {
-          console.log(`Employee ${index + 1}:`, {
-            employeeId: employee.employeeId,
-            employeeDesignationId: employee.employeeDesignationId,
-            designationId: (employee as any).designationId,
-            designation: (employee as any).designation,
-            allKeys: Object.keys(employee)
-          });
-        });
         
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading employees:', error);
         this.loading = false;
         this.messageService.add({
           severity: 'error',
@@ -149,7 +128,6 @@ export class ManageEmployee implements OnInit, OnDestroy {
     }
     
     if (!designationId) {
-      console.log('Designation ID is null or undefined');
       return 'No Designation';
     }
     
@@ -157,13 +135,8 @@ export class ManageEmployee implements OnInit, OnDestroy {
     const id = typeof designationId === 'string' ? parseInt(designationId, 10) : designationId;
     
     if (isNaN(id)) {
-      console.log('Designation ID is not a valid number:', designationId);
       return 'Invalid Designation ID';
     }
-    
-    console.log(`Looking up designation for ID: ${designationId} (converted to: ${id})`);
-    console.log('Current designation map:', this.designationMap);
-    console.log('Available keys:', Object.keys(this.designationMap));
     
     // Try to find the designation name
     let designationName = this.designationMap[id];
@@ -172,8 +145,6 @@ export class ManageEmployee implements OnInit, OnDestroy {
     if (!designationName) {
       designationName = this.designationMap[designationId.toString() as any];
     }
-    
-    console.log(`Found designation name: ${designationName}`);
     
     return designationName || 'Unknown Designation';
   }
@@ -202,7 +173,6 @@ export class ManageEmployee implements OnInit, OnDestroy {
             this.loadEmployees();
           },
           error: (error) => {
-            console.error('Delete error:', error);
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete employee.' });
           }
         });

@@ -10,7 +10,6 @@ export class CompanyAdminService {
 
   private getAuthHeaders() {
     const token = localStorage.getItem('jwt_token');
-    console.log('JWT Token from localStorage:', token);
     return new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -20,7 +19,6 @@ export class CompanyAdminService {
   getAdmins(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl, { headers: this.getAuthHeaders() }).pipe(
       catchError((error) => {
-        console.error('Error in getAdmins:', error);
         return throwError(() => error);
       })
     );
@@ -31,20 +29,16 @@ export class CompanyAdminService {
       headers: this.getAuthHeaders() 
     }).pipe(
       catchError((error) => {
-        console.error('Error updating admin:', error);
         return throwError(() => error);
       })
     );
   }
 
   addAdmin(admin: any): Observable<any> {
-    console.log('Sending admin data to API:', admin);
-    console.log('Auth headers:', this.getAuthHeaders());
     return this.http.post(this.apiUrl, admin, { 
       headers: this.getAuthHeaders() 
     }).pipe(
       catchError((error) => {
-        console.error('Error adding admin:', error);
         // Handle non-JSON error responses
         if (error.error && typeof error.error === 'string') {
           const customError = new Error(error.error);
@@ -61,7 +55,6 @@ export class CompanyAdminService {
       headers: this.getAuthHeaders() 
     }).pipe(
       catchError((error) => {
-        console.error('Error deleting admin:', error);
         return throwError(() => error);
       })
     );
