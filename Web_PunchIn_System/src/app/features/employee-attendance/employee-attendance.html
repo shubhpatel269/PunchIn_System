@@ -10,7 +10,9 @@
             (onClick)="goBack()"
             styleClass="text-gray-600 hover:text-blue-600">
           </p-button>
-          <h1 class="text-2xl font-bold text-gray-900">My Attendance</h1>
+          <h1 class="text-2xl font-bold text-gray-900">
+            {{ isAdminView ? 'Employee Attendance' : 'My Attendance' }}
+          </h1>
         </div>
         <div class="flex items-center space-x-4">
           <p-button 

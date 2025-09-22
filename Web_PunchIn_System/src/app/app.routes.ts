@@ -34,6 +34,7 @@ export const routes: Routes = [
             { path: 'manage-employee', component: ManageEmployee },   
             { path: 'add-employee', component: AddNewProfileComponent },
             { path: 'edit-employee/:id', component: AddNewProfileComponent },
+            { path: 'employee-attendance/:id', loadComponent: () => import('./features/employee-attendance/employee-attendance').then(m => m.EmployeeAttendanceComponent) },
             // { path: 'manage-company-profile', component: ManageCompanyProfile },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

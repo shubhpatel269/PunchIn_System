@@ -45,6 +45,8 @@
           <td [class]="loadingDesignations ? 'loading-designation' : ''">{{ getDesignationName(row.employeeDesignationId || row.designationId || row.designation) }}</td>
           <td>
             <div class="action-buttons">
+              <button type="button" pButton icon="pi pi-eye" class="p-button-text p-button-sm p-button-success"
+                (click)="viewEmployeeAttendance(row)" title="View Attendance"></button>
               <button type="button" pButton icon="pi pi-user-edit" class="p-button-text p-button-sm p-button-info"
                 (click)="onEdit(row)" title="Edit Employee"></button>
               <button type="button" pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"

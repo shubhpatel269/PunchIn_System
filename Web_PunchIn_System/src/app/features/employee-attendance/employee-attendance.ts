@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -73,6 +73,8 @@ export class EmployeeAttendanceComponent implements OnInit {
   user: any = null;
   selectedMonth: number = new Date().getMonth();
   selectedYear: number = new Date().getFullYear();
+  isAdminView: boolean = false;
+  viewingEmployeeId: string | null = null;
   monthlyStats: MonthlyStats = {
     totalDays: 0,
     workingDays: 0,
@@ -116,12 +118,23 @@ export class EmployeeAttendanceComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private messageService: MessageService,
     private attendanceService: AttendanceService
   ) {}
 
   ngOnInit() {
-    this.loadUserData();
+    // Check if this is an admin viewing a specific employee
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.isAdminView = true;
+        this.viewingEmployeeId = params['id'];
+        this.loadEmployeeData(params['id']);
+      } else {
+        this.loadUserData();
+      }
+    });
+    
     this.loadAttendanceData();
     this.initializeCharts();
   }
@@ -133,6 +146,17 @@ export class EmployeeAttendanceComponent implements OnInit {
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  loadEmployeeData(employeeId: string) {
+    // For admin view, we need to fetch employee data by ID
+    // For now, we'll create a mock user object with the employee ID
+    // You can implement actual API call to fetch employee details here
+    this.user = {
+      employeeId: employeeId,
+      name: 'Employee', // This should be fetched from API
+      email: '', // This should be fetched from API
+    };
   }
 
   loadAttendanceData() {
@@ -442,7 +466,11 @@ export class EmployeeAttendanceComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/employee/dashboard']);
+    if (this.isAdminView) {
+      this.router.navigate(['/admin/manage-employee']);
+    } else {
+      this.router.navigate(['/employee/dashboard']);
+    }
   }
 
   getStatusColor(status: string): string {
