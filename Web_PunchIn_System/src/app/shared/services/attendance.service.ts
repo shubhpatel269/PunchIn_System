@@ -39,7 +39,6 @@ export interface AttendanceSummaryResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
-  // private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/Attendance';
   private apiUrl = 'https://localhost:7127/api/Attendance';
 
   constructor(private http: HttpClient) {}

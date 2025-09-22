@@ -61,7 +61,7 @@ export interface RegistrationResponse {
   providedIn: 'root'
 })
 export class CompanyService {
-  private readonly baseUrl = 'https://punchinsystemapi.azurewebsites.net/api/Company';
+  private readonly baseUrl = 'https://localhost:7127/api/Company';
 
   constructor(private http: HttpClient) {}
 

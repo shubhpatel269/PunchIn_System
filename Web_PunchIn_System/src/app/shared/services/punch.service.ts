@@ -16,7 +16,7 @@ export interface PunchRecordRequest {
   providedIn: 'root'
 })
 export class PunchService {
-  private apiUrl = 'https://punchinsystemapi.azurewebsites.net/api/PunchIn';
+  private apiUrl = 'https://localhost:7127/api/PunchIn';
 
   constructor(private http: HttpClient) {}
 

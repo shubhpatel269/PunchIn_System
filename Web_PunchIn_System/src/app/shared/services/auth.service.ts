@@ -23,7 +23,7 @@ export class AuthService {
 
   // Login with credentials
   login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post('https://punchinsystemapi.azurewebsites.net/api/Auth/login', credentials).pipe(
+    return this.http.post('https://localhost:7127/api/Auth/login', credentials).pipe(
       tap((response: any) => {
         if (response && response.token) {
           localStorage.setItem('jwt_token', response.token);
@@ -43,7 +43,7 @@ export class AuthService {
 
   // Employee face login
   faceLogin(faceDescriptor: number[]): Observable<any> {
-    return this.http.post('https://punchinsystemapi.azurewebsites.net/api/Auth/employee/login/face', { faceDescriptor }).pipe(
+    return this.http.post('https://localhost:7127/api/Auth/employee/login/face', { faceDescriptor }).pipe(
       tap((response: any) => {
         if (response && response.token) {
           localStorage.setItem('jwt_token', response.token);
