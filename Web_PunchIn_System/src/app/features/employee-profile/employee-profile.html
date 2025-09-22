@@ -53,7 +53,7 @@
               <div class="relative inline-block">
                 <p-avatar 
                   [image]="profile?.employeeFaceImage" 
-                  [label]="!profile?.employeeFaceImage ? ((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) : ''"
+                  [label]="((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) || ''"
                   size="xlarge" 
                   styleClass="bg-blue-500 text-white font-semibold text-2xl">
                 </p-avatar>
