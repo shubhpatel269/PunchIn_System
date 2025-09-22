@@ -42,35 +42,63 @@ export class Home implements OnInit {
   ) { }
 
   ngOnInit() {
-    console.log('Home component initialized');
+    
     const data = localStorage.getItem('punchInUser');
     if (data) {
       try {
         this.userData = JSON.parse(data);
-        console.log('User data loaded:', this.userData);
+        
         // Stay on home page to show dashboard with navigation
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        
         this.router.navigate(['/login']);
       }
     } else {
-      console.warn('No user data found in localStorage');
+      
       this.router.navigate(['/login']);
     }
   }
 
   onLogout() {
+    const activePunchIdStr = localStorage.getItem('activePunchId');
+    const punchId = activePunchIdStr ? parseInt(activePunchIdStr, 10) : null;
+    const userData = this.userData;
+    const employeeId = userData?.employeeId;
+    const sessionIdStr = localStorage.getItem('activeSessionId');
+    const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+    const lat = 0;
+    const long = 0;
+
+    const proceed = () => {
     localStorage.removeItem('punchInUser');
-    
-    this.router.navigateByUrl('/login', { skipLocationChange: false }).then(() => {
-    }).catch(err => {
-      console.error('Navigation error:', err);
+      localStorage.removeItem('activePunchId');
+      this.router.navigateByUrl('/login', { skipLocationChange: false }).catch(err => {
+        
       window.location.href = '/login';
     });
+    };
+
+    if (sessionId) {
+      // Lazy import to avoid tight coupling; service is providedIn root
+      import('../../shared/services/session.service').then(({ SessionService }) => {
+        const injector = (window as any).ng && (window as any).ng.getInjector && (window as any).ng.getInjector(this as any);
+        // Fallback: proceed if injector not available in this context
+        if (!injector) { proceed(); return; }
+        const sessionService = injector.get(SessionService);
+        const payload = {
+          sessionStatus: 'completed',
+          sessionEndTime: new Date().toISOString(),
+          sessionBreakTime: null
+        };
+        sessionService.endSession(sessionId, payload).subscribe({ next: proceed, error: proceed });
+      }).catch(() => proceed());
+    } else {
+      proceed();
+    }
   }
 
   confirmBackToLogin(event: Event) {
-    console.log('Confirmation dialog triggered');
+    
     
     this.confirmationService.confirm({
       target: event.target as HTMLElement,

@@ -57,8 +57,7 @@ export class AuthService {
 
   // Logout the user
   logout() {
-    localStorage.removeItem('jwt_token');
-    this.isAuthenticatedSubject.next(false);
+    this.clearUserData();
     this.router.navigate(['/login']);
   }
 
@@ -70,5 +69,96 @@ export class AuthService {
   // Get the current JWT token
   getToken(): string | null {
     return localStorage.getItem('jwt_token');
+  }
+
+  // Get user role
+  getUserRole(): string | null {
+    return localStorage.getItem('user_role');
+  }
+
+  // Get user data
+  getUserData(): any {
+    const userData = localStorage.getItem('user_data');
+    return userData ? JSON.parse(userData) : null;
+  }
+
+  // Check if user is admin or superadmin
+  isAdmin(): boolean {
+    const role = this.getUserRole();
+    return role === 'Admin' || role === 'SuperAdmin';
+  }
+
+  // Check if user is employee
+  isEmployee(): boolean {
+    const role = this.getUserRole();
+    return role === 'Employee';
+  }
+
+  // Check if user has specific role
+  hasRole(role: string): boolean {
+    return this.getUserRole() === role;
+  }
+
+  // Check if user is authenticated and has valid token
+  isAuthenticatedSync(): boolean {
+    if (!this.hasToken()) {
+      return false;
+    }
+    
+    // Check if token is expired
+    if (this.isTokenExpired()) {
+      this.clearUserData();
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Check if JWT token is expired
+  private isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return true;
+    }
+
+    try {
+      // Decode JWT token payload
+      const payload = this.decodeToken(token);
+      if (!payload || !payload.exp) {
+        return true;
+      }
+
+      // Check if token is expired (exp is in seconds, Date.now() is in milliseconds)
+      const currentTime = Math.floor(Date.now() / 1000);
+      return payload.exp < currentTime;
+    } catch (error) {
+      // If token is malformed, consider it expired
+      return true;
+    }
+  }
+
+  // Decode JWT token payload
+  private decodeToken(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Clear all user data
+  clearUserData() {
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_data');
+    this.isAuthenticatedSubject.next(false);
   }
 }

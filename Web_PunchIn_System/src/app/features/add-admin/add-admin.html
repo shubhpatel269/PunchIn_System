@@ -1,100 +1,103 @@
-<div class="d-modal">
-    <div class="d-head">
-        <h2 class="table-heading"><strong>Admin Information</strong> </h2>
-    </div>
-    <p-toast />
-    <div class="d-body">
-        <form [formGroup]="registerForm" (ngSubmit)="register()">
+<div class="d-head">
+    <h2 class="table-heading"><strong>{{ isEditMode ? 'Edit Admin' : 'Add Admin' }}</strong></h2>
+</div>
+<p-toast />
+<div class="d-body">
+    <form [formGroup]="adminForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
             <div class="p-field">
-                <label for="employeeId" class="required">Admin ID</label>
-                <input pInputText id="employeeId" formControlName="employeeId" placeholder="Admin ID" />
-                @if (registerForm.get('employeeId')?.touched && registerForm.get('employeeId')?.hasError('required')) {
-                <span class="error-text">Admin ID is required.</span>
+                <label for="adminFirstName" class="required">First Name</label>
+                <input pInputText id="adminFirstName" formControlName="adminFirstName" placeholder="First Name" />
+                @if (adminForm.get('adminFirstName')?.touched && adminForm.get('adminFirstName')?.hasError('required'))
+                {
+                <span class="error-text">First name is required.</span>
+                }
+                @if (adminForm.get('adminFirstName')?.touched && adminForm.get('adminFirstName')?.hasError('pattern')) {
+                <span class="error-text">First name must contain only letters.</span>
                 }
             </div>
             <div class="p-field">
-                <label for="name" class="required">Name</label>
-                <input pInputText id="name" formControlName="name" placeholder="name" />
-                @if (registerForm.get('name')?.touched && registerForm.get('name')?.hasError('required')) {
-                <span class="error-text">Name is required.</span>
-                }
+                <label for="adminMiddleName">Middle Name</label>
+                <input pInputText id="adminMiddleName" formControlName="adminMiddleName" placeholder="Middle Name" />
             </div>
-            <div class="p-field">
-                <label for="email" class="required">Email</label>
-                <input pInputText id="email" formControlName="email" type="email" placeholder="email" />
-                @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')) {
-                <span class="error-text">Email is required.</span>
-                }
-                @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')) {
-                <span class="error-text">Please enter a valid email address.</span>
-                }
-            </div>
-            <div class="p-field">
-                <label for="phone" class="required">Phone Number</label>
-                <input pInputText id="phone" formControlName="phone" type="tel" placeholder="Phone number" />
-                @if (registerForm.get('phone')?.touched && registerForm.get('phone')?.hasError('required')) {
-                <span class="error-text">Phone number is required.</span>
-                }
-                @if (registerForm.get('phone')?.touched && registerForm.get('phone')?.hasError('pattern')) {
-                <span class="error-text">Phone number must be exactly 10 digits.</span>
-                }
-            </div>
-            <div class="p-field">
-                <label for="location" class="required">Location</label>
-                <div class="location-row">
-                    <input pInputText id="location" formControlName="location" placeholder="Enter city" />
-                    <button pButton type="button" label="Get Current Location" (click)="getCurrentLocation()"></button>
-                </div>
-                @if (registerForm.get('location')?.touched && registerForm.get('location')?.hasError('required')) {
-                <span class="error-text">Location is required.</span>
-                }
-            </div>
-            <div class="p-field">
-                <label for="image">Upload Photo <span style="color: red;">*</span><span style="font-size: 0.95em; color: #555; margin-left: 0.5rem;">(Please upload your neat and clean Photo.)</span></label>
-               
-                <div class="upload-row" style="display: flex; align-items: flex-start; gap: 1rem;">
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <p-fileUpload mode="basic"  chooseIcon="pi pi-upload" name="image" accept="image/*" maxFileSize="2000000"
-                            (onSelect)="onImageUpload($event)" chooseLabel="Upload" auto="true"></p-fileUpload>
-                        <button pButton type="button" label="Take Picture" (click)="openCamera()"></button>
-                    </div>
-                    @if (registerForm.get('image')?.value) {
-                    <p-card [style]="{ position: 'relative', width: 'auto' }">
-                        <button type="button" (click)="removeImage()" class="remove-image-btn"
-                            style="position: absolute; top: 4px; right: 4px; z-index: 2; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 18px; cursor: pointer;">
-                            &times;
-                        </button>
-                        <p-image [src]="registerForm.get('image')?.value" alt="Preview" [preview]="true"
-                            style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px;" />
-                    </p-card>
-                    }
-                </div>
-                <p-dialog header="Take a Picture" [(visible)]="showCameraDialog" [modal]="true" [closable]="true"
-                    [style]="{width: '350px'}" (onHide)="closeCamera()">
-                    @if (showCameraDialog) {
-                    <div style="display: flex; flex-direction: column; align-content: space-around; flex-wrap: wrap;">
-                        <video #video width="300" height="225" autoplay></video>
-                        <canvas #canvas width="300" height="225" style="display:none"></canvas>
-                        <div class="camera-btn-row">
-                            <button pButton type="button" label="Capture"
-                                (click)="capturePhoto(video, canvas)"></button>
-                            <button pButton type="button" label="Close" class="p-button-secondary"
-                                (click)="closeCamera()"></button>
-                        </div>
-                    </div>
-                    }
+        </div>
 
-                </p-dialog>
-                @if (registerForm.get('image')?.touched && registerForm.get('image')?.hasError('required')) {
-                <span class="error-text">Image is required.</span>
-                }
-            </div>
+        <div class="p-field">
+            <label for="adminLastName" class="required">Last Name</label>
+            <input pInputText id="adminLastName" formControlName="adminLastName" placeholder="Last Name" />
+            @if (adminForm.get('adminLastName')?.touched && adminForm.get('adminLastName')?.hasError('required')) {
+            <span class="error-text">Last name is required.</span>
+            }
+            @if (adminForm.get('adminLastName')?.touched && adminForm.get('adminLastName')?.hasError('pattern')) {
+            <span class="error-text">Last name must contain only letters.</span>
+            }
+        </div>
 
-        </form>
-    </div>
-    <div class="d-footer">
-        <button pButton type="button" label="Close" class="p-button-secondary" (click)="onClose()"
-            style="margin-right: 1rem;"></button>
-        <button pButton type="submit" label="Register" (click)="register()" class="p-mt-2"></button>
-    </div>
+        <div class="p-field">
+            <label for="adminEmail" class="required">Email</label>
+            <input pInputText id="adminEmail" formControlName="adminEmail" type="email" placeholder="Email Address"
+                [readonly]="isEditMode" />
+            @if (adminForm.get('adminEmail')?.touched && adminForm.get('adminEmail')?.hasError('required')) {
+            <span class="error-text">Email is required.</span>
+            }
+            @if (adminForm.get('adminEmail')?.touched && adminForm.get('adminEmail')?.hasError('email')) {
+            <span class="error-text">Please enter a valid email address.</span>
+            }
+            @if (isEditMode) {
+            <span class="info-text">Email cannot be changed after creation.</span>
+            }
+        </div>
+
+        @if (!isEditMode) {
+        <div class="p-field">
+            <label for="adminPassword" class="required">Password</label>
+            <input pInputText id="adminPassword" formControlName="adminPassword" type="password"
+                placeholder="Password" />
+            @if (adminForm.get('adminPassword')?.touched && adminForm.get('adminPassword')?.hasError('required')) {
+            <span class="error-text">Password is required.</span>
+            }
+            @if (adminForm.get('adminPassword')?.touched && adminForm.get('adminPassword')?.hasError('minlength')) {
+            <span class="error-text">Password must be at least 6 characters long.</span>
+            }
+        </div>
+        }
+
+        <div class="p-field">
+            <label for="adminPhone" class="required">Phone Number</label>
+            <input pInputText id="adminPhone" formControlName="adminPhone" type="tel" placeholder="Phone Number" />
+            @if (adminForm.get('adminPhone')?.touched && adminForm.get('adminPhone')?.hasError('required')) {
+            <span class="error-text">Phone number is required.</span>
+            }
+            @if (adminForm.get('adminPhone')?.touched && adminForm.get('adminPhone')?.hasError('pattern')) {
+            <span class="error-text">Phone number must be exactly 10 digits.</span>
+            }
+        </div>
+
+        <div class="p-field">
+            <label for="adminDob" class="required">Date of Birth</label>
+            <p-datepicker id="adminDob" formControlName="adminDob" placeholder="Select Date of Birth" [showIcon]="true"
+                [maxDate]="maxDate" dateFormat="dd/mm/yy" [showOnFocus]="false" [readonlyInput]="false"
+                [touchUI]="false" [appendTo]="'body'"></p-datepicker>
+            @if (formInitialized && adminForm.get('adminDob')?.touched &&
+            adminForm.get('adminDob')?.hasError('required')) {
+            <span class="error-text">Date of birth is required.</span>
+            }
+        </div>
+
+        @if (isEditMode) {
+        <div class="p-field">
+            <label for="isActive">Status</label>
+            <div class="flex align-items-center gap-2">
+                <input type="checkbox" id="isActive" formControlName="isActive" />
+                <label for="isActive">Active</label>
+            </div>
+        </div>
+        }
+    </form>
+</div>
+<div class="d-footer">
+    <button pButton type="button" label="Cancel" class="p-button-secondary" (click)="onClose()"
+        style="margin-right: 1rem;" [disabled]="loading"></button>
+    <button pButton type="submit" [label]="isEditMode ? 'Update' : 'Add'" (click)="onSubmit()" [loading]="loading"
+        [disabled]="loading"></button>
 </div>

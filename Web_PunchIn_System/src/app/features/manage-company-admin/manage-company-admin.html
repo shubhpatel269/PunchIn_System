@@ -2,8 +2,7 @@
   <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2rem; gap: 0.5rem;">
     <h2 class='text-2xl font-bold text-blue-700 mb-4'>Manage Admin</h2>
     <p-button type="button" icon="pi pi-user-plus" class="register-btn" (click)="addAdmin()"
-      label="Add Admin"></p-button> 
-      <!-- this is change -->
+      label="Add Admin"></p-button>
   </div>
 
 
@@ -14,11 +13,6 @@
   </div>
 
   <div class="card">
-    <!-- Loading State -->
-    <div *ngIf="loading" class="flex justify-content-center p-5">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-<!-- hello -->
     <!-- Error State -->
     <div *ngIf="error && !loading" class="p-3">
       <p-message severity="error">
@@ -27,50 +21,51 @@
     </div>
 
     <!-- Table -->
-    <p-table [value]="admins" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
-      [loading]="loading" [lazy]="false" [showLoader]="false" 
+    <p-table [value]="loading ? skeletonRows : admins" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+      [lazy]="false" [showLoader]="false"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-      [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '60rem'}" 
+      [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '60rem'}"
       [globalFilterFields]="['name', 'email', 'phone']">
 
       <ng-template pTemplate="header">
         <tr>
-          <th>Company ID</th>
+          <th>Admin ID</th>
           <th>Name</th>
           <th>Email</th>
           <th>Phone</th>
-          <th>Status</th>
-          <!-- <th>Last Login</th> -->
           <th style="width: 12rem">Actions</th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-admin>
-        <tr>
-          <td>{{admin.companyId}}</td>
-          <td>{{admin.name}}</td>
-          <td>{{admin.email}}</td>
-          <td>{{admin.phone}}</td>
-          <td>
-            <p-tag [value]="admin.status" [severity]="admin.status === 'Active' ? 'success' : 'danger'">
-            </p-tag>
-          </td>
-          <!-- <td>{{admin.lastLogin ? (admin.lastLogin | date:'medium') : 'Never'}}</td> -->
+      <ng-template pTemplate="body" let-row>
+        <tr *ngIf="loading; else adminRow">
+          <td class="skeleton-cell"><p-skeleton width="4rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="10rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="14rem" height="1rem"></p-skeleton></td>
+          <td class="skeleton-cell"><p-skeleton width="8rem" height="1rem"></p-skeleton></td>
           <td>
             <div class="flex gap-2">
-              <button pButton pRipple type="button" icon="pi pi-pencil"
-                class="p-button-rounded p-button-text p-button-primary" (click)="editAdmin(admin)"></button>
-
-              <button pButton pRipple type="button"
-                [icon]="admin.status === 'Active' ? 'pi pi-lock' : 'pi pi-lock-open'"
-                [class]="'p-button-rounded p-button-text ' + (admin.status === 'Active' ? 'p-button-warning' : 'p-button-success')"
-                (click)="toggleStatus(admin)"></button>
-
-              <button pButton pRipple type="button" icon="pi pi-trash"
-                class="p-button-rounded p-button-text p-button-danger" (click)="deleteAdmin(admin)"></button>
+              <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
+              <p-skeleton width="1.75rem" height="1.75rem" shape="circle"></p-skeleton>
             </div>
           </td>
         </tr>
+        <ng-template #adminRow>
+          <tr>
+            <td>{{row.displayId}}</td>
+            <td>{{row.name}}</td>
+            <td>{{row.email}}</td>
+            <td>{{row.phone}}</td>
+            <td>
+              <div class="flex gap-2">
+                <button pButton pRipple type="button" icon="pi pi-pencil"
+                  class="p-button-rounded p-button-text p-button-primary" (click)="editAdmin(row)"></button>
+                <button pButton pRipple type="button" icon="pi pi-trash"
+                  class="p-button-rounded p-button-text p-button-danger" (click)="deleteAdmin(row)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">

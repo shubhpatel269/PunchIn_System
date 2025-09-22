@@ -75,16 +75,7 @@ body, .punchin-outer {
   border-color: #0284c7 !important;
 }
 
-.right-model {
-  margin-left: auto;
-  height: 100vh !important;
-  max-height: unset !important;
-  border-radius: 0;
- 
-  .p-dialog-content {
-    padding: 0 !important;
-  }
-}
+
 
 button.root.primary.background{
     color  : cyan;
@@ -156,3 +147,19 @@ button.root.primary.background{
     }
   }
 }
+
+.right-model {
+  margin-left: auto;
+  height: 100vh !important;
+  max-height: unset !important;
+  border-radius: 0;
+ 
+  @media (max-width: 960px) {
+    width: 75vw !important;
+  }
+ 
+  @media (max-width: 640px) {
+    width: 100vw !important;
+  }
+}
+ 

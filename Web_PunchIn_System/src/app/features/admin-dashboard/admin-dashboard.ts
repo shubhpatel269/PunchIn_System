@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -11,6 +12,8 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 export class AdminDashboard {
   isCollapsed = false;
   showLogoutModal = false;
+
+  constructor(private authService: AuthService) {}
 
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;
@@ -25,8 +28,7 @@ export class AdminDashboard {
   }
 
   confirmLogout() {
-    // Implement logout logic here
     this.showLogoutModal = false;
-    window.location.href = '/login';
+    this.authService.logout();
   }
 } 

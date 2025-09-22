@@ -40,25 +40,25 @@
         <ng-template pTemplate="content">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Punch In:</span>
+              <span class="text-gray-600">Session Start:</span>
               <p-tag 
-                [value]="todayAttendance?.punchIn || 'Not punched in'" 
-                [severity]="todayAttendance?.punchIn ? 'success' : 'danger'"
-                [icon]="todayAttendance?.punchIn ? 'pi pi-check' : 'pi pi-times'">
+                [value]="formatTime(todayAttendance?.sessionStart) || 'Not started'" 
+                [severity]="todayAttendance?.sessionStart ? 'success' : 'danger'"
+                [icon]="todayAttendance?.sessionStart ? 'pi pi-check' : 'pi pi-times'">
               </p-tag>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Punch Out:</span>
+              <span class="text-gray-600">Session End:</span>
               <p-tag 
-                [value]="todayAttendance?.punchOut || 'Not punched out'" 
-                [severity]="todayAttendance?.punchOut ? 'success' : 'warning'"
-                [icon]="todayAttendance?.punchOut ? 'pi pi-check' : 'pi pi-clock'">
+                [value]="formatTime(todayAttendance?.sessionEnd) || 'Not ended'" 
+                [severity]="todayAttendance?.sessionEnd ? 'success' : 'warning'"
+                [icon]="todayAttendance?.sessionEnd ? 'pi pi-check' : 'pi pi-clock'">
               </p-tag>
             </div>
             <p-divider></p-divider>
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Total Hours:</span>
-              <span class="font-semibold text-lg">{{ todayAttendance?.totalHours || 0 }} hrs</span>
+              <span class="font-semibold text-lg">{{ formatHours(todayAttendance?.totalHours || '00:00:00') }}</span>
             </div>
           </div>
         </ng-template>
@@ -125,17 +125,26 @@
               label="Punch Out" 
               icon="pi pi-sign-out" 
               (onClick)="punchOut()"
-              [disabled]="!todayAttendance?.punchIn || todayAttendance?.punchOut"
+              [disabled]="!todayAttendance?.sessionStart || todayAttendance?.sessionEnd"
               styleClass="w-full"
               severity="warn">
             </p-button>
-            <p-button 
-              label="Take Break" 
-              icon="pi pi-pause" 
-              (onClick)="takeBreak()"
-              styleClass="w-full"
-              severity="info">
-            </p-button>
+            <div class="grid grid-cols-1 pt-2 sm:grid-cols-2 items-center">
+              <div class="sm:col-span-1">
+                <select [(ngModel)]="currentBreakType" class="w-40 p-2 border rounded">
+                  <option *ngFor="let t of breakTypes" [ngValue]="t.value">{{ t.label }}</option>
+                </select>
+              </div>
+              <div class="sm:col-span-1">
+                <p-button 
+                  [label]="isOnBreak ? 'End Break' : 'Start Break'" 
+                  [icon]="isOnBreak ? 'pi pi-play' : 'pi pi-pause'" 
+                  (onClick)="takeBreak()"
+                  styleClass="w-full"
+                  [severity]="isOnBreak ? 'success' : 'info'">
+                </p-button>
+              </div>
+            </div>
             <p-button 
               label="View Attendance" 
               icon="pi pi-calendar" 
@@ -206,7 +215,7 @@
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch In</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch Out</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Hours</th>
-                <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Break Time</th>
               </tr>
             </thead>
             <tbody>
@@ -215,27 +224,23 @@
                   {{ formatDate(record.date) }}
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.punchIn; else noPunchIn">{{ record.punchIn }}</span>
-                  <ng-template #noPunchIn>
+                  <span *ngIf="record.sessionStart; else noSessionStart">{{ formatTime(record.sessionStart) }}</span>
+                  <ng-template #noSessionStart>
                     <span class="text-gray-400">-</span>
                   </ng-template>
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.punchOut; else noPunchOut">{{ record.punchOut }}</span>
-                  <ng-template #noPunchOut>
+                  <span *ngIf="record.sessionEnd; else noSessionEnd">{{ formatTime(record.sessionEnd) }}</span>
+                  <ng-template #noSessionEnd>
                     <span class="text-gray-400">-</span>
                   </ng-template>
                 </td>
                 <td class="py-3 px-4">
-                  <span class="font-medium">{{ record.totalHours }}h</span>
+                  <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
                 </td>
-                <td class="py-3 px-4">
-                  <p-tag 
-                    [value]="record.status | titlecase" 
-                    [severity]="getStatusColor(record.status)"
-                    [icon]="getStatusIcon(record.status)">
-                  </p-tag>
-                </td>
+                 <td class="py-3 px-4">
+                   <span class="font-medium">{{ record.totalBreak || '-' }}</span>
+                 </td>
               </tr>
             </tbody>
           </table>

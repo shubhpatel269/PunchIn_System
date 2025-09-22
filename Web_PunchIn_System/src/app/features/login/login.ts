@@ -9,10 +9,12 @@ import { ImageModule } from 'primeng/image';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { Employee } from '../../shared/services/employee';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { AuthService } from '../../shared/services/auth.service';
+import { PunchService } from '../../shared/services/punch.service';
+import { SessionService } from '../../shared/services/session.service';
+import { LocationLogService } from '../../shared/services/location-log.service';
 
 
 
@@ -78,6 +80,9 @@ export class Login implements AfterViewInit, OnDestroy {
   isLoadingDescriptors: boolean = true;
   detectedEmployee: any = null;
   lastFaceNotRecognizedTime: number = 0;
+  private lastFaceDescriptor: number[] | null = null;
+  private nextRoute: string[] | null = null;
+  private activePunchId: number | null = null;
   detectedUser: string = "";
   faceDetectionInterval: any = null;
 
@@ -98,10 +103,12 @@ export class Login implements AfterViewInit, OnDestroy {
 
   constructor(private router: Router,
     private messageService: MessageService,
-    private employeeService: Employee,
     private confirmationService: ConfirmationService,
     private ngZone: NgZone,
-    private authService: AuthService
+    private authService: AuthService,
+    private punchService: PunchService,
+    private sessionService: SessionService,
+    private locationLogService: LocationLogService
   ) { }
 
   login() {
@@ -113,7 +120,10 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   switchToNoneTab() {
-    this.activeTab = 'none';
+    if(this.activeTab == 'user'){
+      this.stopVideo();
+      }  
+      this.activeTab = 'none';
     this.showAdminLogin = false;
     this.showSignIn = false;
     if (this.isFaceDetected) {
@@ -195,6 +205,7 @@ export class Login implements AfterViewInit, OnDestroy {
 
   async ngOnInit() {
     await this.loadModels();
+    localStorage.clear();
   }
 
 
@@ -215,7 +226,7 @@ export class Login implements AfterViewInit, OnDestroy {
       // Start the blink detection loop
       this.detectFaceWithBlink();
     } catch (error) {
-      console.error('Error initializing face recognition:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Initialization Error',
@@ -242,7 +253,7 @@ export class Login implements AfterViewInit, OnDestroy {
         numFaces: 1
       });
     } catch (error) {
-      console.error('Error initializing MediaPipe:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -287,7 +298,7 @@ export class Login implements AfterViewInit, OnDestroy {
       return Promise.resolve();
 
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      
       this.camera_permission = false;
       this.messageService.add({
         severity: 'warn',
@@ -360,7 +371,7 @@ export class Login implements AfterViewInit, OnDestroy {
             this.showBlinkInstruction = false;
           }
         } catch (error) {
-          console.error('Error in face detection loop:', error);
+          
           // Continue detection even if there's an error
         }
       }
@@ -415,13 +426,11 @@ export class Login implements AfterViewInit, OnDestroy {
       if (result) {
         // Convert Float32Array to regular array for JSON serialization
         const faceDescriptor = Array.from(result.descriptor);
+        this.lastFaceDescriptor = faceDescriptor;
         
         // Send to backend for verification
         this.authService.faceLogin(faceDescriptor).subscribe({
           next: (response) => {
-            // Stop all detection processes
-            this.stopVideo();
-            
             // Get user data from response
             const user = response.user;
             const userName = `${user.employeeFirstName} ${user.employeeLastName}`;
@@ -436,12 +445,17 @@ export class Login implements AfterViewInit, OnDestroy {
             this.detectedUser = `User: ${userName}`;
             this.detectedEmployee = user;
             
-            // Capture snapshot and get location
+            // Capture snapshot BEFORE stopping video
             const imageData = this.captureSnapshot();
+            
+            // Stop all detection processes AFTER capturing snapshot
+            this.stopVideo();
+            
+            // Process the captured snapshot and get location
             this.requestLocationAndSave(imageData);
           },
           error: (error) => {
-            console.error('Face login failed:', error);
+            
             this.messageService.add({
               severity: 'warn',
               summary: 'Face Not Recognized',
@@ -472,7 +486,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.showBlinkInstruction = true;
       }
     } catch (error) {
-      console.error('Error in face recognition:', error);
+      
       this.messageService.add({
         severity: 'error',
         summary: 'Recognition Error',
@@ -544,7 +558,7 @@ export class Login implements AfterViewInit, OnDestroy {
           this.detectedEmployee = null;
         }
       } catch (error) {
-        console.error('Error in face detection:', error);
+        
         // Clear interval on error
         clearInterval(this.faceDetectionInterval);
         this.faceDetectionInterval = null;
@@ -555,11 +569,11 @@ export class Login implements AfterViewInit, OnDestroy {
   // Find best matching face from database using face descriptor
   findBestMatch(queryDescriptor: Float32Array) {
     if (!queryDescriptor || queryDescriptor.length === 0) {
-      console.error('Invalid query descriptor');
+      
       return null;
     }
 
-    console.log('Starting face matching with', this.employeeDescriptors.length, 'stored descriptors');
+    
 
     let minDistance = 0.6; // Increased threshold to be more permissive
     let bestMatch = null;
@@ -567,24 +581,24 @@ export class Login implements AfterViewInit, OnDestroy {
     for (const emp of this.employeeDescriptors) {
       try {
         if (!emp.descriptor || !(emp.descriptor instanceof Float32Array)) {
-          console.warn('Invalid descriptor for employee:', emp.name);
+          
           continue;
         }
 
         const distance = faceapi.euclideanDistance(emp.descriptor, queryDescriptor);
-        console.log(`Distance to ${emp.name} (ID: ${emp.id}):`, distance);
+        
 
         if (distance < minDistance) {
           minDistance = distance;
           bestMatch = emp;
-          console.log(`New best match found: ${emp.name} with distance ${distance}`);
+          
         }
       } catch (error) {
-        console.error(`Error comparing with employee ${emp.name}:`, error);
+        
       }
     }
 
-    console.log('Best match:', bestMatch ? `${bestMatch.name} (distance: ${minDistance})` : 'No match found');
+    
     return bestMatch;
   }
 
@@ -602,7 +616,7 @@ export class Login implements AfterViewInit, OnDestroy {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageData = canvas.toDataURL('image/jpeg');
-      console.log('Snapshot taken');
+      
       return imageData;
     }
 
@@ -616,7 +630,10 @@ export class Login implements AfterViewInit, OnDestroy {
         this.longitude = position.coords.longitude;
         const lat: number = this.latitude;
         const long: number = this.longitude;
-        const timestamp: string = new Date().toLocaleString();
+        
+        // Create timestamp that's slightly in the past to avoid "future timestamp" error
+        const now = new Date();
+        const timestamp: string = new Date(now.getTime() - 1000).toISOString(); // 1 second in the past
 
         // Store punch data
         const punch: Punch = {
@@ -629,7 +646,7 @@ export class Login implements AfterViewInit, OnDestroy {
         };
 
         this.punchData.push(punch);
-        // Store user details in localStorage
+        // Store user details in localStorage and call PunchIn API
         if (this.detectedEmployee) {
           const userData = {
             name: `${this.detectedEmployee.employeeFirstName} ${this.detectedEmployee.employeeLastName}`,
@@ -637,23 +654,97 @@ export class Login implements AfterViewInit, OnDestroy {
             employeeId: this.detectedEmployee.employeeId,
             companyId: this.detectedEmployee.companyId,
             location: lat && long ? `${lat}, ${long}` : '',
-            punchedTime: timestamp,
+            punchedTime: new Date().toLocaleString(),
             mobile: this.detectedEmployee.employeePhone
           };
 
           // Save user data to localStorage
           localStorage.setItem('punchInUser', JSON.stringify(userData));
 
+          // Prepare punch payload
+          const faceDescriptorString = JSON.stringify(this.lastFaceDescriptor || []);
+          
+          // Check if face descriptor is valid
+          if (!this.lastFaceDescriptor || this.lastFaceDescriptor.length === 0) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Face Recognition Error',
+              detail: 'Face descriptor not available. Please try again.',
+              life: 4000
+            });
+            return;
+          }
+          
+          const punchPayload = {
+            employeeId: String(this.detectedEmployee.employeeId),
+            punchTimestamp: timestamp,
+            punchFaceUrl: imageData,
+            punchFaceId: faceDescriptorString,
+            punchLocationLong: Number(long || 0),
+            punchLocationLat: Number(lat || 0)
+          };
+
+          // Call PunchIn API; on success start session, then start countdown
+          this.punchService.punchIn(punchPayload).subscribe({
+            next: (punchResponse) => {
+              const punchId = punchResponse?.punchId ?? punchResponse?.id ?? 0;
+              this.activePunchId = punchId || null;
+              if (this.activePunchId) {
+                localStorage.setItem('activePunchId', String(this.activePunchId));
+              }
+              if (!punchId) {
+                
+              }
+
+              const sessionPayload = {
+                punchId: punchId,
+                employeeId: this.detectedEmployee.employeeId,
+                sessionStatus: 'active',
+                sessionStartTime: new Date().toISOString(),
+                sessionEndTime: null,
+                sessionLocationLong: long || 0,
+                sessionLocationLat: lat || 0,
+                sessionBreakTime: null
+              };
+
+              this.sessionService.startSession(sessionPayload).subscribe({
+                next: (sessionResponse) => {
+                  const sessionId = sessionResponse?.sessionId ?? sessionResponse?.id ?? null;
+                  if (sessionId) {
+                    localStorage.setItem('activeSessionId', String(sessionId));
+                  }
           this.messageService.add({
             severity: 'success',
             summary: 'Punch-In Successful',
-            detail: `Welcome ${userData.name}! You punched in at ${timestamp}`,
-            life: 4000
+                    detail: `Welcome ${userData.name}!`,
+                    life: 3000
           });
-
-          // Navigate to home after a short delay
-          this.startNavigationCountdown();
           this.startSession();
+                  // set next route and start countdown (do not navigate immediately)
+                  this.nextRoute = ['/employee/dashboard'];
+                  this.startNavigationCountdown();
+                },
+                error: (err) => {
+                  
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'Session Start Failed',
+                    detail: 'Could not start your work session. Please try again.',
+                    life: 4000
+                  });
+                }
+              });
+            },
+            error: (err) => {
+              
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Punch-In Failed',
+                detail: 'Could not record punch. Please try again.',
+                life: 4000
+              });
+            }
+          });
         }
       },
       (error) => {
@@ -690,7 +781,13 @@ export class Login implements AfterViewInit, OnDestroy {
       } else {
         this.timerRequestId = null;
         this.ngZone.run(() => {
-          // Navigate to the appropriate dashboard based on user role
+          // Use nextRoute if provided; otherwise fallback to role-based navigation
+          if (this.nextRoute) {
+            const route = this.nextRoute;
+            this.nextRoute = null;
+            this.router.navigate(route);
+            return;
+          }
           const userRole = localStorage.getItem('user_role');
           if (userRole === 'Admin') {
             this.router.navigate(['/admin']);
@@ -742,7 +839,7 @@ export class Login implements AfterViewInit, OnDestroy {
           this.videoRef.nativeElement.srcObject = null;
           this.videoRef.nativeElement.pause();
         } catch (e) {
-          console.warn('Error while stopping video tracks:', e);
+          
         }
       }
       
@@ -752,7 +849,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.videoRef.nativeElement.load();
       }
     } catch (error) {
-      console.error('Error stopping video:', error);
+      
     }
   }
 
@@ -761,38 +858,19 @@ export class Login implements AfterViewInit, OnDestroy {
     this.sessionActive = true;
     this.sessionStartTime = new Date();
 
-    // Log when setInterval is scheduled
-    const intervalScheduledAt = performance.now();
-    console.log('setInterval scheduled at:', intervalScheduledAt);
 
     this.locationInterval = setInterval(() => {
-      const intervalCallbackAt = performance.now();
-      console.log(
-        'setInterval callback at:', intervalCallbackAt,
-        '| Delay since scheduled:', (intervalCallbackAt - intervalScheduledAt).toFixed(2), 'ms'
-      );
       this.trackUserLocation();
-    }, 10 * 1000); // 10 sec for fast check
+    }, 30 * 60 * 1000); // 30 min 
 
-    // Log when setTimeout is scheduled
-    const timeoutScheduledAt = performance.now();
-    console.log('setTimeout scheduled at:', timeoutScheduledAt);
 
     this.sessionTimer = setTimeout(() => {
-      const timeoutCallbackAt = performance.now();
-      console.log(
-        'setTimeout callback at:', timeoutCallbackAt,
-        '| Delay since scheduled:', (timeoutCallbackAt - timeoutScheduledAt).toFixed(2), 'ms'
-      );
       this.endSession();
-    }, 60 * 60 * 1000); // 1 hour
+    }, 4 * 60 * 60 * 1000); // 4 hours
 
-    console.log("WFH session tracking started.");
   }
 
   trackUserLocation() {
-
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const log: LocationLog = {
@@ -801,7 +879,7 @@ export class Login implements AfterViewInit, OnDestroy {
           long: position.coords.longitude
         };
         this.locationLogs.push(log);
-        console.log(" Location logged:", log);
+        
 
         this.messageService.add({
           severity: 'info',
@@ -809,6 +887,31 @@ export class Login implements AfterViewInit, OnDestroy {
           detail: `Lat: ${log.lat}, Long: ${log.long}`,
           life: 3000
         });
+
+        try {
+          const sessionIdStr = localStorage.getItem('activeSessionId');
+          const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
+          const employeeId = this.detectedEmployee?.employeeId || JSON.parse(localStorage.getItem('punchInUser') || '{}')?.employeeId;
+          if (sessionId && employeeId) {
+            const payload = {
+              sessionId: sessionId,
+              employeeId: employeeId,
+              logTimestamp: new Date().toISOString(),
+              locationLong: log.long,
+              locationLat: log.lat
+            };
+            this.locationLogService.createLog(payload).subscribe({
+              next: () => {
+                // Optional: silent success
+              },
+              error: (err) => {
+                
+              }
+            });
+          }
+        } catch (e) {
+          
+        }
       },
       (error) => {
         this.messageService.add({
@@ -907,7 +1010,7 @@ export class Login implements AfterViewInit, OnDestroy {
         this.timerWorker.postMessage('stop');
         this.timerWorker.terminate();
       } catch (e) {
-        console.warn('Error terminating timer worker:', e);
+        
       } finally {
         this.timerWorker = undefined;
       }

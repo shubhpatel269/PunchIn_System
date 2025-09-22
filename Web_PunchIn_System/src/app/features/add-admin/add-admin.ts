@@ -1,232 +1,164 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
-import { FileUploadModule } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { GeolocationService } from '@ng-web-apis/geolocation';
-import { HttpClient } from '@angular/common/http';
-import { Employee } from '../../shared/services/employee';
-import { DialogModule } from 'primeng/dialog';
-import { ViewChild, ElementRef } from '@angular/core';
-import { ImageModule } from 'primeng/image';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import * as faceapi from 'face-api.js';
+import { DatePicker, DatePickerModule } from 'primeng/datepicker';
+import { CompanyAdminService } from '../../shared/services/company-admin.service';
 
 @Component({
   selector: 'app-add-admin',
   standalone: true,
-  imports: [CardModule, InputTextModule, FileUploadModule, ButtonModule, ReactiveFormsModule, DialogModule, ImageModule, ToastModule],
+  imports: [CardModule, InputTextModule, ButtonModule, ReactiveFormsModule, ToastModule, DatePicker],
   templateUrl: './add-admin.html',
   styleUrls: ['./add-admin.css']
 })
-export class AddAdmin {
-  registerForm: FormGroup;
-  uploadedFileName: string | null = null;
+export class AddAdmin implements OnInit {
+  adminForm: FormGroup;
+  isEditMode: boolean = false;
+  loading: boolean = false;
+  maxDate = new Date();
+  formInitialized = false;
 
-  showCameraDialog = false;
-  private stream: MediaStream | null = null;
-
-  editingEmployee: any = null;
-
-  @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
-  @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
-
-  private faceModelsLoaded = false;
 
   constructor(
     private fb: FormBuilder,
-    private geolocation$: GeolocationService,
-    private http: HttpClient,
-    private employeeService: Employee,
     public ref: DynamicDialogRef,
     public config: DynamicDialogConfig,
-    public messageService: MessageService
+    public messageService: MessageService,
+    private companyAdminService: CompanyAdminService
   ) {
-    this.registerForm = this.fb.group({
-      employeeId: ['', Validators.required],
-      name: ['', [Validators.required, Validators.pattern('^[a-zA-Z\\s]*$')]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      image: [null, Validators.required],
-      location: ['', Validators.required]
+    this.isEditMode = config?.data?.admin ? true : false;
+    
+    this.adminForm = this.fb.group({
+      adminFirstName: ['', [Validators.required, Validators.pattern('^[a-zA-Z\\s]*$')]],
+      adminMiddleName: [''],
+      adminLastName: ['', [Validators.required, Validators.pattern('^[a-zA-Z\\s]*$')]],
+      adminEmail: ['', [Validators.required, Validators.email]],
+      adminPassword: ['', this.isEditMode ? [] : [Validators.required, Validators.minLength(6)]],
+      adminPhone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      adminDob: ['', Validators.required],
+      isActive: [true]
     });
-    if (config && config.data && config.data.employee) {
-      this.editingEmployee = config.data.employee;
-      this.registerForm.patchValue(config.data.employee);
-      this.uploadedFileName = null;
+
+    if (this.isEditMode && config.data.admin) {
+      // Handle date formatting for edit mode
+      const adminData = { ...config.data.admin };
+      console.log('Edit mode - original admin data:', adminData);
+      if (adminData.adminDob) {
+        // Convert string date to Date object for display
+        console.log('Original date string:', adminData.adminDob);
+        adminData.adminDob = new Date(adminData.adminDob);
+        console.log('Converted to Date object:', adminData.adminDob);
+      }
+      this.adminForm.patchValue(adminData);
+      // Remove password validation for edit mode
+      this.adminForm.get('adminPassword')?.clearValidators();
+      this.adminForm.get('adminPassword')?.updateValueAndValidity();
     }
+  }
+
+  ngOnInit() {
+    // Focus on first name field instead of date field
+    setTimeout(() => {
+      const firstNameInput = document.getElementById('adminFirstName') as HTMLInputElement;
+      if (firstNameInput) {
+        firstNameInput.focus();
+      }
+      
+      // Reset all form fields to untouched state to prevent validation errors on load
+      this.adminForm.markAsUntouched();
+      this.formInitialized = true;
+    }, 100);
   }
 
   onClose() {
     this.ref.close();
   }
 
-  onImageUpload(event: any) {
-    const file = event.files && event.files.length > 0 ? event.files[0] : null;
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        this.registerForm.patchValue({ image: base64 });
-        this.registerForm.get('image')?.updateValueAndValidity();
-      };
-      reader.readAsDataURL(file);
-      this.uploadedFileName = file.name;
-    } else {
-      this.registerForm.patchValue({ image: null });
-      this.uploadedFileName = null;
-    }
-  }
 
-  removeImage() {
-    this.registerForm.patchValue({ image: null });
-    this.registerForm.get('image')?.updateValueAndValidity();
-    this.uploadedFileName = null;
-  }
-  openCamera() {
-    this.showCameraDialog = true;
-    setTimeout(() => {
-      this.startCamera();
-    }, 100); // Wait for dialog to render
-  }
-
-  startCamera() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          this.stream = stream;
-          if (this.videoRef && this.videoRef.nativeElement) {
-            this.videoRef.nativeElement.srcObject = stream;
-            this.videoRef.nativeElement.play();
-          }
-        })
-        .catch((err) => {
-          alert('Could not access the camera. Please allow camera access.');
-          this.closeCamera();
-        });
-    } else {
-      alert('Camera not supported in this browser.');
-      this.closeCamera();
-    }
-  }
-
-  capturePhoto(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
-    const context = canvas.getContext('2d');
-    if (context) {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const base64 = canvas.toDataURL('image/png');
-      this.registerForm.patchValue({ image: base64 });
-      this.registerForm.get('image')?.updateValueAndValidity();
-      this.uploadedFileName = 'captured-photo.png';
-      this.closeCamera();
-    }
-  }
-
-  closeCamera() {
-    this.showCameraDialog = false;
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-  }
-
-  getCurrentLocation() {
-    const subscription = this.geolocation$.subscribe({
-      next: (position: GeolocationPosition) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        this.reverseGeocode(lat, lng);
-        subscription.unsubscribe();
-      },
-      error: () => {
-        this.messageService.add({ severity: 'warn', summary: 'Location Tracking Error', detail: 'Unable to access location.' }); subscription.unsubscribe();
-      }
-    });
-  }
-
-  reverseGeocode(lat: number, lng: number) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`;
-    this.http.get<any>(url).subscribe({
-      next: (data) => {
-        const address = data.address;
-        const city = address.city || address.town || address.village || '';
-        let locationString = '';
-        if (city) locationString += (locationString ? ', ' : '') + `${city}`;
-        if (!locationString) locationString = 'Location not found';
-        this.registerForm.patchValue({ location: locationString });
-      },
-      error: () => {
-        alert('Failed to get location details.');
-      }
-    });
-  }
-
-  async loadFaceModels() {
-    if (!this.faceModelsLoaded) {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models/face-api/');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models/face-api/');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models/face-api/');
-      this.faceModelsLoaded = true;
-    }
-  }
-
-  async detectFaceInImage(base64Image: string): Promise<boolean> {
-    await this.loadFaceModels();
-    const img = document.createElement('img');
-    img.src = base64Image;
-    await new Promise(resolve => { img.onload = () => resolve(true); });
-    const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-    const detection = await faceapi.detectSingleFace(img, options).withFaceLandmarks().withFaceDescriptor();
-    return !!detection;
-  }
-
-  async register() {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
+  onSubmit() {
+    if (this.adminForm.invalid) {
+      this.adminForm.markAllAsTouched();
       return;
     }
-    const image = this.registerForm.get('image')?.value;
-    if (image) {
-      const faceDetected = await this.detectFaceInImage(image);
-      if (!faceDetected) {
-        this.messageService.add({ severity: 'warn', summary: 'Face Not Detected', detail: 'No face detected in the uploaded image. Please upload a clear photo with your face visible.' });
-        return;
-      }
+
+    this.loading = true;
+    const formData = { ...this.adminForm.value };
+
+    // Format date for API - fix timezone issue
+    if (formData.adminDob) {
+      const date = new Date(formData.adminDob);
+      console.log('Original date:', formData.adminDob);
+      console.log('Date object:', date);
+      // Use local date to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      formData.adminDob = `${year}-${month}-${day}`;
+      console.log('Formatted date for API:', formData.adminDob);
     }
-    if (this.editingEmployee) {
-      this.employeeService.updateEmployee(this.editingEmployee.id || this.editingEmployee.employeeId, this.registerForm.value).subscribe({
+
+    console.log('Form data being sent:', formData);
+
+    if (this.isEditMode) {
+      // For edit mode, include adminId and companyId
+      const adminData = {
+        ...formData,
+        adminId: this.config.data.admin.adminId,
+        companyId: this.config.data.admin.companyId
+      };
+      
+      this.companyAdminService.updateAdmin(adminData).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'User updated successfully.' });
-          this.ref.close('updated');
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Success', 
+            detail: 'Admin updated successfully.' 
+          });
+          this.ref.close(adminData);
         },
-        error: () => {
-          this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'User not updated.' });
+        error: (error) => {
+          console.error('Error updating admin:', error);
+          const errorMessage = error.error?.message || error.message || 'Failed to update admin.';
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: errorMessage 
+          });
+          this.loading = false;
         }
       });
     } else {
-      this.employeeService.registerEmployee(this.registerForm.value).subscribe({
+      // For add mode, include companyId as 0 - backend will handle it from token
+      const adminData = {
+        ...formData,
+        companyId: 0
+      };
+      
+      this.companyAdminService.addAdmin(adminData).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Registered', detail: 'User registered successfully.' });
-          this.registerForm.reset();
-          this.uploadedFileName = null;
-          this.ref.close('updated');
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Success', 
+            detail: 'Admin added successfully.' 
+          });
+          this.ref.close(adminData);
         },
-        error: () => {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to register user.' });
+        error: (error) => {
+          console.error('Error adding admin:', error);
+          const errorMessage = error.error?.message || error.message || 'Failed to add admin.';
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Error', 
+            detail: errorMessage 
+          });
+          this.loading = false;
         }
-      });
-    }
-  }
-
-  deleteUser() {
-    if (this.editingEmployee && confirm('Are you sure you want to delete this user?')) {
-      this.employeeService.deleteEmployee(this.editingEmployee.id || this.editingEmployee.employeeId).subscribe(() => {
-        alert('User deleted successfully!');
-        this.ref.close('deleted');
       });
     }
   }
