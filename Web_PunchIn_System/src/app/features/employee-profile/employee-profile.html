@@ -68,20 +68,6 @@
                 <p class="text-sm text-gray-500">{{ getDepartmentLabel(profile?.employeeDepartment || '') }}</p>
               </div>
 
-              <!-- Status -->
-              <div>
-                <p-tag 
-                  [value]="profile?.employeeStatus" 
-                  [severity]="getStatusSeverity(profile?.employeeStatus || '')"
-                  [icon]="profile?.employeeStatus === 'Active' ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'">
-                </p-tag>
-              </div>
-
-              <!-- Employee ID -->
-              <div class="bg-gray-50 rounded-lg p-4">
-                <p class="text-sm text-gray-500">Employee ID</p>
-                <p class="font-semibold text-gray-900">{{ profile?.employeeId }}</p>
-              </div>
 
               <!-- Quick Actions -->
               <!-- <div class="space-y-2">
