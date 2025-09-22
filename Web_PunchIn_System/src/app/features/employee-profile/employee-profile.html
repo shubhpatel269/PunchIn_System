@@ -209,46 +209,6 @@
                 </div>
               </div>
 
-              <p-divider></p-divider>
-
-              <!-- Employment Information (Read Only) -->
-              <div>
-                <h4 class="text-lg font-medium text-gray-900 mb-4">Employment Information</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <input 
-                      type="text" 
-                      [value]="getDepartmentLabel(profile?.employeeDepartment || '')" 
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                    <input 
-                      type="text" 
-                      [value]="profile?.employeePosition" 
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
-                    <input 
-                      type="text" 
-                      [value]="profile?.employeeHireDate | date:'mediumDate'" 
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <input 
-                      type="text" 
-                      [value]="profile?.employeeStatus" 
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  </div>
-                </div>
-              </div>
             </div>
           </ng-template>
         </p-card>

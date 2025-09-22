@@ -156,13 +156,12 @@ export class EmployeeProfileComponent implements OnInit {
     // Simulate API call
     setTimeout(() => {
       if (this.profile && this.editForm) {
-        // Only update the editable fields (email is permanent and not updated)
+        // Only update the editable fields
         this.profile.employeeFirstName = this.editForm.employeeFirstName || this.profile.employeeFirstName;
         this.profile.employeeLastName = this.editForm.employeeLastName || this.profile.employeeLastName;
         this.profile.employeeDob = this.editForm.employeeDob || this.profile.employeeDob;
         this.profile.employeePhone = this.editForm.employeePhone || this.profile.employeePhone;
         this.profile.employeeAddress = this.editForm.employeeAddress || this.profile.employeeAddress;
-        // Note: employeeEmail is not updated - it remains permanent
         
         // Save updated profile to localStorage
         this.saveProfileToStorage();
