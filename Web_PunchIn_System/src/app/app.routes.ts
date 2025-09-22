@@ -35,7 +35,6 @@ export const routes: Routes = [
             { path: 'add-employee', component: AddNewProfileComponent },
             { path: 'edit-employee/:id', component: AddNewProfileComponent },
             // { path: 'manage-company-profile', component: ManageCompanyProfile },
-            { path: 'reports', loadComponent: () => import('./features/reports/reports').then(m => m.Reports) },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]

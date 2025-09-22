@@ -1,242 +1,90 @@
 <div class="dashboard-container p-4">
-    <!-- Header Section with Right-aligned Controls -->
-    <div class="flex flex-col gap-4 mb-6">
-      <!-- Top Bar -->
-      <div class="flex justify-between items-center">
-        <div class="text-left">
-          <h1 class="text-2xl font-semibold text-gray-800 m-0">Attendance Dashboard</h1>
-          <p class="text-gray-500">{{ currentDate | date:'EEEE, MMMM d, y' }}</p>
-        </div>
-        
-        <!-- Right-aligned Controls -->
-        <div class="flex items-center gap-2">
-          <div class="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm">
-            <button pButton pRipple 
-                    label="Today" 
-                    (click)="onDateSelect(getToday())" 
-                    class="p-button-text p-button-sm"></button>
-            
-            <button pButton pRipple 
-                    label="Yesterday" 
-                    (click)="onDateSelect(getYesterday())" 
-                    class="p-button-text p-button-sm"></button>
-            
-            <p-datepicker [(ngModel)]="dateRange" 
-                       selectionMode="range" 
-                       [showIcon]="true"
-                       [showButtonBar]="true"
-                       inputId="range"
-                       styleClass="w-56"
-                       inputStyleClass="w-full"
-                       (onSelect)="onDateSelect($event)">
-            </p-datepicker>
-            
-            <p-select [options]="companies" 
-                     [(ngModel)]="selectedCompany" 
-                     optionLabel="name" 
-                     placeholder="Company"
-                     [showClear]="true"
-                     styleClass="w-36">
-            </p-select>
-            
-            <button pButton pRipple 
-                    icon="pi pi-download" 
-                    label="Export"
-                    class="p-button-outlined"
-                    (click)="exportToExcel()"
-                    tooltip="Export to Excel">
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Total Punch-ins Card -->
-      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div class="flex items-start justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Punch-ins</div>
-            <div class="mt-2">
-              <div class="text-4xl font-bold text-gray-800">{{totalPunchIns}}</div>
-              <div class="flex items-center mt-2">
-                <span class="flex items-center text-green-500 text-sm font-medium">
-                  <i class="pi pi-arrow-up mr-1"></i>
-                  +12% from yesterday
-                </span>
-              </div>
+  <!-- Header Section -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800 m-0">Attendance Dashboard</h1>
+    <p class="text-gray-500">{{ currentDate | date:'EEEE, MMMM d, y' }}</p>
+  </div>
+  
+  <!-- Stats Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Punch-ins Card -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Punch-ins</div>
+          <div class="mt-2">
+            <div class="text-4xl font-bold text-gray-800">{{totalPunchIns}}</div>
+            <div class="flex items-center mt-2">
+              <span class="flex items-center text-green-500 text-sm font-medium">
+                <i class="pi pi-arrow-up mr-1"></i>
+                +12% from yesterday
+              </span>
             </div>
           </div>
-          <div class="bg-blue-50 p-3 rounded-lg">
-            <i class="pi pi-users text-blue-500 text-2xl"></i>
-          </div>
+        </div>
+        <div class="bg-blue-50 p-3 rounded-lg">
+          <i class="pi pi-users text-blue-500 text-2xl"></i>
         </div>
       </div>
     </div>
-    
-    <!-- Stats Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <!-- Active Sessions Card -->
-      <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-500 text-sm font-medium">Active Sessions</span>
-          <div class="w-2 h-2 rounded-full bg-green-500"></div>
-        </div>
-        <div class="flex items-end justify-between">
-          <span class="text-2xl font-bold">{{activeSessions}}</span>
-          <div class="w-12 h-12 flex items-center justify-center">
-            <i class="pi pi-users text-green-500 text-2xl"></i>
-          </div>
-        </div>
-      </div>
 
-      <!-- On Break Card -->
-      <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-500 text-sm font-medium">On Break</span>
-          <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-        </div>
-        <div class="flex items-end justify-between">
-          <div>
-            <span class="text-2xl font-bold block">{{employeesOnBreak}}</span>
-            <span class="text-xs text-gray-500">Avg. 15 min</span>
-          </div>
-          <div class="w-12 h-12 flex items-center justify-center">
-            <i class="pi pi-clock text-yellow-500 text-2xl"></i>
-          </div>
-        </div>
+    <!-- Active Sessions Card -->
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-gray-500 text-sm font-medium">Active Sessions</span>
+        <div class="w-2 h-2 rounded-full bg-green-500"></div>
       </div>
-
-      <!-- Attendance Card -->
-      <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-500 text-sm font-medium">Attendance</span>
-          <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+      <div class="flex items-end justify-between">
+        <span class="text-2xl font-bold">{{activeSessions}}</span>
+        <div class="w-12 h-12 flex items-center justify-center">
+          <i class="pi pi-users text-green-500 text-2xl"></i>
         </div>
-        <div class="flex items-end justify-between">
-          <span class="text-2xl font-bold">{{attendanceRate}}%</span>
-          <div class="w-12 h-12 flex items-center justify-center">
-            <i class="pi pi-chart-pie text-blue-500 text-2xl"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Employees Card -->
-      <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-gray-500 text-sm font-medium">Total Employees</span>
-          <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-        </div>
-   
-      
-     
       </div>
     </div>
 
-    
-      <!-- Three Charts Side by Side -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-        <!-- Department Breakdown -->
-        <div class="w-full">
-          <p-card header="Department Attendance">
-            <p-chart type="bar" [data]="departmentData" [options]="{'indexAxis': 'y', 'responsive': true, 'maintainAspectRatio': false}" style="height: 250px;"></p-chart>
-          </p-card>
+    <!-- On Break Card -->
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-gray-500 text-sm font-medium">On Break</span>
+        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+      </div>
+      <div class="flex items-end justify-between">
+        <div>
+          <span class="text-2xl font-bold block">{{employeesOnBreak}}</span>
+          <span class="text-xs text-gray-500">Avg. 15 min</span>
         </div>
-
-        <!-- Session Duration -->
-        <div class="w-full">
-          <p-card header="Session Duration">
-            <p-chart type="bar" [data]="sessionDurationData" [options]="{'responsive': true, 'maintainAspectRatio': false}" style="height: 250px;"></p-chart>
-          </p-card>
-        </div>
-
-        <!-- Break Pattern -->
-        <div class="w-full">
-          <p-card header="Break Pattern">
-            <p-chart type="line" [data]="breakPatternData" [options]="{'responsive': true, 'maintainAspectRatio': false}" style="height: 250px;"></p-chart>
-          </p-card>
+        <div class="w-12 h-12 flex items-center justify-center">
+          <i class="pi pi-clock text-yellow-500 text-2xl"></i>
         </div>
       </div>
     </div>
-  
-  
-    <!-- Main Content Area -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <!-- Live Attendance Map - Smaller Square Box -->
-      <div class="lg:col-span-1">
-        <p-card header="Live Attendance Map">
-          <div class="aspect-square bg-gray-50 rounded flex items-center justify-center">
-            <span class="text-gray-400">Map will be displayed here</span>
-          </div>
-        </p-card>
-      </div>
 
-      <!-- Timeline Chart - Takes remaining 2/3 width -->
-      <div class="lg:col-span-2">
-        <p-card header="Hourly Punch-in Distribution">
-          <p-chart type="line" [data]="hourlyData" [options]="{'responsive': true, 'maintainAspectRatio': false}" style="height: 250px;"></p-chart>
-        </p-card>
+    <!-- Attendance Card -->
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-gray-500 text-sm font-medium">Attendance</span>
+        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
       </div>
+      <div class="flex items-end justify-between">
+        <span class="text-2xl font-bold">{{attendanceRate}}%</span>
+        <div class="w-12 h-12 flex items-center justify-center">
+          <i class="pi pi-chart-pie text-blue-500 text-2xl"></i>
+        </div>
+      </div>
+    </div>
 
-    <!-- Employee Status Panel -->
-    <p-card header="Employee Status" class="mt-4">
-        <p-tabs [(value)]="activeTabIndex">
-          <p-tab *ngFor="let status of statuses">
-            
-            <!-- ✅ Tab Header (header property બદલે template use કરો) -->
-            <ng-template pTemplate="header">
-              {{ status }}
-            </ng-template>
-      
-            <!-- ✅ Tab Content -->
-            <p-table [value]="employees" [paginator]="true" [rows]="10" 
-                     [rowsPerPageOptions]="[10,25,50]" 
-                     [globalFilterFields]="['name','designation']" 
-                     styleClass="p-datatable-sm">
-      
-              <!-- Table Header -->
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Employee ID</th>
-                  <th>Name</th>
-                  <th>Designation</th>
-                  <th>Punch-in Time</th>
-                  <th>Status</th>
-                  <th>Session Duration</th>
-                  <th>Breaks</th>
-                  <th>Location</th>
-                </tr>
-              </ng-template>
-      
-              <!-- Table Body -->
-              <ng-template pTemplate="body" let-employee>
-                <tr>
-                  <td>{{employee.id}}</td>
-                  <td>{{employee.name}}</td>
-                  <td>{{employee.designation}}</td>
-                  <td>{{employee.punchInTime | date:'shortTime'}}</td>
-                  <td>
-                    <span [ngClass]="{
-                      'p-tag p-tag-success': employee.status === 'active',
-                      'p-tag p-tag-warning': employee.status === 'paused',
-                      'p-tag p-tag-danger': employee.status === 'completed'
-                    }">
-                      {{employee.status}}
-                    </span>
-                  </td>
-                  <td>{{employee.sessionDuration}}</td>
-                  <td>{{employee.breakCount}} ({{employee.breakDuration}})</td>
-                  <td>{{employee.location}}</td>
-                </tr>
-              </ng-template>
-            </p-table>
-      
-          </p-tab>
-        </p-tabs>
-      </p-card>
-      
-    <!-- Action Panel -->
-    <div class="flex justify-content-end gap-2 mt-4">
-      <button pButton pRipple icon="pi pi-download" label="Export to Excel" (click)="exportReport('excel')" class="p-button-outlined"></button>
-      <button pButton pRipple icon="pi pi-file-pdf" label="Export to PDF" (click)="exportReport('pdf')" class="p-button-outlined"></button>
-      <button pButton pRipple icon="pi pi-bell" label="Notify HR" (click)="notifyHR()" class="p-button-warning"></button>
+    <!-- Total Employees Card -->
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-gray-500 text-sm font-medium">Total Employees</span>
+        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+      </div>
+      <div class="flex items-end justify-between">
+        <span class="text-2xl font-bold">{{totalEmployees}}</span>
+        <div class="w-12 h-12 flex items-center justify-center">
+          <i class="pi pi-users text-purple-500 text-2xl"></i>
+        </div>
+      </div>
     </div>
   </div>
+</div>
