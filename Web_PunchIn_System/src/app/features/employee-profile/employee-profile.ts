@@ -20,6 +20,7 @@ interface EmployeeProfile {
   employeeId: string;
   employeeFirstName: string;
   employeeLastName: string;
+  employeeDob: Date;
   employeeEmail: string;
   employeePhone: string;
   employeeAddress: string;
@@ -62,7 +63,7 @@ export class EmployeeProfileComponent implements OnInit {
   // Form data
   editForm: Partial<EmployeeProfile> = {};
   
-  // Dropdown options
+  // Dropdown options (kept for display purposes)
   departments = [
     { label: 'Human Resources', value: 'HR' },
     { label: 'Information Technology', value: 'IT' },
@@ -70,21 +71,6 @@ export class EmployeeProfileComponent implements OnInit {
     { label: 'Marketing', value: 'Marketing' },
     { label: 'Operations', value: 'Operations' },
     { label: 'Sales', value: 'Sales' }
-  ];
-
-  positions = [
-    { label: 'Software Developer', value: 'Software Developer' },
-    { label: 'Senior Developer', value: 'Senior Developer' },
-    { label: 'Team Lead', value: 'Team Lead' },
-    { label: 'Project Manager', value: 'Project Manager' },
-    { label: 'Business Analyst', value: 'Business Analyst' },
-    { label: 'UI/UX Designer', value: 'UI/UX Designer' }
-  ];
-
-  statuses = [
-    { label: 'Active', value: 'Active' },
-    { label: 'Inactive', value: 'Inactive' },
-    { label: 'On Leave', value: 'On Leave' }
   ];
 
   constructor(
@@ -108,26 +94,49 @@ export class EmployeeProfileComponent implements OnInit {
   }
 
   loadProfile() {
-    // Mock profile data - in real app, this would come from API
-    this.profile = {
-      employeeId: this.user?.employeeId || 'EMP001',
-      employeeFirstName: this.user?.name?.split(' ')[0] || 'John',
-      employeeLastName: this.user?.name?.split(' ')[1] || 'Doe',
-      employeeEmail: this.user?.email || 'john.doe@company.com',
-      employeePhone: this.user?.mobile || '+1 (555) 123-4567',
-      employeeAddress: '123 Main Street, City, State 12345',
-      employeeDepartment: 'IT',
-      employeePosition: 'Software Developer',
-      employeeHireDate: new Date('2023-01-15'),
-      employeeSalary: 75000,
-      employeeStatus: 'Active',
-      profileImage: ''
-    };
+    // Check if there's saved profile data in localStorage
+    const savedProfile = localStorage.getItem('employeeProfile');
+    
+    if (savedProfile) {
+      // Load saved profile data
+      const profileData = JSON.parse(savedProfile);
+      this.profile = {
+        ...profileData,
+        employeeDob: profileData.employeeDob ? new Date(profileData.employeeDob) : new Date('1990-05-15'),
+        employeeHireDate: profileData.employeeHireDate ? new Date(profileData.employeeHireDate) : new Date('2023-01-15')
+      };
+    } else {
+      // Default profile data - in real app, this would come from API
+      this.profile = {
+        employeeId: this.user?.employeeId || 'EMP001',
+        employeeFirstName: this.user?.name?.split(' ')[0] || 'John',
+        employeeLastName: this.user?.name?.split(' ')[1] || 'Doe',
+        employeeDob: new Date('1990-05-15'),
+        employeeEmail: this.user?.email || 'john.doe@company.com',
+        employeePhone: this.user?.mobile || '+1 (555) 123-4567',
+        employeeAddress: '123 Main Street, City, State 12345',
+        employeeDepartment: 'IT',
+        employeePosition: 'Software Developer',
+        employeeHireDate: new Date('2023-01-15'),
+        employeeSalary: 75000,
+        employeeStatus: 'Active',
+        profileImage: ''
+      };
+      // Save initial profile to localStorage
+      this.saveProfileToStorage();
+    }
   }
 
   startEditing() {
     this.isEditing = true;
-    this.editForm = { ...this.profile };
+    // Only include editable fields in the edit form (email is now permanent)
+    this.editForm = {
+      employeeFirstName: this.profile?.employeeFirstName,
+      employeeLastName: this.profile?.employeeLastName,
+      employeeDob: this.profile?.employeeDob,
+      employeePhone: this.profile?.employeePhone,
+      employeeAddress: this.profile?.employeeAddress
+    };
   }
 
   cancelEditing() {
@@ -147,7 +156,17 @@ export class EmployeeProfileComponent implements OnInit {
     // Simulate API call
     setTimeout(() => {
       if (this.profile && this.editForm) {
-        this.profile = { ...this.profile, ...this.editForm };
+        // Only update the editable fields (email is permanent and not updated)
+        this.profile.employeeFirstName = this.editForm.employeeFirstName || this.profile.employeeFirstName;
+        this.profile.employeeLastName = this.editForm.employeeLastName || this.profile.employeeLastName;
+        this.profile.employeeDob = this.editForm.employeeDob || this.profile.employeeDob;
+        this.profile.employeePhone = this.editForm.employeePhone || this.profile.employeePhone;
+        this.profile.employeeAddress = this.editForm.employeeAddress || this.profile.employeeAddress;
+        // Note: employeeEmail is not updated - it remains permanent
+        
+        // Save updated profile to localStorage
+        this.saveProfileToStorage();
+        
         this.isEditing = false;
         this.editForm = {};
         this.isLoading = false;
@@ -155,11 +174,23 @@ export class EmployeeProfileComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Profile Updated',
-          detail: 'Your profile has been successfully updated.',
+          detail: 'Your profile has been successfully updated and saved.',
           life: 4000
         });
       }
     }, 1500);
+  }
+
+  saveProfileToStorage() {
+    if (this.profile) {
+      // Convert dates to strings for JSON storage
+      const profileToSave = {
+        ...this.profile,
+        employeeDob: this.profile.employeeDob?.toISOString(),
+        employeeHireDate: this.profile.employeeHireDate?.toISOString()
+      };
+      localStorage.setItem('employeeProfile', JSON.stringify(profileToSave));
+    }
   }
 
   changePassword() {
@@ -221,5 +252,17 @@ export class EmployeeProfileComponent implements OnInit {
   getDepartmentLabel(deptCode: string): string {
     const dept = this.departments.find(d => d.value === deptCode);
     return dept ? dept.label : deptCode;
+  }
+
+  // Method to reset profile to default (for testing purposes)
+  resetProfile() {
+    localStorage.removeItem('employeeProfile');
+    this.loadProfile();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Profile Reset',
+      detail: 'Profile has been reset to default values.',
+      life: 3000
+    });
   }
 }
