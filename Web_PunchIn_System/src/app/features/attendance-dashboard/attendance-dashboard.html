@@ -87,4 +87,71 @@
       </div>
     </div>
   </div>
+
+  <!-- Recent Employee Attendance -->
+  <div class="mt-8">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold text-gray-900">Recent Employee Attendance</h3>
+          <p class="text-sm text-gray-500">Latest attendance records from all employees</p>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Employee</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch In</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch Out</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Hours</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let record of recentAttendance" class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-3 px-4">
+                  <div class="flex items-center space-x-3">
+                    <p-avatar 
+                      [label]="record.employeeName?.charAt(0) || 'E'" 
+                      size="normal" 
+                      styleClass="bg-blue-500 text-white">
+                    </p-avatar>
+                    <span class="font-medium">{{ record.employeeName || 'Employee' }}</span>
+                  </div>
+                </td>
+                <td class="py-3 px-4">
+                  {{ formatDate(record.date) }}
+                </td>
+                <td class="py-3 px-4">
+                  <span *ngIf="record.sessionStart; else noSessionStart">{{ formatTime(record.sessionStart) }}</span>
+                  <ng-template #noSessionStart>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td class="py-3 px-4">
+                  <span *ngIf="record.sessionEnd; else noSessionEnd">{{ formatTime(record.sessionEnd) }}</span>
+                  <ng-template #noSessionEnd>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td class="py-3 px-4">
+                  <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
+                </td>
+                <td class="py-3 px-4">
+                  <p-tag 
+                    [value]="record.status" 
+                    [severity]="getStatusColor(record.status)"
+                    [icon]="getStatusIcon(record.status)">
+                  </p-tag>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
 </div>
