@@ -15,21 +15,20 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { EmployeeService, Employee } from '../../shared/services/employee.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 interface EmployeeProfile {
   employeeId: string;
   employeeFirstName: string;
+  employeeMiddleName: string;
   employeeLastName: string;
-  employeeDob: Date;
+  employeeDob: string;
   employeeEmail: string;
   employeePhone: string;
-  employeeAddress: string;
-  employeeDepartment: string;
-  employeePosition: string;
-  employeeHireDate: Date;
-  employeeSalary: number;
-  employeeStatus: string;
-  profileImage?: string;
+  employeeLocationHome: string;
+  employeeIsActive: boolean;
+  employeeFaceImage?: string;
 }
 
 @Component({
@@ -62,21 +61,13 @@ export class EmployeeProfileComponent implements OnInit {
   
   // Form data
   editForm: Partial<EmployeeProfile> = {};
-  
-  // Dropdown options (kept for display purposes)
-  departments = [
-    { label: 'Human Resources', value: 'HR' },
-    { label: 'Information Technology', value: 'IT' },
-    { label: 'Finance', value: 'Finance' },
-    { label: 'Marketing', value: 'Marketing' },
-    { label: 'Operations', value: 'Operations' },
-    { label: 'Sales', value: 'Sales' }
-  ];
 
   constructor(
     private router: Router,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private employeeService: EmployeeService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -85,57 +76,90 @@ export class EmployeeProfileComponent implements OnInit {
   }
 
   loadUserData() {
-    const userData = localStorage.getItem('punchInUser');
-    if (userData) {
-      this.user = JSON.parse(userData);
-    } else {
+    // Check if user is authenticated
+    if (!this.authService.isAuthenticatedSync()) {
       this.router.navigate(['/login']);
+      return;
+    }
+
+    // Get user data from AuthService
+    this.user = this.authService.getUserData();
+    
+    // Fallback to punchInUser if user_data is not available
+    if (!this.user) {
+      const userData = localStorage.getItem('punchInUser');
+      if (userData) {
+        this.user = JSON.parse(userData);
+      } else {
+        this.router.navigate(['/login']);
+      }
     }
   }
 
   loadProfile() {
-    // Check if there's saved profile data in localStorage
-    const savedProfile = localStorage.getItem('employeeProfile');
-    
-    if (savedProfile) {
-      // Load saved profile data
-      const profileData = JSON.parse(savedProfile);
-      this.profile = {
-        ...profileData,
-        employeeDob: profileData.employeeDob ? new Date(profileData.employeeDob) : new Date('1990-05-15'),
-        employeeHireDate: profileData.employeeHireDate ? new Date(profileData.employeeHireDate) : new Date('2023-01-15')
-      };
-    } else {
-      // Default profile data - in real app, this would come from API
-      this.profile = {
-        employeeId: this.user?.employeeId || 'EMP001',
-        employeeFirstName: this.user?.name?.split(' ')[0] || 'John',
-        employeeLastName: this.user?.name?.split(' ')[1] || 'Doe',
-        employeeDob: new Date('1990-05-15'),
-        employeeEmail: this.user?.email || 'john.doe@company.com',
-        employeePhone: this.user?.mobile || '+1 (555) 123-4567',
-        employeeAddress: '123 Main Street, City, State 12345',
-        employeeDepartment: 'IT',
-        employeePosition: 'Software Developer',
-        employeeHireDate: new Date('2023-01-15'),
-        employeeSalary: 75000,
-        employeeStatus: 'Active',
-        profileImage: ''
-      };
-      // Save initial profile to localStorage
-      this.saveProfileToStorage();
+    if (!this.user?.employeeId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Employee ID not found. Please login again.',
+        life: 4000
+      });
+      this.router.navigate(['/login']);
+      return;
     }
+
+
+    this.isLoading = true;
+    this.employeeService.getEmployeeById(this.user.employeeId).subscribe({
+      next: (employee: Employee) => {
+        this.profile = {
+          employeeId: employee.employeeId,
+          employeeFirstName: employee.employeeFirstName,
+          employeeMiddleName: employee.employeeMiddleName,
+          employeeLastName: employee.employeeLastName,
+          employeeDob: employee.employeeDob,
+          employeeEmail: employee.employeeEmail,
+          employeePhone: employee.employeePhone,
+          employeeLocationHome: employee.employeeLocationHome,
+          employeeIsActive: employee.employeeIsActive,
+          employeeFaceImage: employee.employeeFaceImage
+        };
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading employee profile:', error);
+        console.error('Error status:', error.status);
+        console.error('Error message:', error.message);
+        
+        let errorMessage = 'Failed to load employee profile. Please try again.';
+        if (error.status === 403) {
+          errorMessage = 'Access denied. Please check your authentication.';
+        } else if (error.status === 401) {
+          errorMessage = 'Authentication expired. Please login again.';
+          this.authService.logout();
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage,
+          life: 4000
+        });
+        this.isLoading = false;
+      }
+    });
   }
 
   startEditing() {
     this.isEditing = true;
-    // Only include editable fields in the edit form (email is now permanent)
+    // Only include editable fields in the edit form
     this.editForm = {
       employeeFirstName: this.profile?.employeeFirstName,
+      employeeMiddleName: this.profile?.employeeMiddleName,
       employeeLastName: this.profile?.employeeLastName,
       employeeDob: this.profile?.employeeDob,
       employeePhone: this.profile?.employeePhone,
-      employeeAddress: this.profile?.employeeAddress
+      employeeLocationHome: this.profile?.employeeLocationHome
     };
   }
 
@@ -151,20 +175,31 @@ export class EmployeeProfileComponent implements OnInit {
   }
 
   saveProfile() {
+    if (!this.profile || !this.editForm) {
+      return;
+    }
+
     this.isLoading = true;
     
-    // Simulate API call
-    setTimeout(() => {
-      if (this.profile && this.editForm) {
-        // Only update the editable fields
-        this.profile.employeeFirstName = this.editForm.employeeFirstName || this.profile.employeeFirstName;
-        this.profile.employeeLastName = this.editForm.employeeLastName || this.profile.employeeLastName;
-        this.profile.employeeDob = this.editForm.employeeDob || this.profile.employeeDob;
-        this.profile.employeePhone = this.editForm.employeePhone || this.profile.employeePhone;
-        this.profile.employeeAddress = this.editForm.employeeAddress || this.profile.employeeAddress;
-        
-        // Save updated profile to localStorage
-        this.saveProfileToStorage();
+    // Prepare the updated employee data for self-update
+    const updatedEmployeeData = {
+      employeeFirstName: this.editForm.employeeFirstName || this.profile.employeeFirstName,
+      employeeMiddleName: this.editForm.employeeMiddleName || this.profile.employeeMiddleName || '',
+      employeeLastName: this.editForm.employeeLastName || this.profile.employeeLastName,
+      employeeDob: this.editForm.employeeDob || this.profile.employeeDob,
+      employeePhone: this.editForm.employeePhone || this.profile.employeePhone,
+      employeeLocationHome: this.editForm.employeeLocationHome || this.profile.employeeLocationHome
+    };
+
+    this.employeeService.updateEmployeeSelf(updatedEmployeeData).subscribe({
+      next: (response) => {
+        // Update local profile with the new data
+        this.profile!.employeeFirstName = updatedEmployeeData.employeeFirstName;
+        this.profile!.employeeMiddleName = updatedEmployeeData.employeeMiddleName;
+        this.profile!.employeeLastName = updatedEmployeeData.employeeLastName;
+        this.profile!.employeeDob = updatedEmployeeData.employeeDob;
+        this.profile!.employeePhone = updatedEmployeeData.employeePhone;
+        this.profile!.employeeLocationHome = updatedEmployeeData.employeeLocationHome;
         
         this.isEditing = false;
         this.editForm = {};
@@ -173,24 +208,23 @@ export class EmployeeProfileComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Profile Updated',
-          detail: 'Your profile has been successfully updated and saved.',
+          detail: 'Your profile has been successfully updated.',
           life: 4000
         });
+      },
+      error: (error) => {
+        console.error('Error updating employee profile:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to update profile. Please try again.',
+          life: 4000
+        });
+        this.isLoading = false;
       }
-    }, 1500);
+    });
   }
 
-  saveProfileToStorage() {
-    if (this.profile) {
-      // Convert dates to strings for JSON storage
-      const profileToSave = {
-        ...this.profile,
-        employeeDob: this.profile.employeeDob?.toISOString(),
-        employeeHireDate: this.profile.employeeHireDate?.toISOString()
-      };
-      localStorage.setItem('employeeProfile', JSON.stringify(profileToSave));
-    }
-  }
 
   changePassword() {
     this.confirmationService.confirm({
@@ -220,7 +254,7 @@ export class EmployeeProfileComponent implements OnInit {
         const reader = new FileReader();
         reader.onload = (e: any) => {
           if (this.profile) {
-            this.profile.profileImage = e.target.result;
+            this.profile.employeeFaceImage = e.target.result;
             this.messageService.add({
               severity: 'success',
               summary: 'Image Updated',
@@ -239,29 +273,11 @@ export class EmployeeProfileComponent implements OnInit {
     this.router.navigate(['/employee/dashboard']);
   }
 
-  getStatusSeverity(status: string): string {
-    switch (status) {
-      case 'Active': return 'success';
-      case 'Inactive': return 'danger';
-      case 'On Leave': return 'warning';
-      default: return 'secondary';
-    }
+  getStatusSeverity(isActive: boolean): string {
+    return isActive ? 'success' : 'danger';
   }
 
-  getDepartmentLabel(deptCode: string): string {
-    const dept = this.departments.find(d => d.value === deptCode);
-    return dept ? dept.label : deptCode;
-  }
-
-  // Method to reset profile to default (for testing purposes)
-  resetProfile() {
-    localStorage.removeItem('employeeProfile');
-    this.loadProfile();
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Profile Reset',
-      detail: 'Profile has been reset to default values.',
-      life: 3000
-    });
+  getStatusText(isActive: boolean): string {
+    return isActive ? 'Active' : 'Inactive';
   }
 }

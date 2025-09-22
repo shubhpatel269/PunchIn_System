@@ -52,8 +52,8 @@
               <!-- Profile Image -->
               <div class="relative inline-block">
                 <p-avatar 
-                  [image]="profile?.profileImage" 
-                  [label]="!profile?.profileImage ? ((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) : ''"
+                  [image]="profile?.employeeFaceImage" 
+                  [label]="!profile?.employeeFaceImage ? ((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) : ''"
                   size="xlarge" 
                   styleClass="bg-blue-500 text-white font-semibold text-2xl">
                 </p-avatar>
@@ -62,10 +62,14 @@
               <!-- Basic Info -->
               <div>
                 <h2 class="text-2xl font-bold text-gray-900">
-                  {{ profile?.employeeFirstName }} {{ profile?.employeeLastName }}
+                  {{ profile?.employeeFirstName }} {{ profile?.employeeMiddleName }} {{ profile?.employeeLastName }}
                 </h2>
-                <p class="text-gray-600">{{ profile?.employeePosition }}</p>
-                <p class="text-sm text-gray-500">{{ getDepartmentLabel(profile?.employeeDepartment || '') }}</p>
+                <p class="text-gray-600">Employee ID: {{ profile?.employeeId }}</p>
+                <p-tag 
+                  [value]="getStatusText(profile?.employeeIsActive || false)" 
+                  [severity]="getStatusSeverity(profile?.employeeIsActive || false)"
+                  styleClass="mt-2">
+                </p-tag>
               </div>
 
 
@@ -114,19 +118,33 @@
                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Middle Name</label>
                     <input 
                       *ngIf="!isEditing"
                       type="text" 
-                      [value]="profile?.employeeLastName" 
+                      [value]="profile?.employeeMiddleName" 
                       readonly
                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
                     <input 
                       *ngIf="isEditing"
                       type="text" 
-                      [(ngModel)]="editForm.employeeLastName"
+                      [(ngModel)]="editForm.employeeMiddleName"
                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   </div>
+                </div>
+                <div class="mt-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                  <input 
+                    *ngIf="!isEditing"
+                    type="text" 
+                    [value]="profile?.employeeLastName" 
+                    readonly
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                  <input 
+                    *ngIf="isEditing"
+                    type="text" 
+                    [(ngModel)]="editForm.employeeLastName"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 
                 <!-- Date of Birth Field -->
@@ -135,16 +153,14 @@
                   <input 
                     *ngIf="!isEditing"
                     type="text" 
-                    [value]="profile?.employeeDob | date:'mediumDate'" 
+                    [value]="profile?.employeeDob" 
                     readonly
                     class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  <p-datepicker 
+                  <input 
                     *ngIf="isEditing"
+                    type="date" 
                     [(ngModel)]="editForm.employeeDob"
-                    dateFormat="mm/dd/yy"
-                    placeholder="Select Date of Birth"
-                    styleClass="w-full">
-                  </p-datepicker>
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
               </div>
 
@@ -178,17 +194,17 @@
                   </div>
                 </div>
                 <div class="mt-4">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Home Location</label>
                   <textarea 
                     *ngIf="!isEditing"
-                    [value]="profile?.employeeAddress" 
+                    [value]="profile?.employeeLocationHome" 
                     readonly
                     rows="3"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
                   </textarea>
                   <textarea 
                     *ngIf="isEditing"
-                    [(ngModel)]="editForm.employeeAddress"
+                    [(ngModel)]="editForm.employeeLocationHome"
                     rows="3"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   </textarea>

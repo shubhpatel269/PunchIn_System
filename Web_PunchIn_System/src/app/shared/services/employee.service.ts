@@ -31,7 +31,7 @@ export class EmployeeService {
     const token = localStorage.getItem('jwt_token');
     return new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': token ? `Bearer ${token}` : ''
     });
   }
 
@@ -58,6 +58,13 @@ export class EmployeeService {
 
   updateEmployee(employeeId: string, employee: Employee): Observable<any> {
     return this.http.put(`${this.apiUrl}/${employeeId}`, employee, { headers: this.getAuthHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  updateEmployeeSelf(employeeData: Partial<Employee>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/Self`, employeeData, { headers: this.getAuthHeaders() })
       .pipe(
         catchError(this.handleError)
       );
