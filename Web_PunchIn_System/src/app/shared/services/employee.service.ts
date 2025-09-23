@@ -28,6 +28,19 @@ export interface TodayStatus {
   elapsedWorkDuration: string; // HH:MM:SS
 }
 
+export interface MonthlyAttendanceOverviewDTO {
+  employeeId: string;
+  year: number;
+  month: number; // 1-12
+  presentWeekdays: number;
+  absentWeekdays: number;
+  attendanceRateWeekdays: number; // percentage
+  presentIncludingWeekends: number;
+  attendanceRateIncludingWeekends: number; // percentage
+  businessDaysToDate: number;
+  calendarDaysToDate: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -95,6 +108,18 @@ export class EmployeeService {
   // New: Today's Status (admin viewing employee)
   getTodayStatusForEmployee(employeeId: string): Observable<TodayStatus> {
     return this.http.get<TodayStatus>(`${this.apiUrl}/TodayStatus/${employeeId}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  // New: Monthly overview (self)
+  getSelfMonthOverview(year: number, month: number): Observable<MonthlyAttendanceOverviewDTO> {
+    return this.http.get<MonthlyAttendanceOverviewDTO>(`${this.apiUrl}/Self/MonthOverview?year=${year}&month=${month}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  // New: Monthly overview (by employee)
+  getMonthOverviewForEmployee(employeeId: string, year: number, month: number): Observable<MonthlyAttendanceOverviewDTO> {
+    return this.http.get<MonthlyAttendanceOverviewDTO>(`${this.apiUrl}/MonthOverview/${employeeId}?year=${year}&month=${month}`, { headers: this.getAuthHeaders() })
       .pipe(catchError(this.handleError));
   }
 

@@ -19,6 +19,7 @@ import { SessionService } from '../../shared/services/session.service';
 import { BreakService } from '../../shared/services/break.service';
 import { AttendanceService } from '../../shared/services/attendance.service';
 import { EmployeeService, TodayStatus } from '../../shared/services/employee.service';
+import { MonthlyAttendanceOverviewDTO } from '../../shared/services/employee.service';
 
 interface AttendanceRecord {
   date: string;
@@ -83,6 +84,8 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   // Today status from API
   todayStatus: TodayStatus | null = null;
+  monthOverview: MonthlyAttendanceOverviewDTO | null = null;
+  showIncludingWeekends: boolean = false;
   private dashboardRefreshInterval: any;
 
   constructor(
@@ -103,8 +106,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.loadUserData();
     this.loadTodayAttendance();
     this.loadRecentAttendance();
-    this.loadAttendanceStats();
-    this.initializeCharts();
 
     // Detect user timezone (for displaying recent attendance times)
     try {
@@ -124,6 +125,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       this.loadTodayStatus();
       this.loadRecentAttendance();
     }, 30000);
+
+    // Load current month overview once on init
+    this.loadMonthOverview();
   }
 
   ngOnDestroy() {
@@ -169,8 +173,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       this.attendanceService.getRecentAttendance(employeeId).subscribe({
         next: (data) => {
           this.recentAttendance = data;
-          this.loadAttendanceStats();
-          this.initializeCharts();
+          this.initializeHoursChartFromRecent();
         },
         error: (err) => {
           console.error('Failed to load recent attendance:', err);
@@ -225,18 +228,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  initializeCharts() {
-    // Attendance chart data
-    this.attendanceChartData = {
-      labels: ['Present', 'Absent', 'Late'],
-      datasets: [{
-        data: [this.attendanceStats.presentDays, this.attendanceStats.absentDays, this.attendanceStats.lateDays],
-        backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
-        borderWidth: 0
-      }]
-    };
-
-    // Hours chart data (last 7 days)
+  initializeHoursChartFromRecent() {
     const last7Days = this.recentAttendance.slice(0, 7).reverse();
     this.hoursChartData = {
       labels: last7Days.map(record => {
@@ -258,16 +250,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: false
-        }
+        legend: { display: false }
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 10
-        }
-      }
+      scales: { y: { beginAtZero: true, max: 10 } }
     };
   }
 
@@ -567,8 +552,14 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
           this.todayAttendance.totalHours = status.elapsedWorkDuration;
         }
       },
-      error: () => {
-        // Silent fail, keep local fallbacks
+      error: (err) => {
+        console.error('TodayStatus API error:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Today Status Error',
+          detail: 'Failed to load today\'s status. Please try again.',
+          life: 3000
+        });
       }
     });
   }
@@ -584,6 +575,68 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     const api = this.todayStatus?.elapsedWorkDuration;
     if (api && api !== '00:00:00') return this.formatHours(api);
     return this.formatHours(this.todayAttendance?.totalHours || '00:00:00');
+  }
+
+  private loadMonthOverview() {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth() + 1; // 1-12
+    this.employeeService.getSelfMonthOverview(year, month).subscribe({
+      next: (ov) => {
+        this.monthOverview = ov;
+        // Default view uses Weekdays-only metrics; toggle can switch to including weekends
+        this.applyMonthOverviewToStats();
+        this.attendanceChartData = {
+          labels: ['Present', 'Absent'],
+          datasets: [{
+            data: [this.attendanceStats.presentDays, this.attendanceStats.absentDays],
+            backgroundColor: ['#10B981', '#EF4444'],
+            borderWidth: 0
+          }]
+        };
+      },
+      error: (err) => {
+        console.error('MonthOverview API error:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Monthly Overview Error',
+          detail: 'Failed to load month overview. Please try again.',
+          life: 3000
+        });
+      }
+    });
+  }
+
+  handleWeekendToggle(event: any) {
+    this.showIncludingWeekends = !!event?.target?.checked;
+    this.applyMonthOverviewToStats();
+    if (this.monthOverview) {
+      this.attendanceChartData = {
+        labels: ['Present', 'Absent'],
+        datasets: [{
+          data: [this.attendanceStats.presentDays, this.attendanceStats.absentDays],
+          backgroundColor: ['#10B981', '#EF4444'],
+          borderWidth: 0
+        }]
+      };
+    }
+  }
+
+  private applyMonthOverviewToStats() {
+    const ov = this.monthOverview;
+    if (!ov) return;
+    if (this.showIncludingWeekends) {
+      this.attendanceStats.presentDays = ov.presentIncludingWeekends;
+      // Absent remains weekdays-based so weekends don't inflate absents
+      this.attendanceStats.absentDays = ov.absentWeekdays;
+      this.attendanceStats.lateDays = 0;
+      this.attendanceStats.attendancePercentage = ov.attendanceRateIncludingWeekends;
+    } else {
+      this.attendanceStats.presentDays = ov.presentWeekdays;
+      this.attendanceStats.absentDays = ov.absentWeekdays;
+      this.attendanceStats.lateDays = 0;
+      this.attendanceStats.attendancePercentage = ov.attendanceRateWeekdays;
+    }
   }
 
   getStatusColor(record: AttendanceRecord): string {
@@ -624,9 +677,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     if (isNaN(d.getTime())) return '-';
     // Convert UTC to local timezone for display
     return d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
     });
   }
 
