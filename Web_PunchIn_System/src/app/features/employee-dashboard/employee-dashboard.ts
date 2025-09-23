@@ -59,6 +59,7 @@ interface AttendanceStats {
 export class EmployeeDashboardComponent implements OnInit {
   user: any = null;
   currentTime: string = '';
+  userTimezone: string = '';
   todayAttendance: AttendanceRecord | null = null;
   attendanceStats: AttendanceStats = {
     totalDays: 0,
@@ -97,6 +98,13 @@ export class EmployeeDashboardComponent implements OnInit {
     this.loadRecentAttendance();
     this.loadAttendanceStats();
     this.initializeCharts();
+
+    // Detect user timezone (for displaying recent attendance times)
+    try {
+      this.userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {
+      this.userTimezone = '';
+    }
 
     // Restore break state from storage or URL
     this.restoreBreakState();
@@ -281,7 +289,7 @@ export class EmployeeDashboardComponent implements OnInit {
     const diffHours = diffMs / (1000 * 60 * 60);
     
     this.todayAttendance.totalHours = this.formatTimeSpan(diffHours);
-    const totalHours = this.todayAttendance ? this.formatHours(this.todayAttendance.totalHours) : '0h';
+    const totalHours = this.todayAttendance ? this.formatHours(this.todayAttendance.totalHours) : '0s';
 
     const sessionIdStr = localStorage.getItem('activeSessionId');
     const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
@@ -546,10 +554,16 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    if (!dateString) return '-';
+    // Treat provided date as UTC if no timezone is included
+    const utcString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+    const d = new Date(utcString);
+    if (isNaN(d.getTime())) return '-';
+    // Convert UTC to local timezone for display
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   }
 
@@ -561,11 +575,13 @@ export class EmployeeDashboardComponent implements OnInit {
     }
     // If it's in ISO format or other format, try to parse and format
     try {
-      const date = new Date(timeString);
+      const utcString = timeString.endsWith('Z') ? timeString : `${timeString}Z`;
+      const date = new Date(utcString);
       return date.toLocaleTimeString('en-US', { 
         hour12: true, 
         hour: '2-digit', 
-        minute: '2-digit' 
+        minute: '2-digit',
+        second: '2-digit'
       });
     } catch {
       return timeString; // Return original if parsing fails
@@ -573,13 +589,16 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   formatHours(hours: string): string {
-    if (!hours || hours === '0' || hours === '00:00:00') return '0h';
-    // If it's already in HH:MM:SS format, convert to decimal hours
-    const decimalHours = this.parseHours(hours);
-    if (decimalHours < 1) {
-      return `${Math.round(decimalHours * 100) / 100}h`;
+    if (!hours || hours === '0' || hours === '00:00:00') return '0s';
+    // If in HH:MM:SS → humanize to "Xh, Ym, Zs"
+    if (hours.includes(':')) {
+      return this.humanizeHms(hours);
     }
-    return `${Math.round(decimalHours * 10) / 10}h`;
+    // Otherwise treat as decimal hours string → convert to h/m/s
+    const dec = Number(hours);
+    if (isNaN(dec) || dec <= 0) return '0s';
+    const totalSeconds = Math.round(dec * 3600);
+    return this.humanizeSeconds(totalSeconds);
   }
 
   private formatTimeSpan(hours: number): string {
@@ -587,5 +606,29 @@ export class EmployeeDashboardComponent implements OnInit {
     const m = Math.floor((hours - h) * 60);
     const s = Math.floor(((hours - h) * 60 - m) * 60);
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  private humanizeHms(hms: string): string {
+    const parts = hms.split(':');
+    if (parts.length < 3) return hms;
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const s = Math.round(parseFloat(parts[2])) || 0;
+    const out: string[] = [];
+    if (h > 0) out.push(`${h}h`);
+    if (m > 0) out.push(`${m}m`);
+    if (s > 0 || out.length === 0) out.push(`${s}s`);
+    return out.join(', ');
+  }
+
+  private humanizeSeconds(totalSeconds: number): string {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const out: string[] = [];
+    if (h > 0) out.push(`${h}h`);
+    if (m > 0) out.push(`${m}m`);
+    if (s > 0 || out.length === 0) out.push(`${s}s`);
+    return out.join(', ');
   }
 }

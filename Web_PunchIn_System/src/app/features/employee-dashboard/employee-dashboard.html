@@ -239,7 +239,7 @@
                   <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
                 </td>
                  <td class="py-3 px-4">
-                   <span class="font-medium">{{ record.totalBreak || '-' }}</span>
+                  <span class="font-medium">{{ record.totalBreak ? formatHours(record.totalBreak) : '-' }}</span>
                  </td>
               </tr>
             </tbody>
