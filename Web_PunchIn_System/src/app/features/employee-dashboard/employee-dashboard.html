@@ -30,7 +30,7 @@
           <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-lg font-semibold text-blue-600">Today's Status</h3>
+                <h3 class="text-lg font-semibold text-blue-600">Current Session's Status</h3>
                 <p class="text-blue-500">{{ getCurrentDate() }}</p>
               </div>
               <i class="pi pi-calendar text-2xl opacity-80"></i>
@@ -42,7 +42,7 @@
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Session Start:</span>
               <p-tag 
-                [value]="formatTime(todayAttendance?.sessionStart) || 'Not started'" 
+                [value]="todayAttendance?.sessionStart ? formatTime(todayAttendance?.sessionStart) : 'Not started'" 
                 [severity]="todayAttendance?.sessionStart ? 'success' : 'danger'"
                 [icon]="todayAttendance?.sessionStart ? 'pi pi-check' : 'pi pi-times'">
               </p-tag>
@@ -50,15 +50,19 @@
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Session End:</span>
               <p-tag 
-                [value]="formatTime(todayAttendance?.sessionEnd) || 'Not ended'" 
-                [severity]="todayAttendance?.sessionEnd ? 'success' : 'warning'"
-                [icon]="todayAttendance?.sessionEnd ? 'pi pi-check' : 'pi pi-clock'">
+                [value]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? formatTime(todayAttendance?.sessionEnd) : 'Running') : '-'" 
+                [severity]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'success' : 'warning') : 'secondary'"
+                [icon]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'pi pi-check' : 'pi pi-spin pi-spinner') : 'pi pi-minus'">
               </p-tag>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Break Time:</span>
+              <span class="font-semibold">{{ getTodayBreakDisplay() }}</span>
             </div>
             <p-divider></p-divider>
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Total Hours:</span>
-              <span class="font-semibold text-lg">{{ formatHours(todayAttendance?.totalHours || '00:00:00') }}</span>
+              <span class="font-semibold text-lg">{{ getTodayElapsedWorkDisplay() }}</span>
             </div>
           </div>
         </ng-template>
@@ -101,10 +105,10 @@
                 [value]="attendanceStats.attendancePercentage" 
                 styleClass="h-2">
               </p-progressBar>
+              </div>
             </div>
-          </div>
-        </ng-template>
-      </p-card>
+          </ng-template>
+        </p-card>
 
       <!-- Quick Actions -->
       <p-card styleClass="h-full">

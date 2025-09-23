@@ -17,6 +17,7 @@ import { AuthService } from '../../shared/services/auth.service';
 import { SessionService } from '../../shared/services/session.service';
 import { BreakService } from '../../shared/services/break.service';
 import { AttendanceService } from '../../shared/services/attendance.service';
+import { EmployeeService, TodayStatus } from '../../shared/services/employee.service';
 
 interface AttendanceRecord {
   date: string;
@@ -79,6 +80,9 @@ export class EmployeeDashboardComponent implements OnInit {
   // Recent attendance data from API
   recentAttendance: AttendanceRecord[] = [];
 
+  // Today status from API
+  todayStatus: TodayStatus | null = null;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -86,7 +90,8 @@ export class EmployeeDashboardComponent implements OnInit {
     private authService: AuthService,
     private sessionService: SessionService,
     private breakService: BreakService,
-    private attendanceService: AttendanceService
+    private attendanceService: AttendanceService,
+    private employeeService: EmployeeService
   ) {
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
@@ -108,6 +113,9 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Restore break state from storage or URL
     this.restoreBreakState();
+
+    // Load today's status from API (self)
+    this.loadTodayStatus();
   }
 
   loadUserData() {
@@ -521,7 +529,47 @@ export class EmployeeDashboardComponent implements OnInit {
     this.router.navigate(['/employee/profile']);
   }
 
+  private loadTodayStatus() {
+    this.employeeService.getSelfTodayStatus().subscribe({
+      next: (status) => {
+        this.todayStatus = status;
+        // If API provides isOnBreak, reflect into UI state without overriding active break id
+        if (typeof status.isOnBreak === 'boolean') {
+          this.isOnBreak = status.isOnBreak || this.isOnBreak;
+        }
+        // Patch today's attendance card if present
+        if (status.sessionStart) {
+          this.todayAttendance = this.todayAttendance || {
+            date: new Date().toISOString().split('T')[0],
+            sessionStart: null,
+            sessionEnd: null,
+            totalHours: '00:00:00',
+            totalBreak: '00:00:00'
+          };
+          this.todayAttendance.sessionStart = status.sessionStart;
+          this.todayAttendance.sessionEnd = status.sessionEnd;
+          this.todayAttendance.totalBreak = status.totalBreakDuration;
+          this.todayAttendance.totalHours = status.elapsedWorkDuration;
+        }
+      },
+      error: () => {
+        // Silent fail, keep local fallbacks
+      }
+    });
+  }
 
+  getTodayBreakDisplay(): string {
+    const api = this.todayStatus?.totalBreakDuration;
+    if (api && api !== '00:00:00') return this.formatHours(api);
+    const local = this.todayAttendance?.totalBreak;
+    return local ? this.formatHours(local) : '0s';
+  }
+
+  getTodayElapsedWorkDisplay(): string {
+    const api = this.todayStatus?.elapsedWorkDuration;
+    if (api && api !== '00:00:00') return this.formatHours(api);
+    return this.formatHours(this.todayAttendance?.totalHours || '00:00:00');
+  }
 
   getStatusColor(record: AttendanceRecord): string {
     if (!record.sessionStart && !record.sessionEnd) return 'danger'; // absent
@@ -577,12 +625,8 @@ export class EmployeeDashboardComponent implements OnInit {
     try {
       const utcString = timeString.endsWith('Z') ? timeString : `${timeString}Z`;
       const date = new Date(utcString);
-      return date.toLocaleTimeString('en-US', { 
-        hour12: true, 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      });
+      // Session End formatting rule: "Running" if null handled by caller
+      return date.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch {
       return timeString; // Return original if parsing fails
     }

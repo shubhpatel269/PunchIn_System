@@ -19,6 +19,15 @@ export interface Employee {
   employeeIsActive: boolean;
 }
 
+export interface TodayStatus {
+  employeeId: string;
+  sessionStart: string | null;
+  sessionEnd: string | null;
+  isOnBreak: boolean;
+  totalBreakDuration: string; // HH:MM:SS
+  elapsedWorkDuration: string; // HH:MM:SS
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,6 +84,18 @@ export class EmployeeService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  // New: Today's Status (self)
+  getSelfTodayStatus(): Observable<TodayStatus> {
+    return this.http.get<TodayStatus>(`${this.apiUrl}/Self/TodayStatus`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  // New: Today's Status (admin viewing employee)
+  getTodayStatusForEmployee(employeeId: string): Observable<TodayStatus> {
+    return this.http.get<TodayStatus>(`${this.apiUrl}/TodayStatus/${employeeId}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
   private handleError(error: any): Observable<never> {
