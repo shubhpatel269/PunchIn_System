@@ -761,7 +761,7 @@ export class Login implements AfterViewInit, OnDestroy {
 
   startNavigationCountdown() {
     this.navigatingToHome = true;
-    this.navigationCountdown = 5;
+    this.navigationCountdown = 3;
     this.startTime = Date.now();
 
     if (this.timerRequestId !== null) {
@@ -773,7 +773,7 @@ export class Login implements AfterViewInit, OnDestroy {
 
       // Run inside Angular's zone to trigger change detection
       this.ngZone.run(() => {
-        this.navigationCountdown = Math.max(5 - elapsed, 0);
+        this.navigationCountdown = Math.max(3 - elapsed, 0);
       });
 
       if (this.navigationCountdown > 0) {
