@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { HttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
+import { DashboardService, DashboardStats, ActiveSessionsResponse, EmployeesOnBreakResponse, CompanyEmployeeCount } from '../../shared/services/dashboard.service';
 
 interface RecentSession {
   punchId: number;
@@ -29,33 +30,86 @@ interface RecentSession {
   imports: [CommonModule, CardModule, TagModule, ToastModule],
   providers: [MessageService]
 })
-export class AttendanceDashboardComponent implements OnInit {
+export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   currentDate: Date = new Date();
   userTimezone: string = '';
 
   // Dashboard stats
   totalPunchIns = 0;
-  activeSessions = 0;
-  employeesOnBreak = 0;
+  activeSessionsToday = 0;
+  employeesOnBreakToday = 0;
   attendanceRate = 0;
   totalEmployees = 0;
+  employeesWhoPunchedInToday = 0;
   recentAttendance: RecentSession[] = [];
   loadingRecentAttendance = false;
+  loadingDashboardStats = false;
+
+  // Auto-refresh interval
+  private refreshInterval: any;
 
   constructor(
     private http: HttpClient,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private dashboardService: DashboardService
   ) {}
 
   ngOnInit() {
     this.loadRecentAttendance();
-    // TODO: Load initial data from API
+    this.loadDashboardStats();
     this.initializeTimezone();
+    this.startAutoRefresh();
+  }
+
+  ngOnDestroy() {
+    this.stopAutoRefresh();
   }
 
   initializeTimezone() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     this.userTimezone = timezone;
+  }
+
+  // Auto-refresh functionality
+  startAutoRefresh() {
+    this.refreshInterval = setInterval(() => {
+      this.loadDashboardStats();
+    }, 30000); // 30 seconds
+  }
+
+  stopAutoRefresh() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
+  }
+
+  // Load dashboard statistics
+  loadDashboardStats() {
+    this.loadingDashboardStats = true;
+    
+    this.dashboardService.getDashboardStats().subscribe({
+      next: (stats: DashboardStats) => {
+        this.totalPunchIns = stats.totalPunchInsToday;
+        this.activeSessionsToday = stats.activeSessionsToday;
+        this.employeesOnBreakToday = stats.employeesOnBreakToday;
+        this.totalEmployees = stats.totalEmployees;
+        this.employeesWhoPunchedInToday = stats.employeesWhoPunchedInToday;
+        this.attendanceRate = stats.attendanceRate;
+        
+        this.loadingDashboardStats = false;
+      },
+      error: (error) => {
+        this.loadingDashboardStats = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load dashboard statistics',
+          life: 3000
+        });
+        console.error('Dashboard stats error:', error);
+      }
+    });
   }
 
   loadRecentAttendance() {
@@ -236,5 +290,74 @@ export class AttendanceDashboardComponent implements OnInit {
       case 'on_break': return 'pi pi-clock';
       default: return 'pi pi-question';
     }
+  }
+
+  // Individual metric methods for detailed views
+  getTodayPunchInsDetails() {
+    this.dashboardService.getTodayPunchIns().subscribe({
+      next: (data) => {
+        console.log('Today Punch-ins:', data);
+        // You can implement a modal or detailed view here
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load today punch-ins details',
+          life: 3000
+        });
+      }
+    });
+  }
+
+  getActiveSessionsDetails() {
+    this.dashboardService.getActiveSessions().subscribe({
+      next: (data: ActiveSessionsResponse) => {
+        console.log('Active Sessions:', data);
+        // You can implement a modal or detailed view here
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load active sessions details',
+          life: 3000
+        });
+      }
+    });
+  }
+
+  getEmployeesOnBreakDetails() {
+    this.dashboardService.getEmployeesOnBreak().subscribe({
+      next: (data: EmployeesOnBreakResponse) => {
+        console.log('Employees on Break:', data);
+        // You can implement a modal or detailed view here
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load employees on break details',
+          life: 3000
+        });
+      }
+    });
+  }
+
+  getCompanyEmployeeCountDetails(companyId: number) {
+    this.dashboardService.getCompanyEmployeeCount(companyId).subscribe({
+      next: (data: CompanyEmployeeCount) => {
+        console.log('Company Employee Count:', data);
+        // You can implement a modal or detailed view here
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load company employee count details',
+          life: 3000
+        });
+      }
+    });
   }
 }

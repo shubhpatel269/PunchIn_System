@@ -4,77 +4,99 @@
     <div>
       <h1 class="text-2xl font-semibold text-gray-800 m-0">Attendance Dashboard</h1>
       <p class="text-gray-500">{{ currentDate | date:'EEEE, MMMM d, y' }}</p>
+
     </div>
     <!-- Total Employees Text -->
     <div class="text-right">
-      <div class="text-gray-500  text-xl">Total Employees: <span class="font-semibold text-gray-800">{{totalEmployees}}</span></div>
+      <div class="text-gray-500 text-xl">
+        Total Employees: 
+        <span class="font-semibold text-gray-800" *ngIf="!loadingDashboardStats">{{totalEmployees}}</span>
+        <span class="font-semibold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</span>
+      </div>
+     
     </div> 
   </div>
   
   <!-- Stats Cards Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Total Punch-ins Card -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Punch-ins</div>
-          <div class="mt-2">
-            <div class="text-4xl font-bold text-gray-800">{{totalPunchIns}}</div>
-            <div class="flex items-center mt-2">
-             
-            </div>
-          </div>
-        </div>
-        <div class="bg-blue-50 p-3 rounded-lg">
-          <i class="pi pi-users text-blue-500 text-2xl"></i>
-        </div>
-      </div>
-    </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+     <!-- Total Punch-ins Card -->
+     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" (click)="getTodayPunchInsDetails()">
+       <div class="flex items-center justify-between mb-4">
+         <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Punch-ins Today</div>
+         <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+       </div>
+       <div class="flex items-center justify-between">
+         <div class="text-4xl font-bold text-gray-800" *ngIf="!loadingDashboardStats">{{totalPunchIns}}</div>
+         <div class="text-4xl font-bold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</div>
+         <div class="w-12 h-12 flex items-center justify-center">
+           <i class="pi pi-users text-blue-500 text-2xl"></i>
+         </div>
+       </div>
+     </div>
 
-    <!-- Active Sessions Card -->
-    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-gray-500 text-sm font-medium">Active Sessions</span>
-        <div class="w-2 h-2 rounded-full bg-green-500"></div>
-      </div>
-      <div class="flex items-end justify-between">
-        <span class="text-2xl font-bold">{{activeSessions}}</span>
-        <div class="w-12 h-12 flex items-center justify-center">
-          <i class="pi pi-users text-green-500 text-2xl"></i>
-        </div>
-      </div>
-    </div>
+     <!-- Active Sessions Card -->
+     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" (click)="getActiveSessionsDetails()">
+       <div class="flex items-center justify-between mb-4">
+         <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Active Sessions Today</div>
+         <div class="w-2 h-2 rounded-full bg-green-500" *ngIf="!loadingDashboardStats"></div>
+         <div class="w-2 h-2 rounded-full bg-gray-300 animate-pulse" *ngIf="loadingDashboardStats"></div>
+       </div>
+       <div class="flex items-center justify-between">
+         <div class="text-4xl font-bold text-gray-800" *ngIf="!loadingDashboardStats">{{activeSessionsToday}}</div>
+         <div class="text-4xl font-bold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</div>
+         <div class="w-12 h-12 flex items-center justify-center">
+           <i class="pi pi-users text-green-500 text-2xl"></i>
+         </div>
+       </div>
+     </div>
 
-    <!-- On Break Card -->
-    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-gray-500 text-sm font-medium">On Break</span>
-        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-      </div>
-      <div class="flex items-end justify-between">
-        <div>
-          <span class="text-2xl font-bold block">{{employeesOnBreak}}</span>
-          <span class="text-xs text-gray-500">Avg. 15 min</span>
-        </div>
-        <div class="w-12 h-12 flex items-center justify-center">
-          <i class="pi pi-clock text-yellow-500 text-2xl"></i>
-        </div>
-      </div>
-    </div>
+     <!-- On Break Card -->
+     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" (click)="getEmployeesOnBreakDetails()">
+       <div class="flex items-center justify-between mb-4">
+         <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Employees on Break Today</div>
+         <div class="w-2 h-2 rounded-full bg-yellow-500" *ngIf="!loadingDashboardStats"></div>
+         <div class="w-2 h-2 rounded-full bg-gray-300 animate-pulse" *ngIf="loadingDashboardStats"></div>
+       </div>
+       <div class="flex items-center justify-between">
+         <div class="text-4xl font-bold text-gray-800" *ngIf="!loadingDashboardStats">{{employeesOnBreakToday}}</div>
+         <div class="text-4xl font-bold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</div>
+         <div class="w-12 h-12 flex items-center justify-center">
+           <i class="pi pi-clock text-yellow-500 text-2xl"></i>
+         </div>
+       </div>
+     </div>
 
-    <!-- Attendance Card -->
-    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-gray-500 text-sm font-medium">Attendance</span>
-        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-      </div>
-      <div class="flex items-end justify-between">
-        <span class="text-2xl font-bold">{{attendanceRate}}%</span>
-        <div class="w-12 h-12 flex items-center justify-center">
-          <i class="pi pi-chart-pie text-blue-500 text-2xl"></i>
-        </div>
-      </div>
-    </div>
+     <!-- Employees Who Punched In Today Card -->
+     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+       <div class="flex items-center justify-between mb-4">
+         <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">Employees Present Today</div>
+         <div class="w-2 h-2 rounded-full bg-purple-500" *ngIf="!loadingDashboardStats"></div>
+         <div class="w-2 h-2 rounded-full bg-gray-300 animate-pulse" *ngIf="loadingDashboardStats"></div>
+       </div>
+       <div class="flex items-center justify-between">
+         <div class="text-4xl font-bold text-gray-800" *ngIf="!loadingDashboardStats">{{employeesWhoPunchedInToday}}</div>
+         <div class="text-4xl font-bold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</div>
+         <div class="w-12 h-12 flex items-center justify-center">
+           <i class="pi pi-users text-purple-500 text-2xl"></i>
+         </div>
+       </div>
+     </div>
+
+     <!-- Attendance Rate Card -->
+     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+       <div class="flex items-center justify-between mb-4">
+         <div class="text-sm font-medium text-gray-500 uppercase tracking-wider">today's Attendance Rate</div>
+         <div class="w-2 h-2 rounded-full bg-blue-500" *ngIf="!loadingDashboardStats"></div>
+         <div class="w-2 h-2 rounded-full bg-gray-300 animate-pulse" *ngIf="loadingDashboardStats"></div>
+       </div>
+       <div class="flex items-center justify-between">
+         <div class="text-4xl font-bold text-gray-800" *ngIf="!loadingDashboardStats">{{attendanceRate | number:'1.2-2'}}%</div>
+         <div class="text-4xl font-bold text-gray-300 animate-pulse" *ngIf="loadingDashboardStats">--</div>
+         <div class="w-12 h-12 flex items-center justify-center">
+           <i class="pi pi-chart-pie text-blue-500 text-2xl"></i>
+         </div>
+       </div>
+     </div>
 
   </div>
 
