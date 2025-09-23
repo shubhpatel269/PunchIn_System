@@ -74,6 +74,7 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   startAutoRefresh() {
     this.refreshInterval = setInterval(() => {
       this.loadDashboardStats();
+      this.loadRecentAttendance();
     }, 30000); // 30 seconds
   }
 

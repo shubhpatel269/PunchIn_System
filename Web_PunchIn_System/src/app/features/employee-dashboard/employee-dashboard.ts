@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -57,7 +58,7 @@ interface AttendanceStats {
   templateUrl: './employee-dashboard.html',
   styleUrl: './employee-dashboard.css'
 })
-export class EmployeeDashboardComponent implements OnInit {
+export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   user: any = null;
   currentTime: string = '';
   userTimezone: string = '';
@@ -82,6 +83,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
   // Today status from API
   todayStatus: TodayStatus | null = null;
+  private dashboardRefreshInterval: any;
 
   constructor(
     private router: Router,
@@ -116,6 +118,19 @@ export class EmployeeDashboardComponent implements OnInit {
 
     // Load today's status from API (self)
     this.loadTodayStatus();
+
+    // Start 30s auto-refresh for necessary endpoints
+    this.dashboardRefreshInterval = setInterval(() => {
+      this.loadTodayStatus();
+      this.loadRecentAttendance();
+    }, 30000);
+  }
+
+  ngOnDestroy() {
+    if (this.dashboardRefreshInterval) {
+      clearInterval(this.dashboardRefreshInterval);
+      this.dashboardRefreshInterval = null;
+    }
   }
 
   loadUserData() {
