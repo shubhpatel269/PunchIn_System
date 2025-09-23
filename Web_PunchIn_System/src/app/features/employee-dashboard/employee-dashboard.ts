@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { BadgeModule } from 'primeng/badge';
@@ -80,6 +80,7 @@ export class EmployeeDashboardComponent implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private messageService: MessageService,
     private authService: AuthService,
     private sessionService: SessionService,
@@ -96,6 +97,9 @@ export class EmployeeDashboardComponent implements OnInit {
     this.loadRecentAttendance();
     this.loadAttendanceStats();
     this.initializeCharts();
+
+    // Restore break state from storage or URL
+    this.restoreBreakState();
   }
 
   loadUserData() {
@@ -321,7 +325,131 @@ export class EmployeeDashboardComponent implements OnInit {
     { label: 'Personal', value: 'personal' }
   ];
 
-  takeBreak() {
+  // Single-array break state storage
+  // Format: [breakId:number, breakType:string, breakStartISO:string, on:'1'|'0']
+  private BREAK_STORAGE_KEY = 'bs';
+  private BREAK_URL_PARAM = 'b';
+  private BREAK_PASSPHRASE = 'punchin-web-aes-passphrase-v1'; // rotate when needed
+  private BREAK_SALT = 'punchin-web-aes-salt-v1';
+
+  private textEncoder = new TextEncoder();
+  private textDecoder = new TextDecoder();
+
+  private base64UrlEncode(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  private base64UrlDecode(str: string): ArrayBuffer {
+    const pad = str.length % 4 === 0 ? '' : '='.repeat(4 - (str.length % 4));
+    const b64 = str.replace(/-/g, '+').replace(/_/g, '/') + pad;
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  private async deriveKey(): Promise<CryptoKey> {
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      this.textEncoder.encode(this.BREAK_PASSPHRASE),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: this.textEncoder.encode(this.BREAK_SALT),
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  private async encryptToUrl(plain: string): Promise<string> {
+    const key = await this.deriveKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cipher = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, this.textEncoder.encode(plain));
+    const ivStr = this.base64UrlEncode(iv.buffer);
+    const ctStr = this.base64UrlEncode(cipher);
+    return `${ivStr}.${ctStr}`;
+  }
+
+  private async decryptFromUrl(token: string): Promise<string | null> {
+    try {
+      const [ivStr, ctStr] = token.split('.');
+      if (!ivStr || !ctStr) return null;
+      const key = await this.deriveKey();
+      const iv = new Uint8Array(this.base64UrlDecode(ivStr));
+      const cipher = this.base64UrlDecode(ctStr);
+      const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
+      return this.textDecoder.decode(plainBuf);
+    } catch {
+      return null;
+    }
+  }
+
+  private async updateUrlWithBreakArray(arr: [number, string, string, '1' | '0'] | null) {
+    if (!arr) {
+      this.router.navigate([], { queryParams: { [this.BREAK_URL_PARAM]: null }, queryParamsHandling: 'merge', relativeTo: this.route });
+      return;
+    }
+    const token = await this.encryptToUrl(JSON.stringify(arr));
+    this.router.navigate([], { queryParams: { [this.BREAK_URL_PARAM]: token }, queryParamsHandling: 'merge', relativeTo: this.route });
+  }
+
+  private async tryLoadBreakFromUrl(): Promise<[number, string, string, '1' | '0'] | null> {
+    const qp = this.route.snapshot.queryParamMap.get(this.BREAK_URL_PARAM);
+    if (!qp) return null;
+    const decoded = await this.decryptFromUrl(qp);
+    if (!decoded) return null;
+    try {
+      const arr = JSON.parse(decoded);
+      if (Array.isArray(arr) && arr.length >= 4) return [arr[0], arr[1], arr[2], arr[3]];
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async restoreBreakState() {
+    // First try localStorage single array
+    const token = localStorage.getItem(this.BREAK_STORAGE_KEY);
+    if (token) {
+      const decoded = await this.decryptFromUrl(token);
+      if (decoded) {
+        try {
+          const arr = JSON.parse(decoded) as [number, string, string, '1' | '0'];
+          if (Array.isArray(arr) && arr[3] === '1') {
+            this.activeBreakId = Number(arr[0]);
+            this.currentBreakType = String(arr[1]);
+            this.isOnBreak = true;
+            return;
+          }
+        } catch {}
+      }
+    }
+    // Fallback: URL param
+    const arr = await this.tryLoadBreakFromUrl();
+    if (arr && arr[3] === '1') {
+      this.activeBreakId = Number(arr[0]);
+      this.currentBreakType = String(arr[1]);
+      this.isOnBreak = true;
+      // Sync encrypted token to localStorage for future loads
+      this.encryptToUrl(JSON.stringify(arr)).then(token => {
+        localStorage.setItem(this.BREAK_STORAGE_KEY, token);
+      });
+    }
+  }
+
+  async takeBreak() {
     const sessionIdStr = localStorage.getItem('activeSessionId');
     const sessionId = sessionIdStr ? parseInt(sessionIdStr, 10) : null;
     const employeeId = this.user?.employeeId || JSON.parse(localStorage.getItem('punchInUser') || '{}')?.employeeId;
@@ -343,6 +471,14 @@ export class EmployeeDashboardComponent implements OnInit {
         next: (res) => {
           this.activeBreakId = res?.breakId ?? res?.id ?? null;
           this.isOnBreak = true;
+          const stateArr: [number, string, string, '1'] | null = this.activeBreakId ? [this.activeBreakId, this.currentBreakType, payload.breakStart, '1'] : null;
+          if (stateArr) {
+            // store encrypted token in localStorage and URL
+            this.encryptToUrl(JSON.stringify(stateArr)).then(token => {
+              localStorage.setItem(this.BREAK_STORAGE_KEY, token);
+            });
+            this.updateUrlWithBreakArray(stateArr);
+          }
           this.messageService.add({ severity: 'info', summary: 'Break Started', detail: 'Enjoy your break!', life: 3000 });
         },
         error: () => {
@@ -358,6 +494,8 @@ export class EmployeeDashboardComponent implements OnInit {
         next: () => {
           this.isOnBreak = false;
           this.activeBreakId = null;
+          localStorage.removeItem(this.BREAK_STORAGE_KEY);
+          this.updateUrlWithBreakArray(null);
           this.messageService.add({ severity: 'success', summary: 'Break Ended', detail: 'Welcome back!', life: 3000 });
         },
         error: () => {
