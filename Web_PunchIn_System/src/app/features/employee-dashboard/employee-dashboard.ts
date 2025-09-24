@@ -20,6 +20,7 @@ import { BreakService } from '../../shared/services/break.service';
 import { AttendanceService } from '../../shared/services/attendance.service';
 import { EmployeeService, TodayStatus } from '../../shared/services/employee.service';
 import { MonthlyAttendanceOverviewDTO } from '../../shared/services/employee.service';
+import { WelcomePopupComponent } from './welcome-popup.component';
 
 interface AttendanceRecord {
   date: string;
@@ -53,7 +54,8 @@ interface AttendanceStats {
     DividerModule,
     AvatarModule,
     TagModule,
-    ToastModule
+    ToastModule,
+    WelcomePopupComponent
   ],
   providers: [MessageService],
   templateUrl: './employee-dashboard.html',
@@ -81,6 +83,10 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   // Recent attendance data from API
   recentAttendance: AttendanceRecord[] = [];
+
+  // Welcome popup properties
+  showWelcomePopup: boolean = false;
+  welcomeUserData: any = {};
 
   // Today status from API
   todayStatus: TodayStatus | null = null;
@@ -128,6 +134,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
     // Load current month overview once on init
     this.loadMonthOverview();
+
+    // Check if welcome popup should be shown (one-time only)
+    this.checkWelcomePopup();
   }
 
   ngOnDestroy() {
@@ -743,4 +752,49 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     if (s > 0 || out.length === 0) out.push(`${s}s`);
     return out.join(', ');
   }
+
+  // Welcome popup methods
+  private checkWelcomePopup(): void {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcomePopup');
+    if (!hasSeenWelcome) {
+      // Load user data for popup
+      const punchInData = localStorage.getItem('punchInUser');
+      if (punchInData) {
+        try {
+          this.welcomeUserData = JSON.parse(punchInData);
+        } catch (error) {
+          console.error('Error parsing punch in user data:', error);
+          // Set default user data if parsing fails
+          this.welcomeUserData = {
+            name: this.user?.name || 'Employee',
+            employeeId: this.user?.employeeId || 'N/A',
+            punchedTime: new Date().toLocaleString(),
+            location: 'Office'
+          };
+        }
+      } else {
+        // Set default user data if no punch in data
+        this.welcomeUserData = {
+          name: this.user?.name || 'Employee',
+          employeeId: this.user?.employeeId || 'N/A',
+          punchedTime: new Date().toLocaleString(),
+          location: 'Office'
+        };
+      }
+      this.showWelcomePopup = true;
+    }
+  }
+
+  onWelcomePopupClose(): void {
+    this.showWelcomePopup = false;
+    // Mark that user has seen the welcome popup
+    localStorage.setItem('hasSeenWelcomePopup', 'true');
+  }
+
+  // Method to reset welcome popup for testing (can be removed in production)
+  resetWelcomePopup(): void {
+    localStorage.removeItem('hasSeenWelcomePopup');
+    this.checkWelcomePopup();
+  }
+
 }

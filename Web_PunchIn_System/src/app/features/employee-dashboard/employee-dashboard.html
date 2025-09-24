@@ -256,3 +256,10 @@
   <!-- Toast Messages -->
   <p-toast></p-toast>
 </div>
+
+<!-- Welcome Popup - Outside main container so it can render when main content is hidden -->
+<app-welcome-popup 
+  [visible]="showWelcomePopup" 
+  [userData]="welcomeUserData"
+  (close)="onWelcomePopupClose()">
+</app-welcome-popup>
