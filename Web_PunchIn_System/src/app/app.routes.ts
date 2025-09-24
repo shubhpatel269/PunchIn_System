@@ -15,7 +15,6 @@ import ManageCompanyProfile from './features/company-profile/company-profile';
 import { AdminGuard } from './shared/guards/admin.guard';
 import { EmployeeGuard } from './shared/guards/employee.guard';
 import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard';
-import { Home } from './features/home/home';
 import { AddNewProfileComponent } from './features/add-new-profile/add-new-profile';
 
 export const routes: Routes = [
@@ -45,7 +44,6 @@ export const routes: Routes = [
         component: EmployeeLayoutComponent, 
         canActivate: [EmployeeGuard],
         children: [
-            { path: 'home', component: Home },
             { path: 'dashboard', component: EmployeeDashboardComponent },
             { path: 'profile', component: EmployeeProfileComponent },
             { path: 'attendance', component: EmployeeAttendanceComponent },
