@@ -40,6 +40,7 @@ export class EmployeeLayoutComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserData();
+    this.performSoftReload();
   }
 
   loadUserData() {
@@ -48,6 +49,21 @@ export class EmployeeLayoutComponent implements OnInit {
       this.user = userData;
     } else {
       this.router.navigate(['/login']);
+    }
+  }
+
+  performSoftReload() {
+    // Check if this is the first time entering employee section after login
+    const hasReloaded = sessionStorage.getItem('employeeSoftReloaded');
+    
+    if (!hasReloaded) {
+      // Mark that we've performed the soft reload
+      sessionStorage.setItem('employeeSoftReloaded', 'true');
+      
+      // Perform soft reload after a short delay to ensure component is initialized
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   }
 
@@ -88,16 +104,19 @@ export class EmployeeLayoutComponent implements OnInit {
         next: () => {
           localStorage.removeItem('activePunchId');
           localStorage.removeItem('activeSessionId');
+          sessionStorage.removeItem('employeeSoftReloaded'); // Clear soft reload flag
           this.authService.logout();
           this.messageService.add({ severity: 'info', summary: 'Logged Out', detail: 'Session ended and logged out.', life: 3000 });
         },
         error: () => {
           // proceed with logout even if session end fails
+          sessionStorage.removeItem('employeeSoftReloaded'); // Clear soft reload flag
           this.authService.logout();
           this.messageService.add({ severity: 'warn', summary: 'Logged Out', detail: 'Logout done. Session end failed.', life: 3000 });
         }
       });
     } else {
+      sessionStorage.removeItem('employeeSoftReloaded'); // Clear soft reload flag
       this.authService.logout();
       this.messageService.add({ severity: 'info', summary: 'Logged Out', detail: 'You have been successfully logged out.', life: 3000 });
     }
