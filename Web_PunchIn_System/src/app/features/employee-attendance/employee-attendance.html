@@ -56,7 +56,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       <!-- Total Working Days -->
       <p-card>
         <ng-template pTemplate="content">
@@ -83,6 +83,19 @@
         </ng-template>
       </p-card>
 
+      <!-- Half Days -->
+      <p-card>
+        <ng-template pTemplate="content">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3">
+              <i class="pi pi-minus-circle text-yellow-600 text-xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.halfDays }}</h3>
+            <p class="text-sm text-gray-500">Half Days</p>
+          </div>
+        </ng-template>
+      </p-card>
+
       <!-- Total Hours -->
       <p-card>
         <ng-template pTemplate="content">
@@ -90,7 +103,7 @@
             <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
               <i class="pi pi-clock text-purple-600 text-xl"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.totalHours.toFixed(1) }}</h3>
+            <h3 class="text-2xl font-bold text-gray-900">{{ formatWorkTime(monthlyStats.totalHours) }}</h3>
             <p class="text-sm text-gray-500">Total Hours</p>
           </div>
         </ng-template>
@@ -223,7 +236,7 @@
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Total Hours:</span>
-              <span class="font-semibold text-lg">{{ monthlyStats.totalHours.toFixed(1) }} hrs</span>
+              <span class="font-semibold text-lg">{{ formatWorkTime(monthlyStats.totalHours) }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Average Hours/Day:</span>
@@ -243,12 +256,12 @@
                 </div>
                 <div class="flex justify-between text-sm">
                   <span>Actual Hours:</span>
-                  <span>{{ monthlyStats.totalHours.toFixed(1) }} hrs</span>
+                  <span>{{ formatWorkTime(monthlyStats.totalHours) }}</span>
                 </div>
                 <div class="flex justify-between text-sm font-medium">
                   <span>Difference:</span>
                   <span [class]="(monthlyStats.totalHours - (monthlyStats.workingDays * 8)) >= 0 ? 'text-green-600' : 'text-red-600'">
-                    {{ (monthlyStats.totalHours - (monthlyStats.workingDays * 8)).toFixed(1) }} hrs
+                    {{ formatWorkTime(monthlyStats.totalHours - (monthlyStats.workingDays * 8)) }}
                   </span>
                 </div>
               </div>
@@ -258,18 +271,98 @@
       </p-card>
     </div>
 
-    <!-- Attendance Table -->
+    <!-- Daily Summary Table (Aggregated Daily Data) -->
     <p-card>
       <ng-template pTemplate="header">
         <div class="p-4">
-          <h3 class="text-lg font-semibold text-gray-900">Daily Attendance Records</h3>
-          <p class="text-sm text-gray-500">Detailed attendance for {{ months[selectedMonth].label }} {{ selectedYear }}</p>
+          <h3 class="text-lg font-semibold text-gray-900">Daily Summary</h3>
+          <p class="text-sm text-gray-500">Aggregated daily attendance for {{ months[selectedMonth].label }} {{ selectedYear }}</p>
         </div>
       </ng-template>
       <ng-template pTemplate="content">
         <div class="overflow-x-auto">
           <p-table 
-            [value]="filteredRecords" 
+            [value]="dailySummaryRecords" 
+            [paginator]="true" 
+            [rows]="15"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+            styleClass="p-datatable-sm">
+            
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>First Punch In</th>
+                <th>Last Punch Out</th>
+                <th>Total Hours</th>
+                <th>Break Time</th>
+                <th>Sessions</th>
+                <th>Breaks</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-record>
+              <tr>
+                <td>
+                  <span class="font-medium">{{ formatDate(record.date) }}</span>
+                </td>
+                <td>
+                  <span class="text-sm text-gray-600">{{ record.day }}</span>
+                </td>
+                <td>
+                  <span *ngIf="record.punchIn; else noPunchIn" class="font-medium">{{ record.punchIn }}</span>
+                  <ng-template #noPunchIn>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span *ngIf="record.punchOut; else noPunchOut" class="font-medium">{{ record.punchOut }}</span>
+                  <ng-template #noPunchOut>
+                    <span class="text-gray-400">-</span>
+                  </ng-template>
+                </td>
+                <td>
+                  <span class="font-medium">{{ record.totalHoursFormatted }}</span>
+                </td>
+                <td>
+                  <span class="font-medium">{{ record.totalBreakFormatted }}</span>
+                </td>
+                <td>
+                  <span class="text-sm font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {{ record.sessionId }}
+                  </span>
+                </td>
+                <td>
+                  <span class="font-medium">{{ record.breakCount }}</span>
+                </td>
+                <td>
+                  <p-tag 
+                    [value]="record.status | titlecase" 
+                    [severity]="getStatusColor(record.status)"
+                    [icon]="getStatusIcon(record.status)">
+                  </p-tag>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Detailed Sessions Table -->
+    <p-card class="mt-6">
+      <ng-template pTemplate="header">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold text-gray-900">Detailed Sessions</h3>
+          <p class="text-sm text-gray-500">Individual session records for {{ months[selectedMonth].label }} {{ selectedYear }}</p>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="overflow-x-auto">
+          <p-table 
+            [value]="filteredDetailedRecords" 
             [paginator]="true" 
             [rows]="15"
             [showCurrentPageReport]="true"

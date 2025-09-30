@@ -41,6 +41,44 @@ export interface MonthlyAttendanceOverviewDTO {
   calendarDaysToDate: number;
 }
 
+export interface DailyAttendanceSummary {
+  date: string;
+  day: string;
+  firstPunchIn: string | null;
+  lastPunchOut: string | null;
+  totalWorkHours: string;
+  totalBreakTime: string;
+  sessionCount: number;
+  breakCount: number;
+  status: string; // "present", "absent", "late", "half-day", "holiday"
+  overtimeHours: string;
+}
+
+export interface CombinedAttendanceResponse {
+  employeeId: string;
+  year: number;
+  month: number;
+  
+  // Summary statistics
+  totalDays: number;
+  workingDays: number;
+  presentDays: number;
+  absentDays: number;
+  lateDays: number;
+  halfDays: number;
+  holidayDays: number;
+  attendanceRate: number;
+  
+  // Hours statistics
+  totalWorkHours: string;
+  totalBreakTime: string;
+  totalOvertimeHours: string;
+  averageDailyHours: number;
+  
+  // Daily records (aggregated per day)
+  dailyRecords: DailyAttendanceSummary[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -120,6 +158,18 @@ export class EmployeeService {
   // New: Monthly overview (by employee)
   getMonthOverviewForEmployee(employeeId: string, year: number, month: number): Observable<MonthlyAttendanceOverviewDTO> {
     return this.http.get<MonthlyAttendanceOverviewDTO>(`${this.apiUrl}/MonthOverview/${employeeId}?year=${year}&month=${month}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  // New: Combined attendance data (self)
+  getSelfCombinedAttendance(year: number, month: number): Observable<CombinedAttendanceResponse> {
+    return this.http.get<CombinedAttendanceResponse>(`${this.apiUrl}/Self/CombinedAttendance?year=${year}&month=${month}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  // New: Combined attendance data (by employee)
+  getCombinedAttendanceForEmployee(employeeId: string, year: number, month: number): Observable<CombinedAttendanceResponse> {
+    return this.http.get<CombinedAttendanceResponse>(`${this.apiUrl}/CombinedAttendance/${employeeId}?year=${year}&month=${month}`, { headers: this.getAuthHeaders() })
       .pipe(catchError(this.handleError));
   }
 
