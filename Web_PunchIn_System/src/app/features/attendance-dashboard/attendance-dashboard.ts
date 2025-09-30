@@ -139,46 +139,45 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   formatDate(date: Date | string): string {
     if (!date) return '-';
     
-    let dateObj: Date;
-    if (typeof date === 'string') {
-      // If the string doesn't end with 'Z', treat it as UTC by appending 'Z'
-      const utcString = date.endsWith('Z') ? date : date + 'Z';
-      dateObj = new Date(utcString);
-    } else {
-      dateObj = date;
-    }
-    
-    if (isNaN(dateObj.getTime())) {
+    try {
+      const dateObj = typeof date === 'string' 
+        ? new Date(date.endsWith('Z') ? date : date + 'Z')
+        : date;
+      
+      if (isNaN(dateObj.getTime())) return '-';
+      
+      return dateObj.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
       return '-';
     }
-    
-    // Convert UTC to local timezone
-    return dateObj.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   }
 
   formatTime(time: string | null): string {
     if (!time) return '-';
     
-    // If it's a full timestamp, extract just the time part
-    if (time.includes('T')) {
-      // If the string doesn't end with 'Z', treat it as UTC by appending 'Z'
-      const utcString = time.endsWith('Z') ? time : time + 'Z';
-      const date = new Date(utcString);
-      // Convert UTC to local timezone
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
+    try {
+      // If it's a full timestamp, extract just the time part
+      if (time.includes('T')) {
+        const date = new Date(time.endsWith('Z') ? time : time + 'Z');
+        if (isNaN(date.getTime())) return '-';
+        
+        return date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      }
+      
+      return time;
+    } catch {
+      return '-';
     }
-    
-    return time;
   }
 
   formatDuration(duration: string | null): string {
@@ -194,33 +193,29 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
     
     // If no end time (active session), calculate from start time to now
     if (!endTime && startTime) {
-      // Treat startTime as UTC if it doesn't have 'Z' suffix
-      const startUTCString = startTime.endsWith('Z') ? startTime : startTime + 'Z';
-      const start = new Date(startUTCString);
-      const now = new Date();
-      const diffMs = now.getTime() - start.getTime();
-      
-      // Only show positive duration (avoid negative values due to timezone issues)
-      if (diffMs > 0) {
-        return this.formatMsToReadable(diffMs);
-      } else {
+      try {
+        // More efficient date parsing
+        const start = new Date(startTime.endsWith('Z') ? startTime : startTime + 'Z');
+        if (isNaN(start.getTime())) return '0s';
+        
+        const diffMs = Date.now() - start.getTime();
+        return diffMs > 0 ? this.formatMsToReadable(diffMs) : '0s';
+      } catch {
         return '0s';
       }
     }
     
     // If we have both start and end times, calculate duration
     if (startTime && endTime) {
-      // Treat both times as UTC if they don't have 'Z' suffix
-      const startUTCString = startTime.endsWith('Z') ? startTime : startTime + 'Z';
-      const endUTCString = endTime.endsWith('Z') ? endTime : endTime + 'Z';
-      const start = new Date(startUTCString);
-      const end = new Date(endUTCString);
-      const diffMs = end.getTime() - start.getTime();
-      
-      // Only show positive duration
-      if (diffMs > 0) {
-        return this.formatMsToReadable(diffMs);
-      } else {
+      try {
+        const start = new Date(startTime.endsWith('Z') ? startTime : startTime + 'Z');
+        const end = new Date(endTime.endsWith('Z') ? endTime : endTime + 'Z');
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return '0s';
+        
+        const diffMs = end.getTime() - start.getTime();
+        return diffMs > 0 ? this.formatMsToReadable(diffMs) : '0s';
+      } catch {
         return '0s';
       }
     }
