@@ -239,27 +239,44 @@ export class Login implements AfterViewInit, OnDestroy {
 
   async initializeMediaPipe() {
     try {
+      // Use local WASM files for better performance
       const filesetResolver = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        '/assets/mediapipe/wasm'
       );
 
       this.faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-          delegate: 'GPU'
+          modelAssetPath: '/assets/mediapipe/face_landmarker.task',
+          delegate: 'CPU' // Use CPU for better compatibility
         },
         outputFaceBlendshapes: true,
         runningMode: 'VIDEO',
         numFaces: 1
       });
     } catch (error) {
-      
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to initialize face detection. Please refresh the page.',
-        life: 5000
-      });
+      // Fallback to CDN if local files not available
+      try {
+        const filesetResolver = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
+        );
+
+        this.faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+            delegate: 'CPU'
+          },
+          outputFaceBlendshapes: true,
+          runningMode: 'VIDEO',
+          numFaces: 1
+        });
+      } catch (fallbackError) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to initialize face detection. Please refresh the page.',
+          life: 5000
+        });
+      }
     }
   }
 
@@ -277,12 +294,13 @@ export class Login implements AfterViewInit, OnDestroy {
         stream.getTracks().forEach(track => track.stop());
       }
 
-      // Request camera access
+      // Request camera access with optimized settings
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user' // Use front camera
+          width: { ideal: 640, max: 1280 },
+          height: { ideal: 480, max: 720 },
+          facingMode: 'user', // Use front camera
+          frameRate: { ideal: 15, max: 30 } // Lower frame rate for better performance
         }
       });
       this.videoRef.nativeElement.srcObject = stream;
@@ -315,6 +333,8 @@ export class Login implements AfterViewInit, OnDestroy {
 
     // Store non-null reference
     const faceLandmarker = this.faceLandmarker;
+    let lastDetectionTime = 0;
+    const DETECTION_INTERVAL = 100; // Process every 100ms instead of every frame
 
     const detectLoop = async (timestamp: number) => {
       if (this.activeTab !== 'user') {
@@ -325,11 +345,17 @@ export class Login implements AfterViewInit, OnDestroy {
         return;
       }
 
+      // Throttle detection to reduce CPU usage
+      if (timestamp - lastDetectionTime < DETECTION_INTERVAL) {
+        this.animationId = requestAnimationFrame(detectLoop);
+        return;
+      }
+      lastDetectionTime = timestamp;
+
       const video = this.videoRef.nativeElement;
 
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         try {
-
           // Use the local variable that TypeScript knows is not null
           const results = await faceLandmarker.detectForVideo(video, timestamp);
 
@@ -360,10 +386,10 @@ export class Login implements AfterViewInit, OnDestroy {
                   clearTimeout(this.recognitionTimer);
                 }
 
-                // Wait 1.5 seconds before face recognition to ensure eyes are open
+                // Wait 1 second before face recognition to ensure eyes are open
                 this.recognitionTimer = setTimeout(() => {
                   this.performFaceRecognition();
-                }, 1500);
+                }, 1000);
               }
             }
           } else {
@@ -371,7 +397,6 @@ export class Login implements AfterViewInit, OnDestroy {
             this.showBlinkInstruction = false;
           }
         } catch (error) {
-          
           // Continue detection even if there's an error
         }
       }
@@ -417,7 +442,7 @@ export class Login implements AfterViewInit, OnDestroy {
     const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
 
     try {
-      // Use face-api.js to get face descriptor
+      // Use face-api.js to get face descriptor with optimized settings
       const result = await faceapi.detectSingleFace(
         this.videoRef.nativeElement,
         options
@@ -428,8 +453,16 @@ export class Login implements AfterViewInit, OnDestroy {
         const faceDescriptor = Array.from(result.descriptor);
         this.lastFaceDescriptor = faceDescriptor;
         
-        // Send to backend for verification
-        this.authService.faceLogin(faceDescriptor).subscribe({
+        // Show processing message immediately
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Processing',
+          detail: 'Verifying your identity...',
+          life: 2000
+        });
+        
+        // Send to backend for verification with timeout
+        const faceLoginSubscription = this.authService.faceLogin(faceDescriptor).subscribe({
           next: (response) => {
             // Get user data from response
             const user = response.user;
@@ -439,7 +472,7 @@ export class Login implements AfterViewInit, OnDestroy {
               severity: 'success',
               summary: 'Verification Complete',
               detail: `Welcome ${userName}!`,
-              life: 4000
+              life: 3000
             });
 
             this.detectedUser = `User: ${userName}`;
@@ -455,43 +488,59 @@ export class Login implements AfterViewInit, OnDestroy {
             this.requestLocationAndSave(imageData);
           },
           error: (error) => {
-            
             this.messageService.add({
               severity: 'warn',
               summary: 'Face Not Recognized',
               detail: 'Your face does not match any employee record.',
-              life: 4000
+              life: 3000
             });
             
             // Reset blink verification to try again
             this.blinkVerified = false;
             this.showBlinkInstruction = true;
 
-            // Continue detection
+            // Continue detection with reduced frequency
             if (this.activeTab === 'user') {
-              this.animationId = requestAnimationFrame(this.detectFaceWithBlink.bind(this));
+              setTimeout(() => {
+                this.detectFaceWithBlink();
+              }, 1000); // Wait 1 second before retrying
             }
           }
         });
+
+        // Set timeout for face recognition (10 seconds)
+        setTimeout(() => {
+          if (!this.detectedEmployee) {
+            faceLoginSubscription.unsubscribe();
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Timeout',
+              detail: 'Face recognition timed out. Please try again.',
+              life: 3000
+            });
+            this.blinkVerified = false;
+            this.showBlinkInstruction = true;
+          }
+        }, 10000);
+
       } else {
         // No face detected during recognition
         this.messageService.add({
           severity: 'warn',
           summary: 'Face Detection Failed',
           detail: 'Please look directly at the camera.',
-          life: 3000
+          life: 2000
         });
         // Reset and try again
         this.blinkVerified = false;
         this.showBlinkInstruction = true;
       }
     } catch (error) {
-      
       this.messageService.add({
         severity: 'error',
         summary: 'Recognition Error',
         detail: 'An error occurred during face recognition.',
-        life: 4000
+        life: 3000
       });
       this.blinkVerified = false;
     }
@@ -684,64 +733,38 @@ export class Login implements AfterViewInit, OnDestroy {
             punchLocationLat: Number(lat || 0)
           };
 
-          // Call PunchIn API; on success start session, then start countdown
-          this.punchService.punchIn(punchPayload).subscribe({
-            next: (punchResponse) => {
-              const punchId = punchResponse?.punchId ?? punchResponse?.id ?? 0;
+          // Call optimized PunchIn API that creates both punch and session
+          this.punchService.punchInQuick(punchPayload).subscribe({
+            next: (response) => {
+              const punchId = response?.punchId ?? 0;
+              const sessionId = response?.sessionId ?? null;
+              
               this.activePunchId = punchId || null;
               if (this.activePunchId) {
                 localStorage.setItem('activePunchId', String(this.activePunchId));
               }
-              if (!punchId) {
-                
+              if (sessionId) {
+                localStorage.setItem('activeSessionId', String(sessionId));
               }
-
-              const sessionPayload = {
-                punchId: punchId,
-                employeeId: this.detectedEmployee.employeeId,
-                sessionStatus: 'active',
-                sessionStartTime: new Date().toISOString(),
-                sessionEndTime: null,
-                sessionLocationLong: long || 0,
-                sessionLocationLat: lat || 0,
-                sessionBreakTime: null
-              };
-
-              this.sessionService.startSession(sessionPayload).subscribe({
-                next: (sessionResponse) => {
-                  const sessionId = sessionResponse?.sessionId ?? sessionResponse?.id ?? null;
-                  if (sessionId) {
-                    localStorage.setItem('activeSessionId', String(sessionId));
-                  }
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Punch-In Successful',
-                    detail: `Welcome ${userData.name}!`,
-                    life: 3000
-          });
-          this.startSession();
-                  // set next route and start countdown (do not navigate immediately)
-                  this.nextRoute = ['/employee/dashboard'];
-                  this.startNavigationCountdown();
-                },
-                error: (err) => {
-                  
-                  this.messageService.add({
-                    severity: 'error',
-                    summary: 'Session Start Failed',
-                    detail: 'Could not start your work session. Please try again.',
-                    life: 4000
-                  });
-                }
+              
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Punch-In Successful',
+                detail: `Welcome ${userData.name}!`,
+                life: 3000
               });
+              
+              this.startSession();
+              // set next route and start countdown (do not navigate immediately)
+              this.nextRoute = ['/employee/dashboard'];
+              this.startNavigationCountdown();
             },
             error: (err) => {
-              
               this.messageService.add({
                 severity: 'error',
                 summary: 'Punch-In Failed',
                 detail: 'Could not record punch. Please try again.',
-                life: 4000
+                life: 3000
               });
             }
           });

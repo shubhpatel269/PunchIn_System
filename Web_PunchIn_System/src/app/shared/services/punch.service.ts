@@ -24,5 +24,10 @@ export class PunchService {
     return this.http.post<any>(this.apiUrl, payload)
       .pipe(catchError(error => throwError(() => error)));
   }
+
+  punchInQuick(payload: PunchRecordRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/quick`, payload)
+      .pipe(catchError(error => throwError(() => error)));
+  }
 }
 
