@@ -651,26 +651,99 @@ export class Login implements AfterViewInit, OnDestroy {
     return bestMatch;
   }
 
-  // capture image from video 
+  // capture image from video with optimization
   captureSnapshot(): string {
     const canvas = this.canvasRef.nativeElement;
     const ctx = canvas.getContext('2d');
     const video = this.videoRef.nativeElement;
 
-    if (ctx) {
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const imageData = canvas.toDataURL('image/jpeg');
-      
-      return imageData;
+    if (!ctx || !video || video.videoWidth === 0 || video.videoHeight === 0) {
+      console.error('Invalid video or canvas context');
+      return '';
     }
 
-    return '';
+    try {
+      // Step 1: Set optimal canvas dimensions (reduce size for smaller file)
+      const maxWidth = 640;  // Optimal width for face recognition
+      const maxHeight = 480; // Optimal height for face recognition
+      
+      let canvasWidth = video.videoWidth;
+      let canvasHeight = video.videoHeight;
+      
+      // Scale down if video is too large, but maintain aspect ratio
+      if (canvasWidth > maxWidth || canvasHeight > maxHeight) {
+        const aspectRatio = canvasWidth / canvasHeight;
+        if (canvasWidth > canvasHeight) {
+          canvasWidth = maxWidth;
+          canvasHeight = maxWidth / aspectRatio;
+        } else {
+          canvasHeight = maxHeight;
+          canvasWidth = maxHeight * aspectRatio;
+        }
+      }
+      
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // Step 2: Clear canvas and set image smoothing for better quality
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Step 3: Draw video frame with scaling
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Step 4: Apply image enhancement for better face clarity
+      this.enhanceImageForFaceRecognition(ctx, canvas.width, canvas.height);
+
+      // Step 5: Convert to optimized JPEG with quality setting
+      // JPEG with 0.85 quality provides good balance between size and quality
+      const imageData = canvas.toDataURL('image/jpeg', 0.85);
+      
+      console.log('Optimized image captured:', {
+        originalSize: `${video.videoWidth}x${video.videoHeight}`,
+        optimizedSize: `${canvasWidth}x${canvasHeight}`,
+        base64Length: imageData.length,
+        format: 'JPEG (85% quality)'
+      });
+      
+      return imageData;
+    } catch (error) {
+      console.error('Error capturing optimized snapshot:', error);
+      return '';
+    }
   }
+
+  // Enhance image for better face recognition
+  private enhanceImageForFaceRecognition(ctx: CanvasRenderingContext2D, width: number, height: number) {
+    try {
+      // Get image data for processing
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      // Apply contrast and brightness enhancement
+      const contrast = 1.1; // Slight contrast boost
+      const brightness = 5;  // Slight brightness boost
+
+      for (let i = 0; i < data.length; i += 4) {
+        // Apply contrast
+        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128));     // Red
+        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrast + 128)); // Green
+        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrast + 128)); // Blue
+
+        // Apply brightness
+        data[i] = Math.min(255, Math.max(0, data[i] + brightness));     // Red
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + brightness)); // Green
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + brightness)); // Blue
+      }
+
+      // Put enhanced image data back
+      ctx.putImageData(imageData, 0, 0);
+    } catch (error) {
+      console.warn('Image enhancement failed, using original:', error);
+    }
+  }
+
 
   requestLocationAndSave(imageData: string) {
     navigator.geolocation.getCurrentPosition(
