@@ -59,8 +59,8 @@ export class Login implements AfterViewInit, OnDestroy {
   // Add blink detection variables
   blinkVerified: boolean = false;
   private eyeClosedFrames: number = 0;
-  private readonly EYE_CLOSED_THRESHOLD = 0.25;
-  private readonly BLINK_FRAME_THRESHOLD = 3;
+  private readonly EYE_CLOSED_THRESHOLD = 0.15; // Decreased from 0.25 (40% more sensitive)
+  private readonly BLINK_FRAME_THRESHOLD = 2; // Decreased from 3 (33% shorter blink required)
   private lastBlinkTime: number = 0;
   showBlinkInstruction: boolean = false;
   private recognitionTimer: any = null;
