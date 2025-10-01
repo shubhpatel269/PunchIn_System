@@ -248,17 +248,20 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   formatTimeComponents(hours: number, minutes: number, seconds: number): string {
     const parts: string[] = [];
     
+    // Always show hours if > 0, even if very large
     if (hours > 0) {
-      parts.push(`${hours}hr`);
+      parts.push(`${hours}h`);
     }
+    // Always show minutes if > 0
     if (minutes > 0) {
-      parts.push(`${minutes}min`);
+      parts.push(`${minutes}m`);
     }
+    // Always show seconds if > 0, or if no other parts (to show at least something)
     if (seconds > 0 || parts.length === 0) {
       parts.push(`${seconds}s`);
     }
     
-    return parts.join(', ');
+    return parts.join(' ');
   }
 
   getSessionStatusText(status: string): string {

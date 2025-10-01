@@ -157,12 +157,15 @@ export class EmployeeAttendanceComponent implements OnInit {
         this.isAdminView = true;
         this.viewingEmployeeId = params['id'];
         this.loadEmployeeData(params['id']);
+        // Load attendance data after employee data is set
+        this.loadAttendanceData();
       } else {
         this.loadUserData();
+        // Load attendance data after user data is set
+        this.loadAttendanceData();
       }
     });
     
-    this.loadAttendanceData();
     this.initializeCharts();
   }
 
@@ -213,6 +216,8 @@ export class EmployeeAttendanceComponent implements OnInit {
         this.dailySummaryRecords = this.transformCombinedDataToRecords(response);
         this.calculateMonthlyStatsFromCombined(response);
         this.initializeCharts();
+        // Initialize calendar after data is loaded
+        this.initializeCalendar();
       },
       error: (error) => {
         console.error('Error loading combined attendance data:', error);
@@ -248,6 +253,11 @@ export class EmployeeAttendanceComponent implements OnInit {
           // Transform the detailed attendance data for detailed sessions table (individual sessions)
           this.detailedSessionsData = this.transformApiDataToRecords(response.records);
           this.filteredDetailedRecords = [...this.detailedSessionsData];
+          
+          // Refresh weekly view with new data
+          if (this.calendarView === 'week') {
+            this.generateWeeklyCalendarDays();
+          }
         },
         error: (error) => {
           console.error('Error loading detailed sessions data:', error);
@@ -735,11 +745,13 @@ export class EmployeeAttendanceComponent implements OnInit {
   onMonthChange() {
     this.loadAttendanceData();
     this.initializeCharts();
+    // Calendar will be initialized after data loads in loadAttendanceData
   }
 
   onYearChange() {
     this.loadAttendanceData();
     this.initializeCharts();
+    // Calendar will be initialized after data loads in loadAttendanceData
   }
 
   exportAttendance() {
@@ -831,6 +843,9 @@ export class EmployeeAttendanceComponent implements OnInit {
     this.generateTimeSlots();
     this.generateCalendarDays();
     this.initializeWeeklyView();
+    
+    // Set weekly view as default and ensure it's properly initialized
+    this.setCalendarView('week');
   }
 
   generateTimeSlots() {
@@ -1027,7 +1042,8 @@ export class EmployeeAttendanceComponent implements OnInit {
           });
           
           const sameTimeIndex = sortedSameTimeSessions.findIndex(s => s === session);
-          const stackOffset = sameTimeIndex * 3; // 3% offset per stacked session
+          // Use smaller offset for cleaner stacking - just 1% per session
+          const stackOffset = sameTimeIndex * 1; // 1% offset per stacked session
           return Math.max(2, Math.min(95, basePercentage + stackOffset));
         }
       }
@@ -1056,7 +1072,30 @@ export class EmployeeAttendanceComponent implements OnInit {
     if (!session.punchInDateTime) return 8; // Minimum height for sessions without start time
     
     try {
-      const punchInTime = new Date(session.punchInDateTime);
+      // Use the same timezone-aware parsing as positioning
+      const formattedTime = this.formatTime(session.punchInDateTime);
+      const timeMatch = formattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      
+      if (!timeMatch) {
+        console.error('Could not parse formatted time for height calculation:', formattedTime);
+        return 8;
+      }
+      
+      let hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+      const period = timeMatch[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (period === 'AM' && hour === 12) {
+        hour = 0;
+      } else if (period === 'PM' && hour !== 12) {
+        hour += 12;
+      }
+      
+      // Create a proper local date for today with the parsed time
+      const today = new Date();
+      const punchInTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute, 0, 0);
+      
       let durationMinutes: number;
       
       if (!session.punchOutDateTime) {
@@ -1064,9 +1103,37 @@ export class EmployeeAttendanceComponent implements OnInit {
         const now = new Date();
         const durationMs = now.getTime() - punchInTime.getTime();
         durationMinutes = durationMs / (1000 * 60);
+        
+        // Debug logging for active sessions
+        console.log(`🔍 ACTIVE SESSION HEIGHT DEBUG:`);
+        console.log(`  Punch In: ${session.punchInDateTime}`);
+        console.log(`  Punch In Time: ${punchInTime}`);
+        console.log(`  Current Time: ${now}`);
+        console.log(`  Duration MS: ${durationMs}`);
+        console.log(`  Duration Minutes: ${durationMinutes}`);
+        console.log(`  ---`);
       } else {
         // For completed sessions, calculate from start to end time
-        const punchOutTime = new Date(session.punchOutDateTime);
+        const punchOutFormattedTime = this.formatTime(session.punchOutDateTime);
+        const punchOutTimeMatch = punchOutFormattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        
+        if (!punchOutTimeMatch) {
+          console.error('Could not parse punch out time:', punchOutFormattedTime);
+          return 8;
+        }
+        
+        let punchOutHour = parseInt(punchOutTimeMatch[1]);
+        const punchOutMinute = parseInt(punchOutTimeMatch[2]);
+        const punchOutPeriod = punchOutTimeMatch[3].toUpperCase();
+        
+        // Convert to 24-hour format
+        if (punchOutPeriod === 'AM' && punchOutHour === 12) {
+          punchOutHour = 0;
+        } else if (punchOutPeriod === 'PM' && punchOutHour !== 12) {
+          punchOutHour += 12;
+        }
+        
+        const punchOutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), punchOutHour, punchOutMinute, 0, 0);
         const durationMs = punchOutTime.getTime() - punchInTime.getTime();
         durationMinutes = durationMs / (1000 * 60);
       }
@@ -1086,6 +1153,12 @@ export class EmployeeAttendanceComponent implements OnInit {
       
       const percentage = (durationMinutes / totalTimeSpan) * 100;
       
+      // Debug logging for height calculation
+      if (!session.punchOutDateTime) {
+        console.log(`  Total Time Span: ${totalTimeSpan} minutes`);
+        console.log(`  Calculated Percentage: ${percentage.toFixed(2)}%`);
+      }
+      
       // For multiple sessions, ensure they don't overlap by limiting height
       if (sessions.length > 1) {
         // Calculate how many sessions are at the same time
@@ -1097,17 +1170,29 @@ export class EmployeeAttendanceComponent implements OnInit {
         });
         
         if (sameTimeSessions.length > 1) {
-          // For sessions at the same time, use smaller heights to fit in stack
-          const maxHeightPerStackedSession = Math.max(3, 50 / sameTimeSessions.length);
-          return Math.max(2, Math.min(maxHeightPerStackedSession, percentage));
+          // For sessions at the same time, use more uniform heights
+          const maxHeightPerStackedSession = Math.max(8, 60 / sameTimeSessions.length);
+          const finalHeight = Math.max(5, Math.min(maxHeightPerStackedSession, percentage));
+          if (!session.punchOutDateTime) {
+            console.log(`  Stacked Session - Final Height: ${finalHeight.toFixed(2)}%`);
+          }
+          return finalHeight;
         } else {
           // For sessions at different times, use their actual calculated height
-          return Math.max(2, Math.min(90, percentage));
+          const finalHeight = Math.max(2, Math.min(90, percentage));
+          if (!session.punchOutDateTime) {
+            console.log(`  Multiple Sessions - Final Height: ${finalHeight.toFixed(2)}%`);
+          }
+          return finalHeight;
         }
       }
       
       // For single session, use calculated height but limit to reasonable size
-      return Math.max(2, Math.min(90, percentage));
+      const finalHeight = Math.max(2, Math.min(90, percentage));
+      if (!session.punchOutDateTime) {
+        console.log(`  Single Session - Final Height: ${finalHeight.toFixed(2)}%`);
+      }
+      return finalHeight;
     } catch (error) {
       console.error('Error calculating session height:', error);
       return 8; // Default height for error cases
@@ -1139,10 +1224,18 @@ export class EmployeeAttendanceComponent implements OnInit {
   // Weekly view methods
   initializeWeeklyView() {
     // Set current week start to the beginning of the current week (Sunday)
+    // Use the selected month/year instead of current date
+    const selectedDate = new Date(this.selectedYear, this.selectedMonth, 1);
     const today = new Date();
-    const dayOfWeek = today.getDay();
-    this.currentWeekStart = new Date(today);
-    this.currentWeekStart.setDate(today.getDate() - dayOfWeek);
+    
+    // If viewing current month, use today's date, otherwise use the 1st of the month
+    const referenceDate = (today.getFullYear() === this.selectedYear && today.getMonth() === this.selectedMonth) 
+      ? today 
+      : selectedDate;
+    
+    const dayOfWeek = referenceDate.getDay();
+    this.currentWeekStart = new Date(referenceDate);
+    this.currentWeekStart.setDate(referenceDate.getDate() - dayOfWeek);
     this.currentWeekStart.setHours(0, 0, 0, 0);
     
     this.generateWeeklyCalendarDays();
@@ -1309,6 +1402,16 @@ export class EmployeeAttendanceComponent implements OnInit {
   getSessionZIndex(sessions: any[], sessionIndex: number): number {
     // Later sessions (higher index) get higher z-index to appear on top
     return 10 + sessionIndex;
+  }
+
+  getSessionLeftPosition(session: any, sessions: any[], sessionIndex: number): number {
+    // Always use consistent left position for cleaner look
+    return 4; // Default left position for all sessions
+  }
+
+  getSessionWidth(session: any, sessions: any[], sessionIndex: number): number {
+    // Always use consistent width for cleaner look
+    return 92; // Default width for all sessions
   }
 
   shouldShowSessionTime(session: any): boolean {

@@ -482,6 +482,13 @@ button:hover,
   align-items: center;
 }
 
+/* Improve visual separation for overlapping sessions */
+.attendance-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}
+
 /* Very small sessions (0s) - make them more visible */
 .attendance-block[style*="height: 2%"],
 .attendance-block[style*="height: 3%"],
