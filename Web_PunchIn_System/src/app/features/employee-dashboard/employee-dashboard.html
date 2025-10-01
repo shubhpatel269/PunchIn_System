@@ -187,7 +187,7 @@
         <ng-template pTemplate="header">
           <div class="p-4">
             <h3 class="text-lg font-semibold text-gray-900">Hours Worked Trend</h3>
-            <p class="text-sm text-gray-500">Last 7 days working hours</p>
+            <p class="text-sm text-gray-500">Last 7 days working hours with detailed breakdown</p>
           </div>
         </ng-template>
         <ng-template pTemplate="content">
@@ -197,6 +197,10 @@
               [data]="hoursChartData" 
               [options]="chartOptions">
             </p-chart>
+          </div>
+          <div class="mt-4 text-xs text-gray-500 text-center">
+            <i class="pi pi-info-circle mr-1"></i>
+            Hover over data points to see exact hours worked
           </div>
         </ng-template>
       </p-card>

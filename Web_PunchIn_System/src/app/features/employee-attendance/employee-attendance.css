@@ -592,6 +592,28 @@ button:hover,
   font-weight: 500;
 }
 
+/* Vertical text styling for month view */
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: 10px;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
+/* Adjust positioning for vertical text in month view */
+.calendarView-month .absent-indicator,
+.calendarView-month .weekend-indicator {
+  transform: translate(-50%, -50%);
+}
+
+.calendarView-month .vertical-text {
+  display: block;
+  text-align: center;
+}
+
 .calendar-tooltip {
   position: absolute;
   background: white;
@@ -668,4 +690,21 @@ button:hover,
 
 .session-tooltip .session-details strong {
   color: white;
+}
+
+/* Quadrant-based tooltip positioning */
+.tooltip-bottom-right {
+  /* Default position - no adjustment needed */
+}
+
+.tooltip-bottom-left {
+  transform: translateX(-100%);
+}
+
+.tooltip-top-right {
+  transform: translateY(-100%);
+}
+
+.tooltip-top-left {
+  transform: translate(-100%, -100%);
 }

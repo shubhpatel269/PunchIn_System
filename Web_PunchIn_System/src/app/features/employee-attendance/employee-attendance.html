@@ -351,8 +351,8 @@
       </ng-template>
     </p-card>
 
-    <!-- Detailed Sessions Table -->
-    <p-card class="mt-6">
+    <!-- Detailed Sessions Table - Admin Only -->
+    <p-card class="mt-6" *ngIf="isAdminView">
       <ng-template pTemplate="header">
         <div class="p-4">
           <h3 class="text-lg font-semibold text-gray-900">Detailed Sessions</h3>
@@ -536,7 +536,7 @@
              </div>
             
             <!-- Days of the week -->
-            <div class="calendar-days">
+            <div class="calendar-days" [class.calendarView-month]="calendarView === 'month'">
               <div class="day-column" *ngFor="let day of (calendarView === 'week' ? weeklyCalendarDays : calendarDays)" 
                    [class.selected-day]="selectedDay === day.date"
                    (mouseenter)="onDayHover(day)"
@@ -569,12 +569,12 @@
                   
                   <!-- Absent indicator -->
                   <div class="absent-indicator" *ngIf="day.sessions.length === 0 && !isWeekend(day.date)">
-                    <span class="absent-text">Absent</span>
+                    <span class="absent-text" [class.vertical-text]="calendarView === 'month'">Absent</span>
                   </div>
                   
                   <!-- Weekend indicator -->
                   <div class="weekend-indicator" *ngIf="isWeekend(day.date)">
-                    <span class="weekend-text">Weekend</span>
+                    <span class="weekend-text" [class.vertical-text]="calendarView === 'month'">Weekend</span>
                   </div>
                 </div>
               </div>
@@ -610,6 +610,7 @@
           <!-- Session Tooltip -->
           <div class="calendar-tooltip session-tooltip" 
                *ngIf="hoveredSession"
+               [class]="'calendar-tooltip session-tooltip tooltip-' + tooltipPosition"
                [style.left.px]="sessionTooltipX"
                [style.top.px]="sessionTooltipY">
             <div class="tooltip-content">

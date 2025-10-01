@@ -111,6 +111,7 @@ export class EmployeeAttendanceComponent implements OnInit {
   hoveredSession: any = null;
   sessionTooltipX: number = 0;
   sessionTooltipY: number = 0;
+  tooltipPosition: string = 'bottom-right';
 
   // Table data
   attendanceRecords: AttendanceRecord[] = [];
@@ -230,7 +231,7 @@ export class EmployeeAttendanceComponent implements OnInit {
       }
     });
 
-    // 2. Load detailed sessions data (individual sessions)
+    // 2. Load detailed sessions data (for calendar view - all users, but table only for admins)
     const startDate = new Date(this.selectedYear, this.selectedMonth, 1);
     // Ensure we include today's date if viewing current month
     const today = new Date();
@@ -245,14 +246,17 @@ export class EmployeeAttendanceComponent implements OnInit {
       endDate = new Date(this.selectedYear, this.selectedMonth + 1, 0, 23, 59, 59, 999);
     }
 
-
     this.attendanceService.getAttendanceSummary(this.user.employeeId, startDate, endDate)
       .subscribe({
         next: (response) => {
           
-          // Transform the detailed attendance data for detailed sessions table (individual sessions)
+          // Transform the detailed attendance data for calendar view (all users)
           this.detailedSessionsData = this.transformApiDataToRecords(response.records);
-          this.filteredDetailedRecords = [...this.detailedSessionsData];
+          
+          // Only create filtered records for admin view (detailed sessions table)
+          if (this.isAdminView) {
+            this.filteredDetailedRecords = [...this.detailedSessionsData];
+          }
           
           // Refresh weekly view with new data
           if (this.calendarView === 'week') {
@@ -269,7 +273,9 @@ export class EmployeeAttendanceComponent implements OnInit {
           });
           // Fallback to empty data
           this.detailedSessionsData = [];
-          this.filteredDetailedRecords = [];
+          if (this.isAdminView) {
+            this.filteredDetailedRecords = [];
+          }
         }
       });
   }
@@ -892,9 +898,6 @@ export class EmployeeAttendanceComponent implements OnInit {
       });
     }
     
-    // Debug logging (only log once per view change)
-    console.log(`Generated ${this.timeSlots.length} time slots for ${this.timePeriodView.toUpperCase()} view`);
-    console.log('Time slots:', this.timeSlots.map(slot => `${slot.time} (hour: ${slot.hour})`));
   }
 
   generateCalendarDays() {
@@ -1048,18 +1051,6 @@ export class EmployeeAttendanceComponent implements OnInit {
         }
       }
       
-      // Debug logging for all sessions to understand timezone issue
-      const timeString = `${hour}:${minute.toString().padStart(2, '0')}`;
-      console.log(`🔍 SESSION DEBUG (FIXED):`);
-      console.log(`  Original DateTime: ${session.punchInDateTime}`);
-      console.log(`  Formatted Time: ${formattedTime}`);
-      console.log(`  Parsed Hour: ${hour}, Minute: ${minute}`);
-      console.log(`  Time String: ${timeString}`);
-      console.log(`  Total Minutes: ${totalMinutes}`);
-      console.log(`  Calculated Position: ${basePercentage.toFixed(1)}%`);
-      console.log(`  Expected Position for ${timeString}: ${((hour * 60 + minute) / 720 * 100).toFixed(1)}%`);
-      console.log(`  CSS will be: top: ${basePercentage.toFixed(1)}%`);
-      console.log(`  ---`);
       
       return Math.max(2, Math.min(95, basePercentage));
     } catch (error) {
@@ -1104,14 +1095,6 @@ export class EmployeeAttendanceComponent implements OnInit {
         const durationMs = now.getTime() - punchInTime.getTime();
         durationMinutes = durationMs / (1000 * 60);
         
-        // Debug logging for active sessions
-        console.log(`🔍 ACTIVE SESSION HEIGHT DEBUG:`);
-        console.log(`  Punch In: ${session.punchInDateTime}`);
-        console.log(`  Punch In Time: ${punchInTime}`);
-        console.log(`  Current Time: ${now}`);
-        console.log(`  Duration MS: ${durationMs}`);
-        console.log(`  Duration Minutes: ${durationMinutes}`);
-        console.log(`  ---`);
       } else {
         // For completed sessions, calculate from start to end time
         const punchOutFormattedTime = this.formatTime(session.punchOutDateTime);
@@ -1153,11 +1136,6 @@ export class EmployeeAttendanceComponent implements OnInit {
       
       const percentage = (durationMinutes / totalTimeSpan) * 100;
       
-      // Debug logging for height calculation
-      if (!session.punchOutDateTime) {
-        console.log(`  Total Time Span: ${totalTimeSpan} minutes`);
-        console.log(`  Calculated Percentage: ${percentage.toFixed(2)}%`);
-      }
       
       // For multiple sessions, ensure they don't overlap by limiting height
       if (sessions.length > 1) {
@@ -1173,25 +1151,16 @@ export class EmployeeAttendanceComponent implements OnInit {
           // For sessions at the same time, use more uniform heights
           const maxHeightPerStackedSession = Math.max(8, 60 / sameTimeSessions.length);
           const finalHeight = Math.max(5, Math.min(maxHeightPerStackedSession, percentage));
-          if (!session.punchOutDateTime) {
-            console.log(`  Stacked Session - Final Height: ${finalHeight.toFixed(2)}%`);
-          }
           return finalHeight;
         } else {
           // For sessions at different times, use their actual calculated height
           const finalHeight = Math.max(2, Math.min(90, percentage));
-          if (!session.punchOutDateTime) {
-            console.log(`  Multiple Sessions - Final Height: ${finalHeight.toFixed(2)}%`);
-          }
           return finalHeight;
         }
       }
       
       // For single session, use calculated height but limit to reasonable size
       const finalHeight = Math.max(2, Math.min(90, percentage));
-      if (!session.punchOutDateTime) {
-        console.log(`  Single Session - Final Height: ${finalHeight.toFixed(2)}%`);
-      }
       return finalHeight;
     } catch (error) {
       console.error('Error calculating session height:', error);
@@ -1381,18 +1350,6 @@ export class EmployeeAttendanceComponent implements OnInit {
       return timeA - timeB;
     });
     
-    // Debug: Show summary of all sessions (simplified)
-    console.log(`\n=== SESSION SUMMARY (${this.timePeriodView.toUpperCase()} view) ===`);
-    console.log(`Total sessions: ${sortedSessions.length}`);
-    sortedSessions.forEach((session, index) => {
-      if (session.punchInDateTime) {
-        const punchInTime = new Date(session.punchInDateTime);
-        const timeString = `${punchInTime.getHours()}:${punchInTime.getMinutes().toString().padStart(2, '0')}`;
-        const formattedTime = this.formatTime(session.punchInDateTime);
-        console.log(`Session ${index + 1}: ${timeString} (formatted: ${formattedTime}) - ${session.punchInDateTime}`);
-      }
-    });
-    console.log('=== END SESSION SUMMARY ===\n');
     
     return sortedSessions;
   }
@@ -1464,13 +1421,47 @@ export class EmployeeAttendanceComponent implements OnInit {
       const containerRect = calendarContainer.getBoundingClientRect();
       const sessionRect = sessionElement.getBoundingClientRect();
       
-      // Position tooltip starting from bottom-right corner of session box with spacing
-      this.sessionTooltipX = sessionRect.right - containerRect.left + 10; // 10px to the right of session box
-      this.sessionTooltipY = sessionRect.bottom - containerRect.top + 10; // 10px below session box
+      // Calculate session position relative to calendar container
+      const sessionLeft = sessionRect.left - containerRect.left;
+      const sessionTop = sessionRect.top - containerRect.top;
+      const sessionRight = sessionRect.right - containerRect.left;
+      const sessionBottom = sessionRect.bottom - containerRect.top;
+      
+      // Get calendar container dimensions
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+      
+      // Calculate quadrant based on session position
+      const isLeftHalf = sessionLeft < containerWidth / 2;
+      const isTopHalf = sessionTop < containerHeight / 2;
+      
+      // Determine tooltip position based on quadrant
+      if (isLeftHalf && isTopHalf) {
+        // Part 1 (Top Left) - Show tooltip on bottom right
+        this.sessionTooltipX = sessionRight + 10;
+        this.sessionTooltipY = sessionBottom + 10;
+        this.tooltipPosition = 'bottom-right';
+      } else if (!isLeftHalf && isTopHalf) {
+        // Part 2 (Top Right) - Show tooltip on bottom left
+        this.sessionTooltipX = sessionLeft - 10; // Will be adjusted by CSS
+        this.sessionTooltipY = sessionBottom + 10;
+        this.tooltipPosition = 'bottom-left';
+      } else if (isLeftHalf && !isTopHalf) {
+        // Part 3 (Bottom Left) - Show tooltip on top right
+        this.sessionTooltipX = sessionRight + 10;
+        this.sessionTooltipY = sessionTop - 10; // Will be adjusted by CSS
+        this.tooltipPosition = 'top-right';
+      } else {
+        // Part 4 (Bottom Right) - Show tooltip on top left
+        this.sessionTooltipX = sessionLeft - 10; // Will be adjusted by CSS
+        this.sessionTooltipY = sessionTop - 10; // Will be adjusted by CSS
+        this.tooltipPosition = 'top-left';
+      }
     } else {
       // Fallback to mouse position if container not found
       this.sessionTooltipX = event.clientX + 10;
       this.sessionTooltipY = event.clientY - 10;
+      this.tooltipPosition = 'bottom-right';
     }
     
     // Hide day tooltip when hovering over session

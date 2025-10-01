@@ -112,6 +112,9 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.loadUserData();
     this.loadTodayAttendance();
     this.loadRecentAttendance();
+    
+    // Load last 7 days working hours for better trend chart
+    this.loadLast7DaysWorkingHours();
 
     // Detect user timezone (for displaying recent attendance times)
     try {
@@ -130,6 +133,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.dashboardRefreshInterval = setInterval(() => {
       this.loadTodayStatus();
       this.loadRecentAttendance();
+      this.loadLast7DaysWorkingHours(); // Refresh trend chart data
     }, 30000);
 
     // Load current month overview once on init
@@ -197,6 +201,50 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // New method to load last 7 days working hours for better trend chart
+  loadLast7DaysWorkingHours() {
+    // Calculate the date range for the last 7 days
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6); // Include today, so 6 days ago + today = 7 days
+    
+    // Get data for current month first
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 1-12 format
+    
+    this.employeeService.getSelfCombinedAttendance(currentYear, currentMonth).subscribe({
+      next: (data) => {
+        // If we need data from previous month, get that too
+        const needPreviousMonth = sevenDaysAgo.getMonth() !== today.getMonth() || 
+                                 sevenDaysAgo.getFullYear() !== today.getFullYear();
+        
+        if (needPreviousMonth) {
+          const prevYear = sevenDaysAgo.getFullYear();
+          const prevMonth = sevenDaysAgo.getMonth() + 1; // 1-12 format
+          
+          this.employeeService.getSelfCombinedAttendance(prevYear, prevMonth).subscribe({
+            next: (prevData) => {
+              this.initializeHoursChartFromCombinedData(data, prevData, sevenDaysAgo, today);
+            },
+            error: (err) => {
+              console.error('Failed to load previous month data:', err);
+              // Use only current month data
+              this.initializeHoursChartFromCombinedData(data, null, sevenDaysAgo, today);
+            }
+          });
+        } else {
+          // Only current month needed
+          this.initializeHoursChartFromCombinedData(data, null, sevenDaysAgo, today);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load combined attendance data:', err);
+        // Fallback to recent attendance if combined data fails
+        this.loadRecentAttendance();
+      }
+    });
+  }
+
   loadAttendanceStats() {
     // Calculate stats from recent attendance
     const totalDays = this.recentAttendance.length;
@@ -237,8 +285,62 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     return 0;
   }
 
+  // Helper method to parse hours string to decimal for chart data
+  private parseHoursToDecimal(timeString: string): number {
+    if (!timeString || timeString === '00:00:00') return 0;
+    return this.parseHours(timeString);
+  }
+
+  // Helper method to parse TimeSpan string to decimal for chart data
+  private parseTimeSpanToDecimal(timeSpanString: string): number {
+    if (!timeSpanString || timeSpanString === '00:00:00') return 0;
+    return this.parseHours(timeSpanString);
+  }
+
+  // Helper method to format decimal hours back to readable format
+  private formatHoursFromDecimal(decimalHours: number): string {
+    if (decimalHours === 0) return '0h';
+    
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    
+    if (hours === 0) {
+      return `${minutes}m`;
+    } else if (minutes === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${minutes}m`;
+    }
+  }
+
   initializeHoursChartFromRecent() {
-    const last7Days = this.recentAttendance.slice(0, 7).reverse();
+    // Create a map of dates to records for easier lookup
+    const recordsMap = new Map();
+    this.recentAttendance.forEach(record => {
+      recordsMap.set(record.date, record);
+    });
+    
+    // Generate last 7 days with proper date handling
+    const today = new Date();
+    const last7Days = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() - i);
+      const dateString = currentDate.toISOString().split('T')[0];
+      
+      const record = recordsMap.get(dateString);
+      if (record) {
+        last7Days.push(record);
+      } else {
+        // Create empty record for missing day
+        last7Days.push({
+          date: dateString,
+          totalHours: '00:00:00'
+        });
+      }
+    }
+    
     this.hoursChartData = {
       labels: last7Days.map(record => {
         const date = new Date(record.date);
@@ -246,7 +348,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       }),
       datasets: [{
         label: 'Hours Worked',
-        data: last7Days.map(record => record.totalHours),
+        data: last7Days.map(record => this.parseHoursToDecimal(record.totalHours)),
         backgroundColor: 'rgba(16, 185, 129, 0.2)',
         borderColor: '#10B981',
         borderWidth: 2,
@@ -259,9 +361,117 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const hours = context.parsed.y;
+              return `Hours: ${this.formatHoursFromDecimal(hours)}`;
+            }
+          }
+        }
       },
-      scales: { y: { beginAtZero: true, max: 10 } }
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          max: 12,
+          ticks: {
+            callback: (value: any) => {
+              return `${value}h`;
+            }
+          }
+        }
+      }
+    };
+  }
+
+  // New method to initialize hours chart from combined attendance data
+  initializeHoursChartFromCombinedData(currentData: any, previousData: any = null, startDate: Date, endDate: Date) {
+    // Combine daily records from both months if available
+    let allDailyRecords: any[] = [];
+    
+    if (previousData && previousData.dailyRecords) {
+      allDailyRecords = [...previousData.dailyRecords];
+    }
+    
+    if (currentData && currentData.dailyRecords) {
+      allDailyRecords = [...allDailyRecords, ...currentData.dailyRecords];
+    }
+    
+    // Filter records for the last 7 days
+    const last7DaysRecords = allDailyRecords.filter((record: any) => {
+      const recordDate = new Date(record.date);
+      return recordDate >= startDate && recordDate <= endDate;
+    });
+    
+    // Sort by date to ensure proper order
+    last7DaysRecords.sort((a: any, b: any) => {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+    
+    // If we don't have enough records, create empty entries for missing days
+    const last7Days = [];
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      
+      const existingRecord = last7DaysRecords.find((record: any) => {
+        const recordDate = new Date(record.date);
+        return recordDate.toDateString() === currentDate.toDateString();
+      });
+      
+      if (existingRecord) {
+        last7Days.push(existingRecord);
+      } else {
+        // Create empty record for missing day
+        last7Days.push({
+          date: currentDate.toISOString().split('T')[0],
+          totalWorkHours: '00:00:00'
+        });
+      }
+    }
+    
+    this.hoursChartData = {
+      labels: last7Days.map((record: any) => {
+        const date = new Date(record.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }),
+      datasets: [{
+        label: 'Hours Worked',
+        data: last7Days.map((record: any) => this.parseTimeSpanToDecimal(record.totalWorkHours)),
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    };
+
+    this.chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const hours = context.parsed.y;
+              return `Hours: ${this.formatHoursFromDecimal(hours)}`;
+            }
+          }
+        }
+      },
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          max: 12,
+          ticks: {
+            callback: (value: any) => {
+              return `${value}h`;
+            }
+          }
+        }
+      }
     };
   }
 
