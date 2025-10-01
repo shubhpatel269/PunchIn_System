@@ -440,6 +440,195 @@
         </div>
       </ng-template>
     </p-card>
+
+    <!-- Calendar View -->
+    <p-card class="mt-6">
+      <ng-template pTemplate="header">
+        <div class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">Weekly Calendar View</h3>
+              <p class="text-sm text-gray-500">Visual representation of weekly attendance</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <!-- Week Navigation -->
+              <div class="flex items-center gap-2">
+                <button 
+                  type="button" 
+                  class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  (click)="previousWeek()"
+                  [disabled]="isFirstWeek()">
+                  <i class="pi pi-chevron-left text-gray-600"></i>
+                </button>
+                
+                <div class="text-center min-w-[200px]">
+                  <div class="font-semibold text-gray-900">{{ getCurrentWeekRange() }}</div>
+                  <div class="text-sm text-gray-500">{{ getCurrentWeekYear() }}</div>
+                </div>
+                
+                <button 
+                  type="button" 
+                  class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                  (click)="nextWeek()"
+                  [disabled]="isLastWeek()">
+                  <i class="pi pi-chevron-right text-gray-600"></i>
+                </button>
+              </div>
+              
+               <!-- View Toggle -->
+               <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                 <button 
+                   type="button" 
+                   class="px-3 py-1 text-sm rounded-md transition-colors"
+                   [class.bg-white]="calendarView === 'week'"
+                   [class.text-gray-900]="calendarView === 'week'"
+                   [class.text-gray-600]="calendarView !== 'week'"
+                   (click)="setCalendarView('week')">
+                   Week
+                 </button>
+                 <button 
+                   type="button" 
+                   class="px-3 py-1 text-sm rounded-md transition-colors"
+                   [class.bg-white]="calendarView === 'month'"
+                   [class.text-gray-900]="calendarView === 'month'"
+                   [class.text-gray-600]="calendarView !== 'month'"
+                   (click)="setCalendarView('month')">
+                   Month
+                 </button>
+               </div>
+               
+               <!-- Time Period Toggle -->
+               <div class="flex items-center gap-1 bg-blue-100 rounded-lg p-1">
+                 <button 
+                   type="button" 
+                   class="px-4 py-2 text-sm rounded-md transition-colors font-medium"
+                   [class.bg-blue-600]="timePeriodView === 'am'"
+                   [class.text-white]="timePeriodView === 'am'"
+                   [class.text-blue-700]="timePeriodView !== 'am'"
+                   (click)="setTimePeriodView('am')">
+                   AM (0-12)
+                 </button>
+                 <button 
+                   type="button" 
+                   class="px-4 py-2 text-sm rounded-md transition-colors font-medium"
+                   [class.bg-blue-600]="timePeriodView === 'pm'"
+                   [class.text-white]="timePeriodView === 'pm'"
+                   [class.text-blue-700]="timePeriodView !== 'pm'"
+                   (click)="setTimePeriodView('pm')">
+                   PM (12-24)
+                 </button>
+               </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div class="calendar-container">
+          <!-- Calendar Grid -->
+          <div class="calendar-grid">
+             <!-- Time slots column -->
+             <div class="time-slots">
+               <!-- Current Period Section -->
+               <div class="time-period-section">
+                 <div class="time-period-header">{{ timePeriodView.toUpperCase() }}</div>
+                 <div class="time-slot" *ngFor="let hour of timeSlots">{{ hour.time }}</div>
+               </div>
+             </div>
+            
+            <!-- Days of the week -->
+            <div class="calendar-days">
+              <div class="day-column" *ngFor="let day of (calendarView === 'week' ? weeklyCalendarDays : calendarDays)" 
+                   [class.selected-day]="selectedDay === day.date"
+                   (mouseenter)="onDayHover(day)"
+                   (mouseleave)="onDayLeave()">
+                
+                <!-- Day header -->
+                <div class="day-header">
+                  <div class="day-number">{{ day.dayNumber }}</div>
+                  <div class="day-name">{{ day.dayName }}</div>
+                  <div class="day-month" *ngIf="calendarView === 'week' && day.monthName">{{ day.monthName }}</div>
+                </div>
+                
+                <!-- Attendance blocks for this day -->
+                <div class="attendance-blocks">
+                  <div class="attendance-block" 
+                       *ngFor="let session of getOrderedSessions(day.sessions); let i = index"
+                       [class]="getSessionClass(session)"
+                       [style.top.%]="getSessionTopPosition(session, day.sessions, i)"
+                       [style.height.%]="getSessionHeight(session, day.sessions)"
+                       [style.left.%]="4"
+                       [style.width.%]="92"
+                       [style.z-index]="getSessionZIndex(day.sessions, i)"
+                       (mouseenter)="onSessionHover(session, $event)"
+                       (mouseleave)="onSessionLeave()"
+                       [title]="getSessionTooltip(session)">
+                     <div class="session-info">
+                       <div class="session-duration" *ngIf="shouldShowSessionTime(session)">{{ session.totalHoursFormatted }}</div>
+                     </div>
+                  </div>
+                  
+                  <!-- Absent indicator -->
+                  <div class="absent-indicator" *ngIf="day.sessions.length === 0 && !isWeekend(day.date)">
+                    <span class="absent-text">Absent</span>
+                  </div>
+                  
+                  <!-- Weekend indicator -->
+                  <div class="weekend-indicator" *ngIf="isWeekend(day.date)">
+                    <span class="weekend-text">Weekend</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Day Tooltip -->
+          <div class="calendar-tooltip" 
+               *ngIf="tooltipVisible && selectedDay && !hoveredSession"
+               [style.left.px]="tooltipX"
+               [style.top.px]="tooltipY">
+            <div class="tooltip-content">
+              <div class="tooltip-date">{{ formatDateForDisplay(selectedDay.date) }}</div>
+              <div class="tooltip-sessions">
+                <div class="tooltip-session" *ngFor="let session of selectedDay.sessions; let i = index">
+                  <div class="session-status">{{ getSessionStatus(session) }} <span *ngIf="selectedDay.sessions.length > 1">(Session {{ i + 1 }})</span></div>
+                  <div class="session-details">
+                    <div>Check In: {{ session.punchIn }}</div>
+                    <div>Check Out: {{ session.punchOut || 'Active' }}</div>
+                    <div>Total: {{ session.totalHoursFormatted }}</div>
+                  </div>
+                </div>
+                <div class="tooltip-absent" *ngIf="selectedDay.sessions.length === 0 && !isWeekend(selectedDay.date)">
+                  <div class="session-status">Absent</div>
+                </div>
+                <div class="tooltip-weekend" *ngIf="isWeekend(selectedDay.date)">
+                  <div class="session-status">Weekend</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Session Tooltip -->
+          <div class="calendar-tooltip session-tooltip" 
+               *ngIf="hoveredSession"
+               [style.left.px]="sessionTooltipX"
+               [style.top.px]="sessionTooltipY">
+            <div class="tooltip-content">
+              <div class="tooltip-date">{{ formatDateForDisplay(hoveredSession.date) }}</div>
+              <div class="tooltip-session-detail">
+                <div class="session-status">{{ getSessionStatus(hoveredSession) }}</div>
+                <div class="session-details">
+                  <div><strong>Check In:</strong> {{ hoveredSession.punchIn }}</div>
+                  <div><strong>Check Out:</strong> {{ hoveredSession.punchOut || 'Active' }}</div>
+                  <div><strong>Duration:</strong> {{ hoveredSession.totalHoursFormatted }}</div>
+                  <div><strong>Break Time:</strong> {{ hoveredSession.totalBreakFormatted }}</div>
+                  <div><strong>Status:</strong> {{ hoveredSession.status | titlecase }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
   </div>
 
   <!-- Toast Messages -->

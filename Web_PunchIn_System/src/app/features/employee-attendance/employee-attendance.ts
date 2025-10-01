@@ -21,6 +21,8 @@ interface AttendanceRecord {
   day: string;
   punchIn: string | null;
   punchOut: string | null;
+  punchInDateTime: string | null; // Original datetime for positioning
+  punchOutDateTime: string | null; // Original datetime for positioning
   totalHours: number;
   totalHoursFormatted: string;
   status: 'present' | 'absent' | 'late' | 'half-day' | 'holiday';
@@ -94,6 +96,21 @@ export class EmployeeAttendanceComponent implements OnInit {
   attendanceChartData: any;
   hoursChartData: any;
   chartOptions: any;
+
+  // Calendar view data
+  timeSlots: any[] = [];
+  calendarDays: any[] = [];
+  weeklyCalendarDays: any[] = [];
+  selectedDay: any = null;
+  tooltipVisible: boolean = false;
+  tooltipX: number = 0;
+  tooltipY: number = 0;
+  calendarView: 'week' | 'month' = 'week';
+  timePeriodView: 'am' | 'pm' = 'am';
+  currentWeekStart: Date = new Date();
+  hoveredSession: any = null;
+  sessionTooltipX: number = 0;
+  sessionTooltipY: number = 0;
 
   // Table data
   attendanceRecords: AttendanceRecord[] = [];
@@ -223,16 +240,11 @@ export class EmployeeAttendanceComponent implements OnInit {
       endDate = new Date(this.selectedYear, this.selectedMonth + 1, 0, 23, 59, 59, 999);
     }
 
-    console.log('Loading detailed sessions data:', {
-      employeeId: this.user.employeeId,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      isCurrentMonth
-    });
 
     this.attendanceService.getAttendanceSummary(this.user.employeeId, startDate, endDate)
       .subscribe({
         next: (response) => {
+          
           // Transform the detailed attendance data for detailed sessions table (individual sessions)
           this.detailedSessionsData = this.transformApiDataToRecords(response.records);
           this.filteredDetailedRecords = [...this.detailedSessionsData];
@@ -265,6 +277,8 @@ export class EmployeeAttendanceComponent implements OnInit {
           day: record.day,
           punchIn: null,
           punchOut: null,
+          punchInDateTime: null,
+          punchOutDateTime: null,
           totalHours: 0,
           totalHoursFormatted: '0h',
           status: 'absent',
@@ -291,11 +305,15 @@ export class EmployeeAttendanceComponent implements OnInit {
           status = 'half-day';
         }
         
+        
         const transformedRecord = {
           date: this.formatDateForDisplay(record.date),
           day: record.day,
           punchIn: this.formatTime(session.sessionStartTime),
           punchOut: session.sessionEndTime ? this.formatTime(session.sessionEndTime) : null,
+          // Store original datetime for positioning calculations
+          punchInDateTime: session.sessionStartTime,
+          punchOutDateTime: session.sessionEndTime,
           totalHours: Math.round(sessionHours * 100) / 100,
           totalHoursFormatted: this.formatWorkTime(sessionHours),
           status,
@@ -327,6 +345,8 @@ export class EmployeeAttendanceComponent implements OnInit {
         day: dailyRecord.day,
         punchIn: dailyRecord.firstPunchIn ? this.formatTime(dailyRecord.firstPunchIn) : null,
         punchOut: dailyRecord.lastPunchOut ? this.formatTime(dailyRecord.lastPunchOut) : null,
+        punchInDateTime: dailyRecord.firstPunchIn,
+        punchOutDateTime: dailyRecord.lastPunchOut,
         totalHours: this.parseTimeSpan(dailyRecord.totalWorkHours),
         totalHoursFormatted: this.formatTimeSpan(dailyRecord.totalWorkHours),
         status: dailyRecord.status as 'present' | 'absent' | 'late' | 'half-day' | 'holiday',
@@ -342,15 +362,6 @@ export class EmployeeAttendanceComponent implements OnInit {
   }
 
   calculateMonthlyStatsFromCombined(combinedData: CombinedAttendanceResponse) {
-    // Debug the received data
-    console.log('Combined data received:', {
-      totalWorkHours: combinedData.totalWorkHours,
-      averageDailyHours: combinedData.averageDailyHours,
-      presentDays: combinedData.presentDays,
-      lateDays: combinedData.lateDays,
-      halfDays: combinedData.halfDays,
-      workingDays: combinedData.workingDays
-    });
     
     // Use the summary data directly from the combined API
     this.monthlyStats = {
@@ -367,7 +378,6 @@ export class EmployeeAttendanceComponent implements OnInit {
       attendancePercentage: combinedData.attendanceRate
     };
     
-    console.log('Monthly stats calculated:', this.monthlyStats);
   }
 
   private parseTimeSpan(timeSpanString: string): number {
@@ -678,6 +688,9 @@ export class EmployeeAttendanceComponent implements OnInit {
         }
       }
     };
+
+    // Initialize calendar view
+    this.initializeCalendar();
   }
 
   getWeeklyHoursData(): number[] {
@@ -778,20 +791,28 @@ export class EmployeeAttendanceComponent implements OnInit {
       
       // Format in user's local timezone (automatically handled by toLocaleDateString)
       return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
     } catch (error) {
       console.error('Error formatting date:', error);
       return '-';
     }
   }
 
-  private formatDateForDisplay(dateString: string): string {
+  public formatDateForDisplay(dateInput: string | Date): string {
     try {
-      // Handle UTC timestamps properly by adding 'Z' if not present
-      const date = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
+      let date: Date;
+      
+      if (dateInput instanceof Date) {
+        // If it's already a Date object, use it directly
+        date = dateInput;
+      } else {
+        // If it's a string, handle UTC timestamps properly by adding 'Z' if not present
+        date = new Date(dateInput.endsWith('Z') ? dateInput : dateInput + 'Z');
+      }
+      
       if (isNaN(date.getTime())) {
         return '-';
       }
@@ -803,5 +824,557 @@ export class EmployeeAttendanceComponent implements OnInit {
       console.error('Error formatting date for display:', error);
       return '-';
     }
+  }
+
+  // Calendar view methods
+  initializeCalendar() {
+    this.generateTimeSlots();
+    this.generateCalendarDays();
+    this.initializeWeeklyView();
+  }
+
+  generateTimeSlots() {
+    this.timeSlots = [];
+    
+    if (this.timePeriodView === 'am') {
+      // AM section (12 AM to 11 AM - 0 to 11)
+      for (let hour = 0; hour <= 11; hour++) {
+        let timeString: string;
+        if (hour === 0) {
+          timeString = '12:00 AM';
+        } else {
+          timeString = `${hour}:00 AM`;
+        }
+        this.timeSlots.push({
+          time: timeString,
+          period: 'AM',
+          hour: hour,
+          minute: 0
+        });
+      }
+    } else {
+      // PM section (12 PM to 11 PM + 12 AM - 12 to 23, then 0)
+      for (let hour = 12; hour <= 23; hour++) {
+        let timeString: string;
+        if (hour === 12) {
+          timeString = '12:00 PM';
+        } else {
+          timeString = `${hour - 12}:00 PM`;
+        }
+        this.timeSlots.push({
+          time: timeString,
+          period: 'PM',
+          hour: hour,
+          minute: 0
+        });
+      }
+      // Add midnight (24:00 = 0:00)
+      this.timeSlots.push({
+        time: '12:00 AM',
+        period: 'PM',
+        hour: 0,
+        minute: 0
+      });
+    }
+    
+    // Debug logging (only log once per view change)
+    console.log(`Generated ${this.timeSlots.length} time slots for ${this.timePeriodView.toUpperCase()} view`);
+    console.log('Time slots:', this.timeSlots.map(slot => `${slot.time} (hour: ${slot.hour})`));
+  }
+
+  generateCalendarDays() {
+    this.calendarDays = [];
+    const monthStart = new Date(this.selectedYear, this.selectedMonth, 1);
+    const monthEnd = new Date(this.selectedYear, this.selectedMonth + 1, 0);
+    
+    
+    // Generate days for the current month
+    for (let day = 1; day <= monthEnd.getDate(); day++) {
+      const date = new Date(this.selectedYear, this.selectedMonth, day);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      // Get sessions for this day from detailed sessions data
+      const daySessions = this.detailedSessionsData.filter(record => {
+        // Handle both string and Date formats
+        let recordDate: Date;
+        if (typeof record.date === 'string') {
+          // If it's a string, parse it directly
+          recordDate = new Date(record.date);
+        } else {
+          recordDate = record.date;
+        }
+        
+        // Compare dates properly
+        return recordDate.getDate() === day && 
+               recordDate.getMonth() === this.selectedMonth && 
+               recordDate.getFullYear() === this.selectedYear;
+      });
+
+
+
+      this.calendarDays.push({
+        date: date,
+        dayNumber: day,
+        dayName: dayName,
+        sessions: daySessions
+      });
+    }
+  }
+
+  getSessionClass(session: any): string {
+    switch (session.status) {
+      case 'present':
+        return 'attendance-block on-time';
+      case 'late':
+        return 'attendance-block late';
+      case 'half-day':
+        return 'attendance-block half-day';
+      case 'absent':
+        return 'attendance-block absent';
+      default:
+        return 'attendance-block on-time';
+    }
+  }
+
+  getSessionStatus(session: any): string {
+    switch (session.status) {
+      case 'present':
+        return 'On time';
+      case 'late':
+        return 'Late';
+      case 'half-day':
+        return 'Half day';
+      case 'absent':
+        return 'Absent';
+      default:
+        return 'On time';
+    }
+  }
+
+  getSessionTopPosition(session: any, sessions: any[], sessionIndex: number): number {
+    if (!session.punchInDateTime) return 5; // Default position for sessions without start time
+    
+    try {
+      // Parse the formatted time string instead of raw datetime to get correct local time
+      const formattedTime = this.formatTime(session.punchInDateTime);
+      const timeMatch = formattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      
+      if (!timeMatch) {
+        console.error('Could not parse formatted time:', formattedTime);
+        return 5;
+      }
+      
+      let hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+      const period = timeMatch[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (period === 'AM' && hour === 12) {
+        hour = 0;
+      } else if (period === 'PM' && hour !== 12) {
+        hour += 12;
+      }
+      
+      // Calculate position based on current time period view
+      let totalMinutes: number;
+      let totalTimeSpan: number;
+      
+      if (this.timePeriodView === 'am') {
+        // AM view: 12 AM to 11 AM (0 to 11 - 12 hours = 720 minutes)
+        const startHour = 0;
+        totalMinutes = (hour - startHour) * 60 + minute;
+        totalTimeSpan = 720; // 12 hours (0-11 AM)
+      } else {
+        // PM view: 12 PM to 11 PM + 12 AM (12 to 23, then 0 - 12 hours = 720 minutes)
+        let adjustedHour = hour;
+        if (hour === 0) adjustedHour = 24; // Handle midnight as 24:00 for PM view
+        const startHour = 12;
+        totalMinutes = (adjustedHour - startHour) * 60 + minute;
+        totalTimeSpan = 720; // 12 hours (12 PM - 11 PM + 12 AM)
+      }
+      
+      const basePercentage = (totalMinutes / totalTimeSpan) * 100;
+      
+        // For multiple sessions at the same time, add vertical stacking
+        if (sessions.length > 1) {
+          const sameTimeSessions = sessions.filter(s => {
+            if (!s.punchInDateTime) return false;
+            const sFormattedTime = this.formatTime(s.punchInDateTime);
+            const sTimeMatch = sFormattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!sTimeMatch) return false;
+            
+            let sHour = parseInt(sTimeMatch[1]);
+            const sMinute = parseInt(sTimeMatch[2]);
+            const sPeriod = sTimeMatch[3].toUpperCase();
+            
+            // Convert to 24-hour format
+            if (sPeriod === 'AM' && sHour === 12) {
+              sHour = 0;
+            } else if (sPeriod === 'PM' && sHour !== 12) {
+              sHour += 12;
+            }
+            
+            // Check if within 5 minutes
+            const timeDiff = Math.abs((sHour * 60 + sMinute) - (hour * 60 + minute));
+            return timeDiff < 5; // Within 5 minutes
+          });
+        
+        if (sameTimeSessions.length > 1) {
+          const sortedSameTimeSessions = sameTimeSessions.sort((a, b) => {
+            const aIndex = sessions.findIndex(s => s === a);
+            const bIndex = sessions.findIndex(s => s === b);
+            return aIndex - bIndex;
+          });
+          
+          const sameTimeIndex = sortedSameTimeSessions.findIndex(s => s === session);
+          const stackOffset = sameTimeIndex * 3; // 3% offset per stacked session
+          return Math.max(2, Math.min(95, basePercentage + stackOffset));
+        }
+      }
+      
+      // Debug logging for all sessions to understand timezone issue
+      const timeString = `${hour}:${minute.toString().padStart(2, '0')}`;
+      console.log(`🔍 SESSION DEBUG (FIXED):`);
+      console.log(`  Original DateTime: ${session.punchInDateTime}`);
+      console.log(`  Formatted Time: ${formattedTime}`);
+      console.log(`  Parsed Hour: ${hour}, Minute: ${minute}`);
+      console.log(`  Time String: ${timeString}`);
+      console.log(`  Total Minutes: ${totalMinutes}`);
+      console.log(`  Calculated Position: ${basePercentage.toFixed(1)}%`);
+      console.log(`  Expected Position for ${timeString}: ${((hour * 60 + minute) / 720 * 100).toFixed(1)}%`);
+      console.log(`  CSS will be: top: ${basePercentage.toFixed(1)}%`);
+      console.log(`  ---`);
+      
+      return Math.max(2, Math.min(95, basePercentage));
+    } catch (error) {
+      console.error('Error calculating session position:', error);
+      return 5; // Default position for error cases
+    }
+  }
+
+  getSessionHeight(session: any, sessions: any[]): number {
+    if (!session.punchInDateTime) return 8; // Minimum height for sessions without start time
+    
+    try {
+      const punchInTime = new Date(session.punchInDateTime);
+      let durationMinutes: number;
+      
+      if (!session.punchOutDateTime) {
+        // For active sessions, calculate from start time to now
+        const now = new Date();
+        const durationMs = now.getTime() - punchInTime.getTime();
+        durationMinutes = durationMs / (1000 * 60);
+      } else {
+        // For completed sessions, calculate from start to end time
+        const punchOutTime = new Date(session.punchOutDateTime);
+        const durationMs = punchOutTime.getTime() - punchInTime.getTime();
+        durationMinutes = durationMs / (1000 * 60);
+      }
+      
+      // Convert to percentage based on current time period view
+      let totalTimeSpan: number;
+      if (this.timePeriodView === 'am') {
+        totalTimeSpan = 720; // 12 hours for AM view (0-12)
+      } else {
+        totalTimeSpan = 720; // 12 hours for PM view (12-24)
+      }
+      
+      // For very short sessions (0-60 seconds), show as thin line (2-3px)
+      if (durationMinutes <= 1) { // 1 minute or less
+        return 0.3; // Very small percentage for thin line
+      }
+      
+      const percentage = (durationMinutes / totalTimeSpan) * 100;
+      
+      // For multiple sessions, ensure they don't overlap by limiting height
+      if (sessions.length > 1) {
+        // Calculate how many sessions are at the same time
+        const sameTimeSessions = sessions.filter(s => {
+          if (!s.punchInDateTime) return false;
+          const sTime = new Date(s.punchInDateTime);
+          const timeDiff = Math.abs(sTime.getTime() - punchInTime.getTime());
+          return timeDiff < 5 * 60 * 1000; // Within 5 minutes
+        });
+        
+        if (sameTimeSessions.length > 1) {
+          // For sessions at the same time, use smaller heights to fit in stack
+          const maxHeightPerStackedSession = Math.max(3, 50 / sameTimeSessions.length);
+          return Math.max(2, Math.min(maxHeightPerStackedSession, percentage));
+        } else {
+          // For sessions at different times, use their actual calculated height
+          return Math.max(2, Math.min(90, percentage));
+        }
+      }
+      
+      // For single session, use calculated height but limit to reasonable size
+      return Math.max(2, Math.min(90, percentage));
+    } catch (error) {
+      console.error('Error calculating session height:', error);
+      return 8; // Default height for error cases
+    }
+  }
+
+
+  getSessionTooltip(session: any): string {
+    const punchIn = session.punchIn || 'N/A';
+    const punchOut = session.punchOut || 'Active';
+    return `${this.getSessionStatus(session)} - ${punchIn} to ${punchOut} (${session.totalHoursFormatted})`;
+  }
+
+  isWeekend(date: Date): boolean {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+  }
+
+  onDayHover(day: any) {
+    this.selectedDay = day;
+    this.tooltipVisible = true;
+  }
+
+  onDayLeave() {
+    this.tooltipVisible = false;
+    this.selectedDay = null;
+  }
+
+  // Weekly view methods
+  initializeWeeklyView() {
+    // Set current week start to the beginning of the current week (Sunday)
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    this.currentWeekStart = new Date(today);
+    this.currentWeekStart.setDate(today.getDate() - dayOfWeek);
+    this.currentWeekStart.setHours(0, 0, 0, 0);
+    
+    this.generateWeeklyCalendarDays();
+  }
+
+  generateWeeklyCalendarDays() {
+    this.weeklyCalendarDays = [];
+    
+    
+    // Generate 7 days starting from currentWeekStart
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(this.currentWeekStart);
+      date.setDate(this.currentWeekStart.getDate() + i);
+      
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      
+      // Get sessions for this day from detailed sessions data
+      const daySessions = this.detailedSessionsData.filter(record => {
+        // Handle both string and Date formats
+        let recordDate: Date;
+        if (typeof record.date === 'string') {
+          // If it's a string, parse it directly
+          recordDate = new Date(record.date);
+        } else {
+          recordDate = record.date;
+        }
+        
+        // Compare dates properly
+        return recordDate.getDate() === date.getDate() && 
+               recordDate.getMonth() === date.getMonth() && 
+               recordDate.getFullYear() === date.getFullYear();
+      });
+
+
+
+      this.weeklyCalendarDays.push({
+        date: date,
+        dayNumber: date.getDate(),
+        dayName: dayName,
+        monthName: monthName,
+        sessions: daySessions
+      });
+    }
+  }
+
+  previousWeek() {
+    this.currentWeekStart.setDate(this.currentWeekStart.getDate() - 7);
+    this.generateWeeklyCalendarDays();
+  }
+
+  nextWeek() {
+    this.currentWeekStart.setDate(this.currentWeekStart.getDate() + 7);
+    this.generateWeeklyCalendarDays();
+  }
+
+  setCalendarView(view: 'week' | 'month') {
+    this.calendarView = view;
+    if (view === 'week') {
+      this.generateWeeklyCalendarDays();
+    } else {
+      this.generateCalendarDays();
+    }
+  }
+
+  setTimePeriodView(period: 'am' | 'pm') {
+    this.timePeriodView = period;
+    this.generateTimeSlots();
+  }
+
+  getCurrentWeekRange(): string {
+    const weekEnd = new Date(this.currentWeekStart);
+    weekEnd.setDate(this.currentWeekStart.getDate() + 6);
+    
+    const startMonth = this.currentWeekStart.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = weekEnd.toLocaleDateString('en-US', { month: 'short' });
+    
+    if (startMonth === endMonth) {
+      return `${startMonth} ${this.currentWeekStart.getDate()} - ${weekEnd.getDate()}`;
+    } else {
+      return `${startMonth} ${this.currentWeekStart.getDate()} - ${endMonth} ${weekEnd.getDate()}`;
+    }
+  }
+
+  getCurrentWeekYear(): string {
+    return this.currentWeekStart.getFullYear().toString();
+  }
+
+  isFirstWeek(): boolean {
+    // Check if we're at the beginning of the selected month
+    const monthStart = new Date(this.selectedYear, this.selectedMonth, 1);
+    const weekEnd = new Date(this.currentWeekStart);
+    weekEnd.setDate(this.currentWeekStart.getDate() + 6);
+    
+    return weekEnd < monthStart;
+  }
+
+  isLastWeek(): boolean {
+    // Check if we're at the end of the selected month
+    const monthEnd = new Date(this.selectedYear, this.selectedMonth + 1, 0);
+    
+    return this.currentWeekStart > monthEnd;
+  }
+
+  // Multiple sessions methods
+  getOrderedSessions(sessions: any[]): any[] {
+    if (!sessions || sessions.length === 0) return [];
+    
+    // Filter sessions by current time period view
+    const filteredSessions = sessions.filter(session => {
+      if (!session.punchInDateTime) return false;
+      
+      // Parse the formatted time string to get correct local time
+      const formattedTime = this.formatTime(session.punchInDateTime);
+      const timeMatch = formattedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      
+      if (!timeMatch) return false;
+      
+      let hour = parseInt(timeMatch[1]);
+      const period = timeMatch[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (period === 'AM' && hour === 12) {
+        hour = 0;
+      } else if (period === 'PM' && hour !== 12) {
+        hour += 12;
+      }
+      
+      if (this.timePeriodView === 'am') {
+        // AM view: show sessions from 0 (12 AM) to 11 (11 AM)
+        return hour >= 0 && hour <= 11;
+      } else {
+        // PM view: show sessions from 12 (12 PM) to 23 (11 PM), and 0 (12 AM)
+        return hour >= 12 || hour === 0;
+      }
+    });
+    
+    // Sort filtered sessions by punch-in time
+    const sortedSessions = filteredSessions.sort((a, b) => {
+      if (!a.punchInDateTime || !b.punchInDateTime) return 0;
+      const timeA = new Date(a.punchInDateTime).getTime();
+      const timeB = new Date(b.punchInDateTime).getTime();
+      return timeA - timeB;
+    });
+    
+    // Debug: Show summary of all sessions (simplified)
+    console.log(`\n=== SESSION SUMMARY (${this.timePeriodView.toUpperCase()} view) ===`);
+    console.log(`Total sessions: ${sortedSessions.length}`);
+    sortedSessions.forEach((session, index) => {
+      if (session.punchInDateTime) {
+        const punchInTime = new Date(session.punchInDateTime);
+        const timeString = `${punchInTime.getHours()}:${punchInTime.getMinutes().toString().padStart(2, '0')}`;
+        const formattedTime = this.formatTime(session.punchInDateTime);
+        console.log(`Session ${index + 1}: ${timeString} (formatted: ${formattedTime}) - ${session.punchInDateTime}`);
+      }
+    });
+    console.log('=== END SESSION SUMMARY ===\n');
+    
+    return sortedSessions;
+  }
+
+
+
+  getSessionZIndex(sessions: any[], sessionIndex: number): number {
+    // Later sessions (higher index) get higher z-index to appear on top
+    return 10 + sessionIndex;
+  }
+
+  shouldShowSessionTime(session: any): boolean {
+    if (!session.punchInDateTime) return false;
+    
+    try {
+      const punchInTime = new Date(session.punchInDateTime);
+      let durationMinutes: number;
+      
+      if (!session.punchOutDateTime) {
+        // Active session - calculate duration from start to now
+        const now = new Date();
+        const durationMs = now.getTime() - punchInTime.getTime();
+        durationMinutes = durationMs / (1000 * 60);
+      } else {
+        // Completed session - use actual duration
+        const punchOutTime = new Date(session.punchOutDateTime);
+        const durationMs = punchOutTime.getTime() - punchInTime.getTime();
+        durationMinutes = durationMs / (1000 * 60);
+      }
+      
+      // Only show time text if session is at least 5 minutes long
+      return durationMinutes >= 5;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Debug method to get time slot positions for comparison
+  getTimeSlotPositions(): any[] {
+    return this.timeSlots.map((slot, index) => {
+      const percentage = (index * 60) / 720 * 100;
+      return {
+        time: slot.time,
+        hour: slot.hour,
+        percentage: percentage,
+        pixelPosition: index * 60
+      };
+    });
+  }
+
+  onSessionHover(session: any, event: MouseEvent) {
+    this.hoveredSession = session;
+    
+    // Get the session element's position relative to the calendar container
+    const sessionElement = event.target as HTMLElement;
+    const calendarContainer = sessionElement.closest('.calendar-container');
+    
+    if (calendarContainer) {
+      const containerRect = calendarContainer.getBoundingClientRect();
+      const sessionRect = sessionElement.getBoundingClientRect();
+      
+      // Position tooltip starting from bottom-right corner of session box with spacing
+      this.sessionTooltipX = sessionRect.right - containerRect.left + 10; // 10px to the right of session box
+      this.sessionTooltipY = sessionRect.bottom - containerRect.top + 10; // 10px below session box
+    } else {
+      // Fallback to mouse position if container not found
+      this.sessionTooltipX = event.clientX + 10;
+      this.sessionTooltipY = event.clientY - 10;
+    }
+    
+    // Hide day tooltip when hovering over session
+    this.tooltipVisible = false;
+  }
+
+  onSessionLeave() {
+    this.hoveredSession = null;
   }
 }
