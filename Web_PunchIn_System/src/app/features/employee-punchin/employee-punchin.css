@@ -1,0 +1,475 @@
+/* Container for admin dashboard layout */
+.employee-punchin-fullscreen {
+  min-height: 100vh;
+  background: #ffffff;
+  overflow-y: auto;
+  color: #000000;
+}
+
+/* Prevent flickering in PrimeNG Image components */
+:host ::ng-deep .p-image {
+  position: relative;
+  display: inline-block;
+}
+
+:host ::ng-deep .p-image img {
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Circular image styling for PrimeNG Image component */
+:host ::ng-deep .employee-face-image .p-image,
+:host ::ng-deep .punch-face-image .p-image {
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .employee-face-image .p-image img,
+:host ::ng-deep .punch-face-image .p-image img {
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:host ::ng-deep .p-image-preview-indicator {
+  transition: opacity 0.2s ease;
+}
+
+:host ::ng-deep .p-image:hover .p-image-preview-indicator {
+  opacity: 1;
+}
+
+.employee-punchin-container {
+  padding: 1.5rem;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Page header */
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.back-button {
+  font-size: 1.2rem;
+  color: #000000;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: #007bff;
+}
+
+/* Employee Information Card */
+.employee-info-card {
+  margin-bottom: 1.5rem;
+}
+
+.employee-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.employee-avatar {
+  flex-shrink: 0;
+}
+
+.circular-image-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  border: 3px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.circular-image-wrapper-small {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid #e9ecef;
+}
+
+.employee-face-image {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+:host ::ng-deep .employee-face-image .p-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  display: block;
+}
+
+:host ::ng-deep .employee-face-image .p-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 50%;
+}
+
+:host ::ng-deep .employee-face-image .p-image-preview-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+.employee-details {
+  flex: 1;
+}
+
+.employee-name {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.employee-email {
+  margin: 0 0 0.25rem 0;
+  color: #000000;
+  font-size: 1rem;
+}
+
+.employee-id {
+  margin: 0;
+  color: #000000;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Loading States */
+.loading-container {
+  margin-bottom: 1.5rem;
+}
+
+.loading-card {
+  padding: 1rem;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Table Container */
+.punchin-table-container {
+  margin-top: 1rem;
+}
+
+.table-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Table Styles */
+:host ::ng-deep .p-datatable {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .p-datatable .p-datatable-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #e9ecef;
+  color: #000000;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0.75rem;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1f3f4;
+  color: #000000;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background: #f8f9fa;
+}
+
+/* Punch-In Data Styles */
+.punch-id {
+  font-weight: 600;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+.punch-timestamp {
+  font-size: 0.9rem;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.punch-face-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.punch-face-image {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+:host ::ng-deep .punch-face-image .p-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  display: block;
+}
+
+:host ::ng-deep .punch-face-image .p-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 50%;
+}
+
+:host ::ng-deep .punch-face-image .p-image-preview-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.punch-face-id {
+  font-size: 0.85rem;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.punch-location {
+  font-size: 0.85rem;
+  color: #000000;
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.punch-created,
+.punch-updated {
+  font-size: 0.85rem;
+  color: #000000;
+}
+
+/* Empty State */
+.empty-message {
+  text-align: center;
+  color: #000000;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.no-data-container {
+  margin-top: 2rem;
+}
+
+.no-data-card {
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-data-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.no-data-content h4 {
+  margin: 0;
+  color: #000000;
+  font-size: 1.25rem;
+}
+
+.no-data-content p {
+  margin: 0;
+  color: #000000;
+}
+
+/* Remove dialog footer styles as we're not using dialog anymore */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .employee-punchin-container {
+    padding: 1rem;
+  }
+  
+  .fullscreen-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .employee-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .employee-face-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  :host ::ng-deep .employee-face-image .p-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  
+  .employee-name {
+    font-size: 1.25rem;
+  }
+  
+  :host ::ng-deep .p-datatable {
+    font-size: 0.85rem;
+  }
+  
+  .punch-face-image {
+    width: 40px;
+    height: 40px;
+  }
+  
+  :host ::ng-deep .punch-face-image .p-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  
+  .punch-location {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Dark mode support - keeping black text for better visibility */
+@media (prefers-color-scheme: dark) {
+  .employee-name {
+    color: #000000;
+  }
+  
+  .employee-email,
+  .employee-id {
+    color: #000000;
+  }
+  
+  .table-title {
+    color: #000000;
+  }
+  
+  .punch-id {
+    color: #000000;
+  }
+  
+  .punch-timestamp {
+    color: #000000;
+  }
+  
+  .punch-face-id,
+  .punch-location {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #000000;
+  }
+  
+  .punch-created,
+  .punch-updated {
+    color: #000000;
+  }
+  
+  .page-title {
+    color: #000000;
+  }
+  
+  .empty-message {
+    color: #000000;
+  }
+  
+  .no-data-content h4,
+  .no-data-content p {
+    color: #000000;
+  }
+}

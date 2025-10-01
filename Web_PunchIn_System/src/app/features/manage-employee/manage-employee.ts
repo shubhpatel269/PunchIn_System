@@ -122,6 +122,10 @@ export class ManageEmployee implements OnInit, OnDestroy {
     this.router.navigate(['/admin/employee-attendance', employee.employeeId]);
   }
 
+  viewEmployeePunchIns(employee: Employee) {
+    this.router.navigate(['/admin/employee-punchins', employee.employeeId]);
+  }
+
   getDesignationName(designationId: number | string | null | undefined): string {
     if (this.loadingDesignations) {
       return 'Loading...';

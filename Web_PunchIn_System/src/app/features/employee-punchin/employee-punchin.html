@@ -1,0 +1,127 @@
+<div class="employee-punchin-fullscreen">
+  <div class="employee-punchin-container">
+    <p-toast></p-toast>
+    
+    <!-- Header with back button -->
+    <div class="fullscreen-header">
+      <div class="header-left">
+        <button type="button" pButton icon="pi pi-arrow-left" class="p-button-text p-button-lg back-button"
+          (click)="goBack()" title="Back to Manage Employee"></button>
+        <h2 class="page-title">Employee Punch-In Data</h2>
+      </div>
+    </div>
+    
+    <!-- Employee Information Card -->
+    <p-card *ngIf="employeePunchInData && !loading" class="employee-info-card">
+      <ng-template pTemplate="header">
+        <div class="employee-header">
+          <div class="employee-avatar">
+            <div class="circular-image-wrapper">
+              <p-image 
+                [src]="getEmployeeFaceImageSrc()" 
+                [alt]="getEmployeeFullName()"
+                class="employee-face-image"
+                [preview]="true"
+                [imageStyle]="{'object-fit': 'cover', 'border-radius': '50%', 'width': '100%', 'height': '100%'}">
+              </p-image>
+            </div>
+          </div>
+          <div class="employee-details">
+            <h3 class="employee-name">{{ getEmployeeFullName() }}</h3>
+            <p class="employee-email">{{ employeePunchInData.employeeEmail }}</p>
+            <p class="employee-id">ID: {{ employeePunchInData.employeeId }}</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <p-card class="loading-card">
+        <div class="loading-content">
+          <p-skeleton width="200px" height="20px" borderRadius="8px"></p-skeleton>
+          <p-skeleton width="150px" height="16px" borderRadius="8px" style="margin-top: 8px;"></p-skeleton>
+          <p-skeleton width="100px" height="16px" borderRadius="8px" style="margin-top: 8px;"></p-skeleton>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Punch-In Data Table -->
+    <div *ngIf="employeePunchInData && !loading" class="punchin-table-container">
+      <h4 class="table-title">Punch-In Records ({{ employeePunchInData.punchIns.length }} total)</h4>
+      
+      <p-table 
+        [value]="employeePunchInData.punchIns" 
+        [paginator]="true" 
+        [rows]="10" 
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        [scrollable]="true"
+        scrollHeight="500px">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 80px;">Punch ID</th>
+            <th style="width: 150px;">Date & Time</th>
+            <th style="width: 120px;">Face Image</th>
+            <th style="width: 200px;">Location</th>
+            <th style="width: 150px;">Created At</th>
+            <th style="width: 150px;">Updated At</th>
+          </tr>
+        </ng-template>
+        
+        <ng-template pTemplate="body" let-punchIn>
+          <tr>
+            <td>
+              <span class="punch-id">{{ punchIn.punchId }}</span>
+            </td>
+            <td>
+              <span class="punch-timestamp">{{ formatDate(punchIn.punchTimestamp) }}</span>
+            </td>
+            <td>
+              <div class="punch-face-container">
+                <div class="circular-image-wrapper-small">
+                  <p-image 
+                    [src]="getPunchFaceImageSrc(punchIn.punchFaceUrl)" 
+                    [alt]="'Punch face for ' + punchIn.punchId"
+                    class="punch-face-image"
+                    [preview]="true"
+                    [imageStyle]="{'object-fit': 'cover', 'border-radius': '50%', 'width': '100%', 'height': '100%'}">
+                  </p-image>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="punch-location">{{ formatLocation(punchIn.punchLocationLat, punchIn.punchLocationLong) }}</span>
+            </td>
+            <td>
+              <span class="punch-created">{{ punchIn.punchCreatedAt ? formatDate(punchIn.punchCreatedAt) : 'N/A' }}</span>
+            </td>
+            <td>
+              <span class="punch-updated">{{ punchIn.punchUpdatedAt ? formatDate(punchIn.punchUpdatedAt) : 'N/A' }}</span>
+            </td>
+          </tr>
+        </ng-template>
+        
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center empty-message">
+              No punch-in records found for this employee
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- No Data State -->
+    <div *ngIf="employeePunchInData && !loading && employeePunchInData.punchIns.length === 0" class="no-data-container">
+      <p-card class="no-data-card">
+        <div class="no-data-content">
+          <i class="pi pi-calendar-times" style="font-size: 3rem; color: #ccc;"></i>
+          <h4>No Punch-In Records</h4>
+          <p>This employee has no punch-in records yet.</p>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>

@@ -94,6 +94,20 @@
   display: flex;
   gap: 0.25rem;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive action buttons for smaller screens */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  
+  .p-button-text.p-button-sm {
+    margin-right: 0;
+    margin-bottom: 0.15rem;
+  }
 }
 
 /* Empty message styling */
