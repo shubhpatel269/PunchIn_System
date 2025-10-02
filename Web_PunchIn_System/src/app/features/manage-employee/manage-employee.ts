@@ -9,6 +9,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { RouterModule, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 
 @Component({
@@ -25,7 +26,7 @@ export class ManageEmployee implements OnInit, OnDestroy {
   designationMap: { [key: number]: string } = {};
   loading = false;
   loadingDesignations = false;
-  skeletonRows: any[] = Array(5).fill({});
+  skeletonRows: any[] = Array(3).fill({}); // Reduced from 5 to 3 for faster perceived loading
   
   constructor(
     private employeeService: EmployeeService,
@@ -38,17 +39,21 @@ export class ManageEmployee implements OnInit, OnDestroy {
   ngOnInit() {
     // Start in loading state to show skeletons and avoid early empty message
     this.loading = true;
-    // Load designations first, then employees
-    this.loadDesignations();
+    this.loadingDesignations = true;
+    
+    // Load both designations and employees in parallel for better performance
+    this.loadDataInParallel();
   }
 
-  loadDesignations() {
-    this.loadingDesignations = true;
-    this.designationService.getDesignations().subscribe({
+  loadDataInParallel() {
+    // Use forkJoin to load both designations and employees simultaneously
+    forkJoin({
+      designations: this.designationService.getDesignations(),
+      employees: this.employeeService.getEmployees()
+    }).subscribe({
       next: (response) => {
-        // Handle different response structures
-        const designations = response.data || response || [];
-        
+        // Process designations
+        const designations = response.designations.data || response.designations || [];
         this.designations = designations.filter((d: any) => !d.isDeleted);
         
         // Create mapping for quick lookup - handle multiple possible property names
@@ -67,42 +72,74 @@ export class ManageEmployee implements OnInit, OnDestroy {
           
           this.designationMap[id] = name;
         });
-        this.loadingDesignations = false;
         
-        // Load employees after designations are loaded
-        this.loadEmployees();
+        // Process employees
+        this.employees = response.employees;
+        
+        // Set loading states to false
+        this.loading = false;
+        this.loadingDesignations = false;
       },
       error: (error) => {
+        this.loading = false;
         this.loadingDesignations = false;
+        
+        console.error('Error loading data:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load designations'
+          detail: 'Failed to load employee data. Please try again.'
         });
         
-        // Still load employees even if designations fail
-        this.loadEmployees();
+        // Try to load individually if parallel loading fails
+        this.loadDesignationsFallback();
+        this.loadEmployeesFallback();
+      }
+    });
+  }
+
+  loadDesignationsFallback() {
+    this.designationService.getDesignations().subscribe({
+      next: (response) => {
+        const designations = response.data || response || [];
+        this.designations = designations.filter((d: any) => !d.isDeleted);
+        
+        this.designationMap = {};
+        this.designations.forEach((designation: any) => {
+          const id = designation.id || designation.designationId || 0;
+          const name = designation.name || 
+                      designation.title || 
+                      designation.designationName || 
+                      designation.designation || 
+                      designation.label ||
+                      'Unknown';
+          this.designationMap[id] = name;
+        });
+        this.loadingDesignations = false;
+      },
+      error: (error) => {
+        this.loadingDesignations = false;
+        console.error('Fallback designation loading failed:', error);
+      }
+    });
+  }
+
+  loadEmployeesFallback() {
+    this.employeeService.getEmployees().subscribe({
+      next: (data) => {
+        this.employees = data;
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Fallback employee loading failed:', error);
       }
     });
   }
 
   loadEmployees() {
-    this.loading = true;
-    this.employeeService.getEmployees().subscribe({
-      next: (data) => {
-        this.employees = data;
-        
-        this.loading = false;
-      },
-      error: (error) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load employees'
-        });
-      }
-    });
+    // Keep this method for backward compatibility (used in delete callback)
+    this.loadDataInParallel();
   }
 
   ngOnDestroy() {

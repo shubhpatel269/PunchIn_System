@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 export interface Employee {
   employeeId: string;
@@ -84,6 +84,9 @@ export interface CombinedAttendanceResponse {
 })
 export class EmployeeService {
   private apiUrl = 'https://localhost:7127/api/Employee';
+  private employeesCache: Employee[] | null = null;
+  private cacheTimestamp: number = 0;
+  private cacheExpiry = 5 * 60 * 1000; // 5 minutes cache
 
   constructor(private http: HttpClient) { }
 
@@ -98,15 +101,35 @@ export class EmployeeService {
   createEmployee(employee: Employee): Observable<any> {
     return this.http.post(this.apiUrl, employee, { headers: this.getAuthHeaders() })
       .pipe(
+        tap(() => this.clearEmployeesCache()), // Clear cache when data changes
         catchError(this.handleError)
       );
   }
 
-  getEmployees(): Observable<Employee[]> {
+  getEmployees(forceRefresh: boolean = false): Observable<Employee[]> {
+    // Check if we have valid cached data
+    if (!forceRefresh && this.employeesCache && this.isCacheValid()) {
+      return of(this.employeesCache);
+    }
+
     return this.http.get<Employee[]>(this.apiUrl, { headers: this.getAuthHeaders() })
       .pipe(
+        tap((employees) => {
+          // Cache the employees data
+          this.employeesCache = employees;
+          this.cacheTimestamp = Date.now();
+        }),
         catchError(this.handleError)
       );
+  }
+
+  clearEmployeesCache(): void {
+    this.employeesCache = null;
+    this.cacheTimestamp = 0;
+  }
+
+  private isCacheValid(): boolean {
+    return Date.now() - this.cacheTimestamp < this.cacheExpiry;
   }
 
   getEmployeeById(employeeId: string): Observable<Employee> {
@@ -119,6 +142,7 @@ export class EmployeeService {
   updateEmployee(employeeId: string, employee: Employee): Observable<any> {
     return this.http.put(`${this.apiUrl}/${employeeId}`, employee, { headers: this.getAuthHeaders() })
       .pipe(
+        tap(() => this.clearEmployeesCache()), // Clear cache when data changes
         catchError(this.handleError)
       );
   }
@@ -133,6 +157,7 @@ export class EmployeeService {
   deleteEmployee(employeeId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${employeeId}`, { headers: this.getAuthHeaders() })
       .pipe(
+        tap(() => this.clearEmployeesCache()), // Clear cache when data changes
         catchError(this.handleError)
       );
   }
