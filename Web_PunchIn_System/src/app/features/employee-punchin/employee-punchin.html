@@ -11,29 +11,45 @@
       </div>
     </div>
     
-    <!-- Employee Information Card -->
-    <p-card *ngIf="employeePunchInData && !loading" class="employee-info-card">
-      <ng-template pTemplate="header">
-        <div class="employee-header">
-          <div class="employee-avatar">
-            <div class="circular-image-wrapper">
-              <p-image 
-                [src]="getEmployeeFaceImageSrc()" 
-                [alt]="getEmployeeFullName()"
-                class="employee-face-image"
-                [preview]="true"
-                [imageStyle]="{'object-fit': 'cover', 'border-radius': '50%', 'width': '100%', 'height': '100%'}">
-              </p-image>
+    <!-- Employee Information and Map Section -->
+    <div *ngIf="employeePunchInData && !loading" class="employee-info-section">
+      <!-- Employee Information Card -->
+      <p-card class="employee-info-card">
+        <ng-template pTemplate="header">
+          <div class="employee-header">
+            <div class="employee-avatar">
+              <div class="circular-image-wrapper">
+                <p-image 
+                  [src]="getEmployeeFaceImageSrc()" 
+                  [alt]="getEmployeeFullName()"
+                  class="employee-face-image"
+                  [preview]="true"
+                  [imageStyle]="{'object-fit': 'cover', 'border-radius': '50%', 'width': '100%', 'height': '100%'}">
+                </p-image>
+              </div>
+            </div>
+            <div class="employee-details">
+              <h3 class="employee-name">{{ getEmployeeFullName() }}</h3>
+              <p class="employee-email">{{ employeePunchInData.employeeEmail }}</p>
+              <p class="employee-id">ID: {{ employeePunchInData.employeeId }}</p>
             </div>
           </div>
-          <div class="employee-details">
-            <h3 class="employee-name">{{ getEmployeeFullName() }}</h3>
-            <p class="employee-email">{{ employeePunchInData.employeeEmail }}</p>
-            <p class="employee-id">ID: {{ employeePunchInData.employeeId }}</p>
+        </ng-template>
+      </p-card>
+
+      <!-- Map Card -->
+      <p-card class="map-card" *ngIf="employeePunchInData && employeePunchInData.punchIns.length > 0">
+        <ng-template pTemplate="header">
+          <div class="map-header">
+            <h4 class="map-title">Punch-In Locations</h4>
           </div>
+        </ng-template>
+        <div class="map-container">
+          <div #mapContainer class="leaflet-map"></div>
+          <div class="location-counter">{{ getValidLocationCount() }} locations found</div>
         </div>
-      </ng-template>
-    </p-card>
+      </p-card>
+    </div>
 
     <!-- Loading State -->
     <div *ngIf="loading" class="loading-container">
@@ -61,24 +77,22 @@
         
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 80px;">Punch ID</th>
-            <th style="width: 150px;">Date & Time</th>
-            <th style="width: 120px;">Face Image</th>
-            <th style="width: 200px;">Location</th>
-            <th style="width: 150px;">Created At</th>
-            <th style="width: 150px;">Updated At</th>
+            <th style="width: 100px; text-align: center;">Punch ID</th>
+            <th style="width: 200px; text-align: center;">Date & Time</th>
+            <th style="width: 150px; text-align: center;">Face Image</th>
+            <th style="width: 300px; text-align: center;">Location</th>
           </tr>
         </ng-template>
         
         <ng-template pTemplate="body" let-punchIn>
-          <tr>
-            <td>
+          <tr [attr.data-punch-id]="punchIn.punchId">
+            <td style="text-align: center;">
               <span class="punch-id">{{ punchIn.punchId }}</span>
             </td>
-            <td>
+            <td style="text-align: center;">
               <span class="punch-timestamp">{{ formatDate(punchIn.punchTimestamp) }}</span>
             </td>
-            <td>
+            <td style="text-align: center;">
               <div class="punch-face-container">
                 <div class="circular-image-wrapper-small">
                   <p-image 
@@ -91,21 +105,20 @@
                 </div>
               </div>
             </td>
-            <td>
-              <span class="punch-location">{{ formatLocation(punchIn.punchLocationLat, punchIn.punchLocationLong) }}</span>
-            </td>
-            <td>
-              <span class="punch-created">{{ punchIn.punchCreatedAt ? formatDate(punchIn.punchCreatedAt) : 'N/A' }}</span>
-            </td>
-            <td>
-              <span class="punch-updated">{{ punchIn.punchUpdatedAt ? formatDate(punchIn.punchUpdatedAt) : 'N/A' }}</span>
+            <td style="text-align: center;">
+              <div class="location-container">
+                <i class="pi pi-map-marker location-pin" 
+                   (click)="openLocationInMaps(punchIn.punchLocationLat, punchIn.punchLocationLong)"
+                   [title]="'Open location in Google Maps: ' + formatLocation(punchIn.punchLocationLat, punchIn.punchLocationLong)"></i>
+                <span class="punch-location">{{ formatLocation(punchIn.punchLocationLat, punchIn.punchLocationLong) }}</span>
+              </div>
             </td>
           </tr>
         </ng-template>
         
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center empty-message">
+            <td colspan="4" class="text-center empty-message">
               No punch-in records found for this employee
             </td>
           </tr>
