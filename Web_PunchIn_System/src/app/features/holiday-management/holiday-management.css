@@ -1,0 +1,400 @@
+/* Holiday Management Component Styles */
+
+/* Container for holiday management layout */
+.holiday-management-container {
+  min-height: 100vh;
+  background: #f8fafc;
+  overflow-y: auto;
+  color: #000000;
+}
+
+/* Card hover effects */
+.p-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.p-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Table styles */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Button styles */
+.p-button {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Tag styles */
+.p-tag {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Input styles */
+.p-inputtext {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: #374151;
+}
+
+.p-inputtext:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dropdown styles */
+.p-dropdown {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.p-dropdown .p-dropdown-label {
+  color: #374151;
+}
+
+.p-dropdown .p-dropdown-trigger {
+  color: #6b7280;
+}
+
+.p-dropdown:not(.p-disabled):hover {
+  border-color: #9ca3af;
+}
+
+.p-dropdown:not(.p-disabled).p-focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Checkbox styles */
+.p-checkbox .p-checkbox-box {
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight .p-checkbox-icon {
+  color: white;
+}
+
+/* Material Calendar Multiple Date Selection Styles */
+.mat-calendar-body-cell.selected {
+  background-color: #3B82F6 !important;
+  border-radius: 50% !important;
+  color: white !important;
+}
+
+.mat-calendar-body-cell.selected:hover {
+  background-color: #2563EB !important;
+}
+
+/* Ensure Material Calendar is visible and properly styled */
+.mat-calendar {
+  width: 100% !important;
+  min-width: 300px !important;
+  background-color: white !important;
+}
+
+.mat-calendar-header {
+  padding: 16px !important;
+  background-color: white !important;
+}
+
+.mat-calendar-body {
+  padding: 8px !important;
+  background-color: white !important;
+}
+
+.mat-calendar-body-cell {
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  background-color: white !important;
+}
+
+.mat-calendar-body-cell:hover {
+  background-color: #f3f4f6 !important;
+  border-radius: 50% !important;
+}
+
+/* Calendar Menu Styles with Proper Z-Index */
+.calendar-menu {
+  min-width: 350px !important;
+  max-width: 400px !important;
+  z-index: 9999 !important;
+}
+
+.calendar-menu .mat-mdc-menu-content {
+  padding: 0 !important;
+  z-index: 9999 !important;
+  background-color: white !important;
+}
+
+.calendar-menu .mat-mdc-menu-panel {
+  min-width: 350px !important;
+  max-width: 400px !important;
+  overflow: visible !important;
+  z-index: 9999 !important;
+  background-color: white !important;
+}
+
+/* Material Calendar Z-Index Management */
+.mat-calendar {
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+.mat-calendar-header {
+  z-index: 10001 !important;
+  position: relative !important;
+}
+
+.mat-calendar-body {
+  z-index: 10001 !important;
+  position: relative !important;
+}
+
+.mat-calendar-body-cell {
+  z-index: 10002 !important;
+  position: relative !important;
+}
+
+/* Material Menu Z-Index Overrides */
+.mat-mdc-menu-panel {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+.mat-mdc-menu-content {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* CDK Overlay Z-Index Management */
+.cdk-overlay-container {
+  z-index: 9998 !important;
+}
+
+.cdk-overlay-backdrop {
+  z-index: 9997 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 9999 !important;
+}
+
+/* Ensure Material Menu appears above dialogs */
+.p-dialog .mat-mdc-menu-panel {
+  z-index: 10001 !important;
+}
+
+.p-dialog .mat-calendar {
+  z-index: 10002 !important;
+}
+
+/* Dialog Z-Index Management */
+.p-dialog {
+  z-index: 1000 !important;
+}
+
+.p-dialog-mask {
+  z-index: 999 !important;
+}
+
+/* Additional Z-Index Management for Calendar */
+.mat-mdc-menu-trigger {
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+/* Ensure calendar cells are clickable and properly layered */
+.mat-calendar-body-cell {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 10002 !important;
+}
+
+/* Material Menu positioning */
+.mat-mdc-menu-panel {
+  position: fixed !important;
+  transform: none !important;
+}
+
+/* Prevent Material Menu from creating additional overlays */
+.calendar-menu .mat-mdc-menu-panel {
+  position: relative !important;
+  transform: none !important;
+}
+
+/* Global Material Menu Z-Index */
+.mat-mdc-menu-panel {
+  z-index: 10001 !important;
+}
+
+.mat-mdc-menu-content {
+  z-index: 10001 !important;
+}
+
+/* Ensure Material Calendar is always on top */
+.mat-calendar {
+  z-index: 10002 !important;
+  position: relative !important;
+}
+
+/* Make the calendar button more prominent */
+button[matMenuTriggerFor] {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+button[matMenuTriggerFor]:hover {
+  background-color: #2563EB !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Dialog customization */
+.p-dialog .p-dialog-header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-title {
+  color: #374151;
+  font-weight: 600;
+}
+
+.p-dialog .p-dialog-content {
+  padding: 1.5rem;
+  border-radius: 0 !important;
+  background: white;
+}
+
+.p-dialog .p-dialog-footer {
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 12px 12px !important;
+}
+
+/* Modal backdrop */
+.p-dialog-mask {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: none;
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.p-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Form validation */
+.p-invalid {
+  border-color: #ef4444;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Status indicators */
+.status-present {
+  color: #10b981;
+}
+
+.status-absent {
+  color: #ef4444;
+}
+
+.status-late {
+  color: #f59e0b;
+}
+
+.status-half-day {
+  color: #3b82f6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-cols-1.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-1.lg\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex.justify-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

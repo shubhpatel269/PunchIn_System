@@ -17,6 +17,7 @@ import { EmployeeGuard } from './shared/guards/employee.guard';
 import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard';
 import { AddNewProfileComponent } from './features/add-new-profile/add-new-profile';
 import { EmployeePunchInComponent } from './features/employee-punchin/employee-punchin';
+import { HolidayManagementComponent } from './features/holiday-management/holiday-management';
 
 export const routes: Routes = [
     { path: '', component: Landing },
@@ -36,6 +37,7 @@ export const routes: Routes = [
             { path: 'edit-employee/:id', component: AddNewProfileComponent },
             { path: 'employee-attendance/:id', loadComponent: () => import('./features/employee-attendance/employee-attendance').then(m => m.EmployeeAttendanceComponent) },
             { path: 'employee-punchins/:id', component: EmployeePunchInComponent },
+            { path: 'holiday-management', component: HolidayManagementComponent },
             { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]

@@ -2,6 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChang
 import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -15,7 +16,8 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(withInterceptors([JwtInterceptor])),
     provideRouter(routes),
-    provideAnimationsAsync(), 
+    provideAnimationsAsync(),
+    provideNativeDateAdapter(),
     MessageService,
     providePrimeNG({
       theme: {
