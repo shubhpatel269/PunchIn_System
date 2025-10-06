@@ -708,3 +708,52 @@ button:hover,
 .tooltip-top-left {
   transform: translate(-100%, -100%);
 }
+
+/* Leaflet Map Styles */
+#locationMap {
+  height: 256px;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Custom Leaflet marker styles */
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Leaflet popup customization */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+/* Map container in modal */
+.location-map-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+/* Loading state for map */
+.map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 256px;
+  background: #f8fafc;
+  border-radius: 8px;
+  color: #6b7280;
+}

@@ -380,6 +380,7 @@
                 <th>Break Count</th>
                 <th>Total Break</th>
                 <th>Status</th>
+                <th>Location</th>
               </tr>
             </ng-template>
             
@@ -433,6 +434,17 @@
                     [severity]="getStatusColor(record.status)"
                     [icon]="getStatusIcon(record.status)">
                   </p-tag>
+                </td>
+                <td>
+                  <button 
+                    *ngIf="record.sessionId" 
+                    type="button"
+                    class="p-0 hover:bg-gray-100 transition-colors"
+                    (click)="viewLocationTracking(record.sessionId)"
+                    title="View Location Tracking">
+                    <i class="pi pi-eye text-blue-600"></i>
+                  </button>
+                  <span *ngIf="!record.sessionId" class="text-gray-400">-</span>
                 </td>
               </tr>
             </ng-template>
@@ -630,6 +642,71 @@
         </div>
       </ng-template>
     </p-card>
+  </div>
+
+  <!-- Location Tracking Modal -->
+  <div *ngIf="showLocationModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);">
+      <div class="flex items-center justify-between p-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-900">Location Tracking - Session {{ selectedSessionId }}</h3>
+        <button 
+          type="button"
+          class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          (click)="closeLocationModal()">
+          <i class="pi pi-times text-gray-500"></i>
+        </button>
+      </div>
+      
+      <div class="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <!-- Loading State -->
+        <div *ngIf="loadingLocationData" class="flex items-center justify-center py-8">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span class="ml-2 text-gray-600">Loading location data...</span>
+        </div>
+        
+        <!-- Location Data -->
+        <div *ngIf="!loadingLocationData && locationData.length > 0" class="space-y-4">
+          <!-- Map Container -->
+          <div class="bg-gray-100 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-2">Route Map</h4>
+            <div class="location-map-container">
+              <div id="locationMap" class="w-full h-64"></div>
+            </div>
+          </div>
+          
+          <!-- Location List -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h4 class="font-semibold text-gray-900 mb-3">Location History ({{ locationData.length }} points)</h4>
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+              <div *ngFor="let location of locationData; let i = index" 
+                   class="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div class="flex items-center space-x-3">
+                  <div class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">
+                    {{ i + 1 }}
+                  </div>
+                  <div>
+                    <div class="font-medium text-gray-900">{{ formatLocationTime(location.logTimestamp) }}</div>
+                    <div class="text-sm text-gray-500">
+                      Lat: {{ location.locationLat.toFixed(6) }}, Long: {{ location.locationLong.toFixed(6) }}
+                    </div>
+                  </div>
+                </div>
+                <div class="text-xs text-gray-400">
+                  {{ getLocationInterval(i) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- No Data State -->
+        <div *ngIf="!loadingLocationData && locationData.length === 0" class="text-center py-8">
+          <i class="pi pi-map-marker text-gray-400 text-4xl mb-4"></i>
+          <h4 class="text-lg font-semibold text-gray-900 mb-2">No Location Data</h4>
+          <p class="text-gray-500">No location tracking data found for this session.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Toast Messages -->

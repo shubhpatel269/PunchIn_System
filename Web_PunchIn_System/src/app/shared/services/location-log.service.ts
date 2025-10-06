@@ -29,5 +29,10 @@ export class LocationLogService {
     return this.http.post<any>(this.apiUrl, payload, { headers: this.getAuthHeaders() })
       .pipe(catchError(error => throwError(() => error)));
   }
+
+  getLocationLogsBySession(sessionId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Session/${sessionId}`, { headers: this.getAuthHeaders() })
+      .pipe(catchError(error => throwError(() => error)));
+  }
 }
 

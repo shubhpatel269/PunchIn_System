@@ -15,6 +15,8 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { AttendanceService, AttendanceRecordDTO, SessionRecord } from '../../shared/services/attendance.service';
 import { EmployeeService, CombinedAttendanceResponse, DailyAttendanceSummary } from '../../shared/services/employee.service';
+import { LocationLogService } from '../../shared/services/location-log.service';
+import * as L from 'leaflet';
 
 interface AttendanceRecord {
   date: string;
@@ -49,6 +51,15 @@ interface MonthlyStats {
   averageHours: number;
   overtimeHours: number;
   attendancePercentage: number;
+}
+
+interface LocationData {
+  logId: number;
+  sessionId: number;
+  employeeId: string;
+  logTimestamp: string;
+  locationLat: number;
+  locationLong: number;
 }
 
 @Component({
@@ -117,6 +128,13 @@ export class EmployeeAttendanceComponent implements OnInit {
   attendanceRecords: AttendanceRecord[] = [];
   filteredRecords: AttendanceRecord[] = [];
   
+  // Location tracking modal properties
+  showLocationModal: boolean = false;
+  selectedSessionId: number | null = null;
+  locationData: LocationData[] = [];
+  loadingLocationData: boolean = false;
+  private map: L.Map | null = null;
+  
   // Combined data for daily summary
   combinedAttendanceData: CombinedAttendanceResponse | null = null;
   dailySummaryRecords: AttendanceRecord[] = [];
@@ -148,7 +166,8 @@ export class EmployeeAttendanceComponent implements OnInit {
     private route: ActivatedRoute,
     private messageService: MessageService,
     private attendanceService: AttendanceService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private locationLogService: LocationLogService
   ) {}
 
   ngOnInit() {
@@ -1470,5 +1489,159 @@ export class EmployeeAttendanceComponent implements OnInit {
 
   onSessionLeave() {
     this.hoveredSession = null;
+  }
+
+  // Location tracking methods
+  viewLocationTracking(sessionId: number) {
+    this.selectedSessionId = sessionId;
+    this.showLocationModal = true;
+    this.loadingLocationData = true;
+    this.locationData = [];
+
+    this.locationLogService.getLocationLogsBySession(sessionId).subscribe({
+      next: (data) => {
+        this.locationData = data;
+        this.loadingLocationData = false;
+        
+        // Initialize map after data is loaded
+        setTimeout(() => {
+          this.initializeMap();
+        }, 100);
+      },
+      error: (error) => {
+        this.loadingLocationData = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load location data',
+          life: 3000
+        });
+      }
+    });
+  }
+
+  closeLocationModal() {
+    // Clean up map
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+    
+    this.showLocationModal = false;
+    this.selectedSessionId = null;
+    this.locationData = [];
+  }
+
+  formatLocationTime(timestamp: string): string {
+    return new Date(timestamp).toLocaleString();
+  }
+
+  getLocationInterval(index: number): string {
+    if (index === 0) return 'Start';
+    if (index === this.locationData.length - 1) return 'End';
+    
+    const current = new Date(this.locationData[index].logTimestamp);
+    const previous = new Date(this.locationData[index - 1].logTimestamp);
+    const diffMinutes = Math.round((current.getTime() - previous.getTime()) / (1000 * 60));
+    
+    return `+${diffMinutes}m`;
+  }
+
+  initializeMap() {
+    if (this.locationData.length === 0) return;
+
+    const mapContainer = document.getElementById('locationMap');
+    if (!mapContainer) return;
+
+    // Clear previous content
+    mapContainer.innerHTML = '';
+
+    // Destroy existing map if it exists
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+
+    // Create Leaflet map
+    this.map = L.map('locationMap').setView([0, 0], 13);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    // Create route coordinates
+    const routeCoordinates: L.LatLng[] = this.locationData.map(location => 
+      L.latLng(location.locationLat, location.locationLong)
+    );
+
+    // Add route polyline
+    if (routeCoordinates.length > 1) {
+      const routePolyline = L.polyline(routeCoordinates, {
+        color: '#3B82F6',
+        weight: 4,
+        opacity: 0.8
+      }).addTo(this.map);
+
+      // Fit map to show the entire route
+      this.map.fitBounds(routePolyline.getBounds(), { padding: [20, 20] });
+    }
+
+    // Add markers for each location point
+    this.locationData.forEach((location, index) => {
+      const marker = L.marker([location.locationLat, location.locationLong], {
+        icon: this.createCustomMarker(index + 1)
+      }).addTo(this.map!);
+
+      // Add popup with location details
+      marker.bindPopup(`
+        <div class="p-2">
+          <h4 class="font-semibold text-gray-900 mb-2">Point ${index + 1}</h4>
+          <p class="text-sm text-gray-600 mb-1">
+            <strong>Time:</strong> ${this.formatLocationTime(location.logTimestamp)}
+          </p>
+          <p class="text-sm text-gray-600 mb-1">
+            <strong>Lat:</strong> ${location.locationLat.toFixed(6)}
+          </p>
+          <p class="text-sm text-gray-600">
+            <strong>Lng:</strong> ${location.locationLong.toFixed(6)}
+          </p>
+        </div>
+      `);
+    });
+
+    // Add start and end markers with different colors
+    if (routeCoordinates.length > 0) {
+      // Start marker (green)
+      L.marker(routeCoordinates[0], {
+        icon: L.divIcon({
+          className: 'custom-div-icon',
+          html: '<div class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">S</div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        })
+      }).addTo(this.map).bindPopup('<strong>Start Point</strong>');
+
+      // End marker (red)
+      if (routeCoordinates.length > 1) {
+        L.marker(routeCoordinates[routeCoordinates.length - 1], {
+          icon: L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div class="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">E</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          })
+        }).addTo(this.map).bindPopup('<strong>End Point</strong>');
+      }
+    }
+  }
+
+  private createCustomMarker(number: number): L.DivIcon {
+    return L.divIcon({
+      className: 'custom-div-icon',
+      html: `<div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">${number}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
   }
 }
