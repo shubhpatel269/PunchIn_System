@@ -1,0 +1,63 @@
+/* Company Settings Component Styles - Matching company-profile design exactly */
+
+.company-settings-container {
+    border-radius: 1rem;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+    padding: 2rem 2rem 2rem 2rem;
+}
+
+/* Ensure Tailwind grid works properly */
+.grid {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 1rem !important;
+    width: 100% !important;
+}
+
+.col-12 {
+    grid-column: span 12 !important;
+}
+
+.col-6 {
+    grid-column: span 6 !important;
+}
+
+/* Tailwind responsive classes should work automatically, but let's ensure they do */
+@media (min-width: 768px) {
+    .md\:col-6 {
+        grid-column: span 6 !important;
+    }
+}
+
+.field {
+    margin-bottom: 1.5rem;
+}
+
+.field > label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.field-checkbox {
+    margin-bottom: 1.5rem;
+}
+
+/* Error State Styles */
+.border-red-500 {
+    border-color: #ef4444 !important;
+}
+
+/* Loading Animation */
+.pi-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

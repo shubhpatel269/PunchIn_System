@@ -312,15 +312,15 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
     console.log('Sending all-day data:', allDayData);
     
      this.holidayService.createAllDayHolidays(allDayData).subscribe({
-       next: (result: any) => {
+      next: (result: any) => {
          // Show appropriate message based on results
          if (result.successCount > 0 && result.errorCount === 0) {
            // All holidays added successfully
-           this.messageService.add({
-             severity: 'success',
-             summary: 'Success',
-             detail: `${result.successCount} holidays added successfully`
-           });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `${result.successCount} holidays added successfully`
+        });
          } else if (result.successCount > 0 && result.errorCount > 0) {
            // Some holidays added, some already existed
            this.messageService.add({
@@ -330,22 +330,22 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
            });
          } else if (result.successCount === 0 && result.errorCount > 0) {
            // All holidays already existed
-           this.messageService.add({
-             severity: 'warn',
+          this.messageService.add({
+            severity: 'warn',
              summary: 'Info',
              detail: `All ${result.errorCount} holidays already exist for the selected days`
            });
          } else {
            // No holidays to add (shouldn't happen normally)
-           this.messageService.add({
+        this.messageService.add({
              severity: 'info',
              summary: 'Info',
              detail: 'No holidays were added'
            });
          }
          this.showAllDayDialog = false;
-         this.loadHolidays();
-       },
+        this.loadHolidays();
+      },
       error: (error: any) => {
         console.error('All-day holiday error:', error);
         this.messageService.add({
@@ -383,39 +383,39 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
         });
       }
     });
-   }
-   
+  }
+  
    // Delete multiple holidays (optimized)
-   deleteSelectedHolidays() {
-     if (this.selectedHolidays.length === 0) {
-       this.messageService.add({
-         severity: 'warn',
-         summary: 'Validation Error',
-         detail: 'Please select holidays to delete'
-       });
-       return;
-     }
-     
-     this.confirmationService.confirm({
-       message: `Are you sure you want to delete ${this.selectedHolidays.length} holidays?`,
-       header: 'Confirm Delete',
-       icon: 'pi pi-exclamation-triangle',
-       accept: () => {
-         const companyId = this.getCompanyId();
-         if (!companyId) return;
+  deleteSelectedHolidays() {
+    if (this.selectedHolidays.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validation Error',
+        detail: 'Please select holidays to delete'
+      });
+      return;
+    }
+    
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete ${this.selectedHolidays.length} holidays?`,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const companyId = this.getCompanyId();
+        if (!companyId) return;
          
          const holidayIds = this.selectedHolidays.map(h => h.holidayId);
-         
-         this.holidayService.deleteBulkHolidays(companyId, holidayIds).subscribe({
-           next: (result: any) => {
+        
+        this.holidayService.deleteBulkHolidays(companyId, holidayIds).subscribe({
+          next: (result: any) => {
              // Show appropriate message based on results
              if (result.successCount > 0 && result.errorCount === 0) {
                // All holidays deleted successfully
-               this.messageService.add({
-                 severity: 'success',
-                 summary: 'Success',
-                 detail: `${result.successCount} holidays deleted successfully`
-               });
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: `${result.successCount} holidays deleted successfully`
+            });
              } else if (result.successCount > 0 && result.errorCount > 0) {
                // Some holidays deleted, some not found
                this.messageService.add({
@@ -439,24 +439,24 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
                });
              }
              
-             this.selectedHolidays = [];
-             this.loadHolidays();
-           },
-           error: (error: any) => {
+            this.selectedHolidays = [];
+            this.loadHolidays();
+          },
+          error: (error: any) => {
              console.error('Bulk delete error:', error);
-             this.messageService.add({
-               severity: 'error',
-               summary: 'Error',
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
                detail: error.error?.message || 'Failed to delete holidays'
-             });
+            });
              this.selectedHolidays = [];
-           }
-         });
-       }
-     });
-   }
-   
-   // Reset new holiday form
+          }
+        });
+      }
+    });
+  }
+  
+  // Reset new holiday form
   resetNewHoliday() {
     this.newHoliday = {
       holidayDate: new Date(),
@@ -580,7 +580,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
         
         // Scroll to the highlighted holiday
         this.scrollToHighlightedHoliday();
-      } else {
+    } else {
         this.highlightedHoliday = null;
       }
       

@@ -1,0 +1,207 @@
+<!-- Toast Messages -->
+<p-toast></p-toast>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Company Settings Page -->
+<div class="company-settings-container">
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 2rem; gap: 0.5rem;">
+    <h2 class='text-2xl font-bold text-blue-700 mb-4'>Company Settings</h2>
+    <div class="flex gap-2">
+      <p-button 
+        type="button" 
+        icon="pi pi-refresh" 
+        class="p-button-outlined" 
+        (click)="resetForm()" 
+        [disabled]="saving"
+        label="Reset">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center py-20">
+    <div class="text-center">
+      <i class="pi pi-spin pi-spinner text-4xl text-blue-600 mb-4"></i>
+      <p class="text-gray-600">Loading company settings...</p>
+    </div>
+  </div>
+
+  <!-- Settings Form -->
+  <div *ngIf="!loading">
+    <form (ngSubmit)="saveSettings()" #companySettingsForm="ngForm">
+      <div class="grid">
+        <!-- Work Time Section -->
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="workStartTime">Work Start Time *</label>
+            <input 
+              id="workStartTime" 
+              type="time" 
+              pInputText 
+              [(ngModel)]="settingsForm.workStartTime"
+              name="workStartTime" 
+              required
+              [class.border-red-500]="hasFieldError('workStartTime')">
+            <div *ngIf="hasFieldError('workStartTime')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('workStartTime') }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="workEndTime">Work End Time *</label>
+            <input 
+              id="workEndTime" 
+              type="time" 
+              pInputText 
+              [(ngModel)]="settingsForm.workEndTime"
+              name="workEndTime" 
+              required
+              [class.border-red-500]="hasFieldError('workEndTime')">
+            <div *ngIf="hasFieldError('workEndTime')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('workEndTime') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Grace Period Section -->
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="graceLateMinutes">Grace Late Minutes *</label>
+            <input 
+              id="graceLateMinutes" 
+              type="number" 
+              pInputText 
+              [(ngModel)]="settingsForm.graceLateMinutes"
+              name="graceLateMinutes" 
+              min="0" 
+              max="120"
+              required
+              [class.border-red-500]="hasFieldError('graceLateMinutes')">
+            <div *ngIf="hasFieldError('graceLateMinutes')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('graceLateMinutes') }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="graceEarlyLeaveMinutes">Grace Early Leave Minutes *</label>
+            <input 
+              id="graceEarlyLeaveMinutes" 
+              type="number" 
+              pInputText 
+              [(ngModel)]="settingsForm.graceEarlyLeaveMinutes"
+              name="graceEarlyLeaveMinutes" 
+              min="0" 
+              max="120"
+              required
+              [class.border-red-500]="hasFieldError('graceEarlyLeaveMinutes')">
+            <div *ngIf="hasFieldError('graceEarlyLeaveMinutes')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('graceEarlyLeaveMinutes') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Company Settings Section -->
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label for="timeZone">Company Timezone *</label>
+            <p-select 
+              id="timeZone"
+              [options]="timeZoneOptions" 
+              [(ngModel)]="settingsForm.timeZone"
+              name="timeZone"
+              placeholder="Select timezone"
+              required
+              [class.border-red-500]="hasFieldError('timeZone')">
+            </p-select>
+            <div *ngIf="hasFieldError('timeZone')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('timeZone') }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 md:col-6">
+          <div class="field-checkbox">
+            <p-checkbox 
+              id="allowHalfDay" 
+              name="allowHalfDay" 
+              [binary]="true" 
+              [(ngModel)]="settingsForm.allowHalfDay">
+            </p-checkbox>
+            <label for="allowHalfDay" class="ml-2">Allow Half Day Leaves</label>
+          </div>
+
+          <div class="field" *ngIf="settingsForm.allowHalfDay">
+            <label for="halfDayHours">Half Day Hours *</label>
+            <input 
+              id="halfDayHours" 
+              type="number" 
+              pInputText 
+              [(ngModel)]="settingsForm.halfDayHours"
+              name="halfDayHours" 
+              min="1" 
+              max="8"
+              required
+              [class.border-red-500]="hasFieldError('halfDayHours')">
+            <div *ngIf="hasFieldError('halfDayHours')" class="text-red-600 text-sm mt-1">
+              {{ getFieldError('halfDayHours') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Summary -->
+      <div *ngIf="companySettings" class="mt-6 p-4 bg-gray-50 rounded-lg">
+        <h4 class="font-semibold text-gray-900 mb-3">Settings Summary</h4>
+        <div class="grid">
+          <div class="col-12 md:col-4">
+            <div class="text-sm">
+              <span class="font-medium text-gray-700">Created:</span>
+              <span class="text-gray-600 ml-2">{{ companySettings.createdDate | date:'MMM dd, yyyy' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-4">
+            <div class="text-sm">
+              <span class="font-medium text-gray-700">Last Updated:</span>
+              <span class="text-gray-600 ml-2">{{ companySettings.updatedDate | date:'MMM dd, yyyy' }}</span>
+            </div>
+          </div>
+          <div class="col-12 md:col-4">
+            <div class="text-sm">
+              <span class="font-medium text-gray-700">Status:</span>
+              <span class="text-gray-600 ml-2">{{ companySettings.isActive ? 'Active' : 'Inactive' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="col-12 mt-4">
+        <div class="flex gap-2 justify-content-end">
+          <p-button 
+            type="submit" 
+            [icon]="saving ? 'pi pi-spin pi-spinner' : (companySettings ? 'pi pi-check' : 'pi pi-plus')" 
+            class="p-button-success" 
+            [disabled]="saving"
+            [label]="saving ? 'Saving...' : (companySettings ? 'Update Settings' : 'Create Settings')">
+          </p-button>
+          <p-button 
+            *ngIf="companySettings"
+            type="button" 
+            icon="pi pi-trash" 
+            class="p-button-danger p-button-outlined" 
+            (click)="deleteSettings()" 
+            [disabled]="saving"
+            label="Delete Settings">
+          </p-button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
