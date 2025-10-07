@@ -9,6 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService } from 'primeng/api';
 import { CompanySettingsService, CompanySettings, CreateCompanySettingsDto, UpdateCompanySettingsDto } from '../../shared/services/company-settings.service';
 import { CompanyService } from '../../shared/services/company.service';
@@ -25,7 +26,8 @@ import { CompanyService } from '../../shared/services/company.service';
     InputTextModule,
     CheckboxModule,
     SelectModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    SkeletonModule
   ],
   templateUrl: './company-settings.html',
   styleUrl: './company-settings.css',
@@ -49,7 +51,8 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
     graceEarlyLeaveMinutes: 15,
     allowHalfDay: false,
     halfDayHours: 4,
-    timeZone: 'UTC'
+    timeZone: 'UTC',
+    breakTimeMinutes: 60
   };
   
   // Available options
@@ -161,7 +164,8 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
       graceEarlyLeaveMinutes: settings.graceEarlyLeaveMinutes,
       allowHalfDay: settings.allowHalfDay,
       halfDayHours: settings.halfDayHours,
-      timeZone: settings.timeZone
+      timeZone: settings.timeZone,
+      breakTimeMinutes: settings.breakTimeMinutes
     };
   }
   
@@ -211,6 +215,12 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
         this.formErrors['halfDayHours'] = 'Half day hours must be between 1 and 8';
         isValid = false;
       }
+    }
+    
+    // Validate break time minutes
+    if (this.settingsForm.breakTimeMinutes < 0 || this.settingsForm.breakTimeMinutes > 480) {
+      this.formErrors['breakTimeMinutes'] = 'Break time minutes must be between 0 and 480 (8 hours)';
+      isValid = false;
     }
     
     // Validate timezone
@@ -265,7 +275,8 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
       graceEarlyLeaveMinutes: this.settingsForm.graceEarlyLeaveMinutes,
       allowHalfDay: this.settingsForm.allowHalfDay,
       halfDayHours: this.settingsForm.halfDayHours,
-      timeZone: this.settingsForm.timeZone
+      timeZone: this.settingsForm.timeZone,
+      breakTimeMinutes: this.settingsForm.breakTimeMinutes
     };
     
     this.companySettingsService.createCompanySettings(createDto).subscribe({
@@ -301,7 +312,8 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
       graceEarlyLeaveMinutes: this.settingsForm.graceEarlyLeaveMinutes,
       allowHalfDay: this.settingsForm.allowHalfDay,
       halfDayHours: this.settingsForm.halfDayHours,
-      timeZone: this.settingsForm.timeZone
+      timeZone: this.settingsForm.timeZone,
+      breakTimeMinutes: this.settingsForm.breakTimeMinutes
     };
     
     this.companySettingsService.updateCompanySettings(this.companyId, updateDto).subscribe({
@@ -345,7 +357,8 @@ export class CompanySettingsComponent implements OnInit, OnDestroy {
         graceEarlyLeaveMinutes: 15,
         allowHalfDay: false,
         halfDayHours: 4,
-        timeZone: 'UTC'
+        timeZone: 'UTC',
+        breakTimeMinutes: 60
       };
       this.formErrors = {};
       this.messageService.add({

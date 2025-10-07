@@ -19,6 +19,57 @@
   
   <!-- Stats Cards Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <!-- Loading State for Stats Cards -->
+    <div *ngIf="loadingDashboardStats" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="120px" height="16px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+      </div>
+      <div class="flex items-center justify-between">
+        <p-skeleton width="60px" height="36px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="48px" height="48px" shape="circle"></p-skeleton>
+      </div>
+    </div>
+    <div *ngIf="loadingDashboardStats" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="140px" height="16px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+      </div>
+      <div class="flex items-center justify-between">
+        <p-skeleton width="60px" height="36px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="48px" height="48px" shape="circle"></p-skeleton>
+      </div>
+    </div>
+    <div *ngIf="loadingDashboardStats" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="160px" height="16px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+      </div>
+      <div class="flex items-center justify-between">
+        <p-skeleton width="60px" height="36px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="48px" height="48px" shape="circle"></p-skeleton>
+      </div>
+    </div>
+    <div *ngIf="loadingDashboardStats" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="150px" height="16px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+      </div>
+      <div class="flex items-center justify-between">
+        <p-skeleton width="60px" height="36px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="48px" height="48px" shape="circle"></p-skeleton>
+      </div>
+    </div>
+    <div *ngIf="loadingDashboardStats" class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <p-skeleton width="130px" height="16px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+      </div>
+      <div class="flex items-center justify-between">
+        <p-skeleton width="60px" height="36px" borderRadius="8px"></p-skeleton>
+        <p-skeleton width="48px" height="48px" shape="circle"></p-skeleton>
+      </div>
+    </div>
      <!-- Total Punch-ins Card -->
      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" (click)="getTodayPunchInsDetails()">
        <div class="flex items-center justify-between mb-4">
@@ -130,11 +181,72 @@
             <tbody>
               <!-- Loading State -->
               <tr *ngIf="loadingRecentAttendance">
-                <td colspan="7" class="py-8 px-4 text-center">
-                  <div class="flex items-center justify-center space-x-2">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span class="text-gray-500">Loading recent attendance...</span>
-                  </div>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="120px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="60px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="70px" height="24px" borderRadius="12px"></p-skeleton>
+                </td>
+              </tr>
+              <tr *ngIf="loadingRecentAttendance">
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="120px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="60px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="70px" height="24px" borderRadius="12px"></p-skeleton>
+                </td>
+              </tr>
+              <tr *ngIf="loadingRecentAttendance">
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="120px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="80px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="60px" height="16px" borderRadius="8px"></p-skeleton>
+                </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="70px" height="24px" borderRadius="12px"></p-skeleton>
                 </td>
               </tr>
               

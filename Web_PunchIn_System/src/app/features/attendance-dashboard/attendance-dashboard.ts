@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
 import { HttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { DashboardService, DashboardStats, ActiveSessionsResponse, EmployeesOnBreakResponse, CompanyEmployeeCount } from '../../shared/services/dashboard.service';
@@ -27,7 +28,7 @@ interface RecentSession {
   standalone: true,
   templateUrl: './attendance-dashboard.html',
   styleUrls: ['./attendance-dashboard.css'],
-  imports: [CommonModule, CardModule, TagModule, ToastModule],
+  imports: [CommonModule, CardModule, TagModule, ToastModule, SkeletonModule],
   providers: [MessageService]
 })
 export class AttendanceDashboardComponent implements OnInit, OnDestroy {

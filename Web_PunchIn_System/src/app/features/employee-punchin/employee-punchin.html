@@ -53,13 +53,67 @@
 
     <!-- Loading State -->
     <div *ngIf="loading" class="loading-container">
-      <p-card class="loading-card">
-        <div class="loading-content">
-          <p-skeleton width="200px" height="20px" borderRadius="8px"></p-skeleton>
-          <p-skeleton width="150px" height="16px" borderRadius="8px" style="margin-top: 8px;"></p-skeleton>
-          <p-skeleton width="100px" height="16px" borderRadius="8px" style="margin-top: 8px;"></p-skeleton>
+      <!-- Employee Information and Map Section Skeleton -->
+      <div class="employee-info-section">
+        <!-- Employee Information Card Skeleton -->
+        <p-card class="employee-info-card">
+          <ng-template pTemplate="header">
+            <div class="employee-header">
+              <div class="employee-avatar">
+                <div class="circular-image-wrapper">
+                  <p-skeleton shape="circle" size="150px"></p-skeleton>
+                </div>
+              </div>
+              <div class="employee-details">
+                <p-skeleton width="150px" height="28px" borderRadius="8px" style="margin-bottom: 12px;"></p-skeleton>
+                <p-skeleton width="220px" height="16px" borderRadius="8px" style="margin-bottom: 8px;"></p-skeleton>
+                <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+              </div>
+            </div>
+          </ng-template>
+        </p-card>
+
+        <!-- Map Card Skeleton -->
+        <p-card class="map-card">
+          <ng-template pTemplate="header">
+            <div class="map-header">
+              <p-skeleton width="150px" height="18px" borderRadius="8px"></p-skeleton>
+            </div>
+          </ng-template>
+          <div class="map-container">
+            <p-skeleton width="100%" height="350px" borderRadius="8px"></p-skeleton>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Table Skeleton -->
+      <div class="punchin-table-container">
+        <p-skeleton width="200px" height="20px" borderRadius="8px" style="margin-bottom: 16px;"></p-skeleton>
+        
+        <div class="table-skeleton">
+          <!-- Table Header Skeleton -->
+          <div class="table-header-skeleton">
+            <p-skeleton width="80px" height="40px" borderRadius="8px"></p-skeleton>
+            <p-skeleton width="180px" height="40px" borderRadius="8px"></p-skeleton>
+            <p-skeleton width="80px" height="40px" borderRadius="8px"></p-skeleton>
+            <p-skeleton width="250px" height="40px" borderRadius="8px"></p-skeleton>
+          </div>
+          
+          <!-- Table Rows Skeleton -->
+          <div class="table-rows-skeleton" *ngFor="let row of skeletonRows">
+            <div class="table-row-skeleton">
+              <p-skeleton width="60px" height="60px" borderRadius="8px"></p-skeleton>
+              <p-skeleton width="160px" height="60px" borderRadius="8px"></p-skeleton>
+              <div class="face-image-skeleton">
+                <p-skeleton shape="circle" size="50px"></p-skeleton>
+              </div>
+              <div class="location-skeleton">
+                <p-skeleton width="200px" height="18px" borderRadius="8px"></p-skeleton>
+              </div>
+            </div>
+          </div>
         </div>
-      </p-card>
+      </div>
     </div>
 
     <!-- Punch-In Data Table -->

@@ -119,22 +119,33 @@
           
           <!-- Calendar days -->
           <div class="grid grid-cols-7 gap-1">
-            <div 
-              *ngFor="let day of calendarDays; let i = index"
-              class="relative p-2 text-center cursor-pointer rounded-lg transition-colors"
-              [class]="getDayClasses(day)"
-              (click)="onCalendarDateClick(day)"
-              [title]="day.isHoliday ? day.holidayName : null">
-              
-              <span class="text-sm">{{ day.day }}</span>
-              
-              <!-- Holiday indicator -->
-              <div 
-                *ngIf="day.isHoliday"
-                class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
-                [title]="day.holidayName">
+            <!-- Loading State for Calendar -->
+            <ng-container *ngIf="loading">
+              <div *ngFor="let item of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]" 
+                   class="relative p-2 text-center rounded-lg bg-gray-100">
+                <p-skeleton width="20px" height="16px" borderRadius="4px"></p-skeleton>
               </div>
-            </div>
+            </ng-container>
+            
+            <!-- Actual Calendar Days -->
+            <ng-container *ngIf="!loading">
+              <div 
+                *ngFor="let day of calendarDays; let i = index"
+                class="relative p-2 text-center cursor-pointer rounded-lg transition-colors"
+                [class]="getDayClasses(day)"
+                (click)="onCalendarDateClick(day)"
+                [title]="day.isHoliday ? day.holidayName : null">
+                
+                <span class="text-sm">{{ day.day }}</span>
+                
+                <!-- Holiday indicator -->
+                <div 
+                  *ngIf="day.isHoliday"
+                  class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+                  [title]="day.holidayName">
+                </div>
+              </div>
+            </ng-container>
           </div>
         </div>
         
@@ -168,9 +179,21 @@
           </button>
         </div>
         
-        <div *ngIf="loading" class="flex items-center justify-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span class="ml-2 text-gray-600">Loading holidays...</span>
+        <!-- Loading State -->
+        <div *ngIf="loading" class="space-y-3">
+          <div *ngFor="let item of [1,2,3,4,5]" class="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+            <div class="flex items-center space-x-3">
+              <p-skeleton width="8px" height="8px" shape="circle"></p-skeleton>
+              <div>
+                <p-skeleton width="120px" height="16px" borderRadius="8px" style="margin-bottom: 4px;"></p-skeleton>
+                <p-skeleton width="80px" height="14px" borderRadius="8px"></p-skeleton>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <p-skeleton width="60px" height="20px" borderRadius="10px"></p-skeleton>
+              <p-skeleton width="20px" height="20px" shape="circle"></p-skeleton>
+            </div>
+          </div>
         </div>
         
         <div *ngIf="!loading && filteredHolidays.length === 0" class="text-center py-8">
@@ -233,9 +256,50 @@
         </div>
       </div>
       
+      <!-- Loading State for Table -->
+      <div *ngIf="loading" class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 font-semibold text-gray-700" style="width: 3rem">
+                <p-skeleton width="20px" height="20px" borderRadius="4px"></p-skeleton>
+              </th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Holiday Name</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Created</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of [1,2,3,4,5]" class="border-b border-gray-100">
+              <td class="py-3 px-4">
+                <p-skeleton width="20px" height="20px" borderRadius="4px"></p-skeleton>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="150px" height="16px" borderRadius="8px"></p-skeleton>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="80px" height="24px" borderRadius="12px"></p-skeleton>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="100px" height="16px" borderRadius="8px"></p-skeleton>
+              </td>
+              <td class="py-3 px-4">
+                <p-skeleton width="20px" height="20px" shape="circle"></p-skeleton>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Actual Table -->
       <p-table 
+        *ngIf="!loading"
         [value]="filteredHolidays" 
-        [loading]="loading"
         [paginator]="true" 
         [rows]="10"
         [showCurrentPageReport]="true"

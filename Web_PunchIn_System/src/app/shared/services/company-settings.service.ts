@@ -11,6 +11,7 @@ export interface CompanySettings {
   allowHalfDay: boolean;
   halfDayHours: number;
   timeZone: string;
+  breakTimeMinutes: number;
   isActive: boolean;
   createdDate: Date;
   updatedDate: Date;
@@ -25,6 +26,7 @@ export interface CreateCompanySettingsDto {
   allowHalfDay: boolean;
   halfDayHours: number;
   timeZone: string;
+  breakTimeMinutes: number;
 }
 
 export interface UpdateCompanySettingsDto {
@@ -35,6 +37,7 @@ export interface UpdateCompanySettingsDto {
   allowHalfDay: boolean;
   halfDayHours: number;
   timeZone: string;
+  breakTimeMinutes: number;
 }
 
 export interface ApiResponse {

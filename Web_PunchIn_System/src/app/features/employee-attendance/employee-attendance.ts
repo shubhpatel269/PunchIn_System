@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -16,6 +16,7 @@ import { ToastModule } from 'primeng/toast';
 import { AttendanceService, AttendanceRecordDTO, SessionRecord } from '../../shared/services/attendance.service';
 import { EmployeeService, CombinedAttendanceResponse, DailyAttendanceSummary } from '../../shared/services/employee.service';
 import { LocationLogService } from '../../shared/services/location-log.service';
+import { CompanySettingsService, CompanySettings } from '../../shared/services/company-settings.service';
 import * as L from 'leaflet';
 
 interface AttendanceRecord {
@@ -41,7 +42,8 @@ interface AttendanceRecord {
 
 interface MonthlyStats {
   totalDays: number;
-  workingDays: number;
+  workingDays: number; // Working days for whole month
+  workingDaysTillCurrent: number; // Working days from month start to current date
   presentDays: number;
   absentDays: number;
   lateDays: number;
@@ -51,6 +53,7 @@ interface MonthlyStats {
   averageHours: number;
   overtimeHours: number;
   attendancePercentage: number;
+  actualWorkHours: number; // Actual work hours from month start to today
 }
 
 interface LocationData {
@@ -83,7 +86,7 @@ interface LocationData {
   templateUrl: './employee-attendance.html',
   styleUrl: './employee-attendance.css'
 })
-export class EmployeeAttendanceComponent implements OnInit {
+export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
   user: any = null;
   selectedMonth: number = new Date().getMonth();
   selectedYear: number = new Date().getFullYear();
@@ -91,7 +94,8 @@ export class EmployeeAttendanceComponent implements OnInit {
   viewingEmployeeId: string | null = null;
   monthlyStats: MonthlyStats = {
     totalDays: 0,
-    workingDays: 0,
+    workingDays: 0, // Working days for whole month
+    workingDaysTillCurrent: 0, // Working days from month start to current date
     presentDays: 0,
     absentDays: 0,
     lateDays: 0,
@@ -100,7 +104,8 @@ export class EmployeeAttendanceComponent implements OnInit {
     totalHours: 0,
     averageHours: 0,
     overtimeHours: 0,
-    attendancePercentage: 0
+    attendancePercentage: 0,
+    actualWorkHours: 0 // Actual work hours from month start to today
   };
 
   // Chart data
@@ -161,16 +166,27 @@ export class EmployeeAttendanceComponent implements OnInit {
 
   years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
+  // Cache for session heights to prevent ExpressionChangedAfterItHasBeenCheckedError
+  private sessionHeightCache = new Map<string, number>();
+  
+  // Company settings for dynamic calculations
+  private companySettings: CompanySettings | null = null;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
     private attendanceService: AttendanceService,
     private employeeService: EmployeeService,
-    private locationLogService: LocationLogService
+    private locationLogService: LocationLogService,
+    private companySettingsService: CompanySettingsService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    // Load company settings first
+    this.loadCompanySettings();
+    
     // Check if this is an admin viewing a specific employee
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -189,6 +205,12 @@ export class EmployeeAttendanceComponent implements OnInit {
     this.initializeCharts();
   }
 
+  ngAfterViewInit() {
+    // Clear height cache when view is initialized
+    this.sessionHeightCache.clear();
+    this.cdr.detectChanges();
+  }
+
   loadUserData() {
     const userData = localStorage.getItem('punchInUser');
     if (userData) {
@@ -196,6 +218,35 @@ export class EmployeeAttendanceComponent implements OnInit {
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  loadCompanySettings() {
+    // Get company ID from user data or use default
+    const companyId = this.user?.companyId || 1; // Default to company ID 1
+    
+    this.companySettingsService.getCompanySettings(companyId).subscribe({
+      next: (settings) => {
+        this.companySettings = settings;
+      },
+      error: (error) => {
+        console.error('Error loading company settings:', error);
+        // Use default values if company settings fail to load
+        this.companySettings = {
+          companyId: companyId,
+          workStartTime: '09:00:00',
+          workEndTime: '18:00:00',
+          graceLateMinutes: 15,
+          graceEarlyLeaveMinutes: 15,
+          allowHalfDay: true,
+          halfDayHours: 4,
+          timeZone: 'UTC',
+          breakTimeMinutes: 60,
+          isActive: true,
+          createdDate: new Date(),
+          updatedDate: new Date()
+        };
+      }
+    });
   }
 
   loadEmployeeData(employeeId: string) {
@@ -219,6 +270,9 @@ export class EmployeeAttendanceComponent implements OnInit {
       });
       return;
     }
+
+    // Clear height cache when loading new data
+    this.sessionHeightCache.clear();
 
     // Load both combined data (for daily summary) and detailed sessions
     const year = this.selectedYear;
@@ -352,7 +406,7 @@ export class EmployeeAttendanceComponent implements OnInit {
           totalHours: Math.round(sessionHours * 100) / 100,
           totalHoursFormatted: this.formatWorkTime(sessionHours),
           status,
-          overtime: sessionHours > 8 ? Math.round((sessionHours - 8) * 100) / 100 : 0,
+          overtime: this.calculateOvertime(sessionHours),
           breakCount: session.breakCount || 0,
           totalBreak: Math.round(sessionBreakHours * 100) / 100,
           totalBreakFormatted: this.formatTimeSpan(session.totalBreakDuration || '00:00:00'),
@@ -401,7 +455,8 @@ export class EmployeeAttendanceComponent implements OnInit {
     // Use the summary data directly from the combined API
     this.monthlyStats = {
       totalDays: combinedData.totalDays,
-      workingDays: combinedData.workingDays,
+      workingDays: combinedData.workingDays, // Working days for whole month
+      workingDaysTillCurrent: combinedData.workingDaysTillCurrent, // Working days till current date
       presentDays: combinedData.presentDays,
       absentDays: combinedData.absentDays,
       lateDays: combinedData.lateDays,
@@ -410,7 +465,8 @@ export class EmployeeAttendanceComponent implements OnInit {
       totalHours: this.parseTimeSpan(combinedData.totalWorkHours),
       averageHours: combinedData.averageDailyHours,
       overtimeHours: this.parseTimeSpan(combinedData.totalOvertimeHours),
-      attendancePercentage: combinedData.attendanceRate
+      attendancePercentage: combinedData.attendanceRate,
+      actualWorkHours: this.parseTimeSpan(combinedData.actualWorkHours) // Actual work hours from month start to today
     };
     
   }
@@ -467,6 +523,24 @@ export class EmployeeAttendanceComponent implements OnInit {
       
       return result;
     }
+  }
+
+  private calculateOvertime(sessionHours: number): number {
+    if (!this.companySettings) {
+      // Fallback to default 8 hours if company settings not loaded
+      return sessionHours > 8 ? Math.round((sessionHours - 8) * 100) / 100 : 0;
+    }
+
+    // Calculate expected net work hours per day from company settings
+    const workStartTime = this.parseTimeSpan(this.companySettings.workStartTime);
+    const workEndTime = this.parseTimeSpan(this.companySettings.workEndTime);
+    const breakTimeMinutes = this.companySettings.breakTimeMinutes;
+    
+    const totalWorkPeriod = workEndTime - workStartTime;
+    const expectedBreakTime = breakTimeMinutes / 60; // Convert minutes to hours
+    const expectedNetWorkHours = totalWorkPeriod - expectedBreakTime;
+    
+    return sessionHours > expectedNetWorkHours ? Math.round((sessionHours - expectedNetWorkHours) * 100) / 100 : 0;
   }
 
   public formatWorkTime(hours: number): string {
@@ -649,6 +723,7 @@ export class EmployeeAttendanceComponent implements OnInit {
     this.monthlyStats = {
       totalDays: uniqueDays,
       workingDays,
+      workingDaysTillCurrent: workingDays, // For now, use same as workingDays (can be enhanced later)
       presentDays,
       absentDays,
       lateDays,
@@ -657,7 +732,8 @@ export class EmployeeAttendanceComponent implements OnInit {
       totalHours,
       averageHours: workingDays > 0 ? totalHours / workingDays : 0,
       overtimeHours,
-      attendancePercentage: workingDays > 0 ? (presentDays / workingDays) * 100 : 0
+      attendancePercentage: workingDays > 0 ? (presentDays / workingDays) * 100 : 0,
+      actualWorkHours: totalHours // Actual work hours from month start to today
     };
   }
 
@@ -705,8 +781,9 @@ export class EmployeeAttendanceComponent implements OnInit {
         tooltip: {
           callbacks: {
             label: (context: any) => {
-              const hours = context.parsed.y;
-              return `Hours: ${this.formatWorkTime(hours)}`;
+              const days = context.parsed;
+              const label = context.label;
+              return `${label}: ${days} days`;
             }
           }
         }
@@ -1081,6 +1158,14 @@ export class EmployeeAttendanceComponent implements OnInit {
   getSessionHeight(session: any, sessions: any[]): number {
     if (!session.punchInDateTime) return 8; // Minimum height for sessions without start time
     
+    // Create a cache key for this session
+    const cacheKey = `${session.sessionId || session.punchId}_${session.punchInDateTime}_${session.punchOutDateTime || 'active'}`;
+    
+    // Return cached value if available
+    if (this.sessionHeightCache.has(cacheKey)) {
+      return this.sessionHeightCache.get(cacheKey)!;
+    }
+    
     try {
       // Use the same timezone-aware parsing as positioning
       const formattedTime = this.formatTime(session.punchInDateTime);
@@ -1170,20 +1255,27 @@ export class EmployeeAttendanceComponent implements OnInit {
           // For sessions at the same time, use more uniform heights
           const maxHeightPerStackedSession = Math.max(8, 60 / sameTimeSessions.length);
           const finalHeight = Math.max(5, Math.min(maxHeightPerStackedSession, percentage));
+          this.sessionHeightCache.set(cacheKey, finalHeight);
           return finalHeight;
         } else {
           // For sessions at different times, use their actual calculated height
           const finalHeight = Math.max(2, Math.min(90, percentage));
+          this.sessionHeightCache.set(cacheKey, finalHeight);
           return finalHeight;
         }
       }
       
       // For single session, use calculated height but limit to reasonable size
       const finalHeight = Math.max(2, Math.min(90, percentage));
+      
+      // Cache the result
+      this.sessionHeightCache.set(cacheKey, finalHeight);
       return finalHeight;
     } catch (error) {
       console.error('Error calculating session height:', error);
-      return 8; // Default height for error cases
+      const defaultHeight = 8;
+      this.sessionHeightCache.set(cacheKey, defaultHeight);
+      return defaultHeight; // Default height for error cases
     }
   }
 

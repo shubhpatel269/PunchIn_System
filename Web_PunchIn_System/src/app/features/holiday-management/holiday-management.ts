@@ -13,6 +13,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService } from 'primeng/api';
 import { HolidayService } from '../../shared/services/holiday.service';
 import { CompanyService } from '../../shared/services/company.service';
@@ -57,7 +58,8 @@ interface CompanySettings {
     InputTextModule,
     CheckboxModule,
     SelectModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    SkeletonModule
   ],
   templateUrl: './holiday-management.html',
   styleUrl: './holiday-management.css',

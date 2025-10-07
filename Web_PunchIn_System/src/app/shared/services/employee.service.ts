@@ -61,7 +61,8 @@ export interface CombinedAttendanceResponse {
   
   // Summary statistics
   totalDays: number;
-  workingDays: number;
+  workingDays: number; // Working days for whole month
+  workingDaysTillCurrent: number; // Working days from month start to current date
   presentDays: number;
   absentDays: number;
   lateDays: number;
@@ -74,6 +75,9 @@ export interface CombinedAttendanceResponse {
   totalBreakTime: string;
   totalOvertimeHours: string;
   averageDailyHours: number;
+  
+  // Expected vs Actual (from month start to current date)
+  actualWorkHours: string; // Actual work hours from month start to today
   
   // Daily records (aggregated per day)
   dailyRecords: DailyAttendanceSummary[];

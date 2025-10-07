@@ -65,7 +65,8 @@
               <i class="pi pi-calendar text-blue-600 text-xl"></i>
             </div>
             <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.workingDays }}</h3>
-            <p class="text-sm text-gray-500">Working Days</p>
+            <p class="text-sm text-gray-500">Total Working Days</p>
+            <p class="text-xs text-gray-400 mt-1">{{ monthlyStats.workingDaysTillCurrent }} till today</p>
           </div>
         </ng-template>
       </p-card>
@@ -118,6 +119,7 @@
             </div>
             <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.attendancePercentage.toFixed(1) }}%</h3>
             <p class="text-sm text-gray-500">Attendance Rate</p>
+            <p class="text-xs text-gray-400 mt-1">Based on {{ monthlyStats.workingDaysTillCurrent }} working days</p>
           </div>
         </ng-template>
       </p-card>
@@ -213,7 +215,7 @@
             <p-divider></p-divider>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
-                <span>Attendance Rate</span>
+                <span>Attendance Rate (till today)</span>
                 <span>{{ monthlyStats.attendancePercentage.toFixed(1) }}%</span>
               </div>
               <p-progressBar 
@@ -245,26 +247,6 @@
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Overtime Hours:</span>
               <span class="font-semibold text-orange-600">{{ monthlyStats.overtimeHours.toFixed(1) }} hrs</span>
-            </div>
-            <p-divider></p-divider>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <h4 class="font-medium text-gray-900 mb-2">Expected vs Actual</h4>
-              <div class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span>Expected Hours:</span>
-                  <span>{{ (monthlyStats.workingDays * 8).toFixed(1) }} hrs</span>
-                </div>
-                <div class="flex justify-between text-sm">
-                  <span>Actual Hours:</span>
-                  <span>{{ formatWorkTime(monthlyStats.totalHours) }}</span>
-                </div>
-                <div class="flex justify-between text-sm font-medium">
-                  <span>Difference:</span>
-                  <span [class]="(monthlyStats.totalHours - (monthlyStats.workingDays * 8)) >= 0 ? 'text-green-600' : 'text-red-600'">
-                    {{ formatWorkTime(monthlyStats.totalHours - (monthlyStats.workingDays * 8)) }}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </ng-template>
@@ -379,7 +361,6 @@
                 <th>Hours</th>
                 <th>Break Count</th>
                 <th>Total Break</th>
-                <th>Status</th>
                 <th>Location</th>
               </tr>
             </ng-template>
@@ -427,13 +408,6 @@
                   <span class="font-medium">
                     {{ record.totalBreakFormatted }}
                   </span>
-                </td>
-                <td>
-                  <p-tag 
-                    [value]="record.status | titlecase" 
-                    [severity]="getStatusColor(record.status)"
-                    [icon]="getStatusIcon(record.status)">
-                  </p-tag>
                 </td>
                 <td>
                   <button 
