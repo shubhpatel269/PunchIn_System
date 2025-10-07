@@ -29,6 +29,13 @@
             </a>
           </li>
           <li class="rounded-sm">
+            <a routerLink="/employee/company-details" routerLinkActive="bg-blue-100"
+              class="flex items-center p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer group relative">
+              <i class="pi pi-building text-blue-600 text-xl"></i>
+              <span class="z-[9999] hidden group-hover:block absolute left-12 bg-gray-800 text-white px-2 py-1 rounded text-sm">Company</span>
+            </a>
+          </li>
+          <li class="rounded-sm">
             <button (click)="confirmLogout($event)"
               class="flex items-center w-full p-2 space-x-3 rounded-md hover:bg-blue-50 cursor-pointer bg-transparent border-0 outline-none group relative">
               <i class="pi pi-sign-out text-blue-600 text-xl"></i>

@@ -1,0 +1,239 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-6">
+        <h1 class="text-2xl font-bold text-gray-900">Company Details</h1>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex justify-center items-center py-12">
+      <div class="text-center">
+        <i class="pi pi-spin pi-spinner text-4xl text-blue-500 mb-4"></i>
+        <p class="text-gray-600">Loading company information...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !loading" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <div class="flex">
+        <i class="pi pi-exclamation-triangle text-red-400 mr-3 mt-0.5"></i>
+        <div>
+          <h3 class="text-sm font-medium text-red-800">Error Loading Data</h3>
+          <p class="text-sm text-red-700 mt-1">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!loading && !error" class="space-y-6">
+      
+      <!-- Company Profile -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="px-4 py-3">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="pi pi-building mr-2 text-blue-500"></i>
+              Company Profile
+            </h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Company Logo and Basic Info -->
+            <div class="space-y-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <i class="pi pi-building text-2xl text-blue-600"></i>
+                </div>
+                <div>
+                  <h4 class="text-xl font-semibold text-gray-900">{{ companyProfile?.companyName || '-' }}</h4>
+                  <p-tag 
+                    [value]="companyProfile?.companyType || '-'" 
+                    [severity]="getCompanyTypeColor(companyProfile?.companyType || '')"
+                    [icon]="'pi pi-tag'">
+                  </p-tag>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <div class="flex items-center">
+                  <i class="pi pi-map-marker text-gray-400 mr-2 w-4"></i>
+                  <span class="text-sm text-gray-600">{{ companyProfile?.companyAddress || '-' }}</span>
+                </div>
+                <div class="flex items-center">
+                  <i class="pi pi-phone text-gray-400 mr-2 w-4"></i>
+                  <span class="text-sm text-gray-600">{{ companyProfile?.contactNo || '-' }}</span>
+                </div>
+                <div class="flex items-center">
+                  <i class="pi pi-envelope text-gray-400 mr-2 w-4"></i>
+                  <span class="text-sm text-gray-600">{{ companyProfile?.companyEmail || '-' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Company Details -->
+            <div class="space-y-6">
+              <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6">
+                <h5 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <i class="pi pi-info-circle text-blue-600"></i>
+                  </div>
+                  Company Information
+                </h5>
+                <div class="space-y-3">
+                  <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-700">City:</span>
+                    <span class="text-gray-900 font-semibold">{{ companyProfile?.companyCity || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-700">State:</span>
+                    <span class="text-gray-900 font-semibold">{{ companyProfile?.companyState || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between items-center py-2">
+                    <span class="font-medium text-gray-700">Founded:</span>
+                    <span class="text-gray-900 font-semibold">{{ companyProfile?.companyCreatedAt | date:'mediumDate' }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-700">Status:</span>
+                <p-tag 
+                  [value]="!companyProfile?.companyIsDeleted ? 'Active' : 'Inactive'" 
+                  [severity]="!companyProfile?.companyIsDeleted ? 'success' : 'danger'"
+                  [icon]="!companyProfile?.companyIsDeleted ? 'pi pi-check-circle' : 'pi pi-times-circle'">
+                </p-tag>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Work Policies -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="px-4 py-3">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="pi pi-clock mr-2 text-green-500"></i>
+              Work Policies & Settings
+            </h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Work Hours -->
+            <div class="space-y-4">
+              <h5 class="text-sm font-medium text-gray-700 flex items-center">
+                <i class="pi pi-calendar mr-2 text-blue-500"></i>
+                Work Hours
+              </h5>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Start Time:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ formatTime(companySettings?.workStartTime) }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">End Time:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ formatTime(companySettings?.workEndTime) }}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Working Days:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ getWorkingDaysDisplay() }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Break & Leave Policies -->
+            <div class="space-y-4">
+              <h5 class="text-sm font-medium text-gray-700 flex items-center">
+                <i class="pi pi-coffee mr-2 text-orange-500"></i>
+                Break & Leave Policies
+              </h5>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Break Time:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ companySettings?.breakTimeMinutes || 0 }} minutes
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Half Day Hours:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ companySettings?.halfDayHours || 0 }} hours
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grace Periods -->
+            <div class="space-y-4">
+              <h5 class="text-sm font-medium text-gray-700 flex items-center">
+                <i class="pi pi-shield mr-2 text-purple-500"></i>
+                Grace Periods
+              </h5>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Late Grace:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ companySettings?.graceLateMinutes || 0 }} minutes
+                  </span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Early Leave Grace:</span>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ companySettings?.graceEarlyLeaveMinutes || 0 }} minutes
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <!-- Summary Card -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="px-4 py-3">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="pi pi-info-circle mr-2 text-indigo-500"></i>
+              Quick Summary
+            </h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="flex items-start">
+              <i class="pi pi-lightbulb text-blue-500 mr-3 mt-1"></i>
+              <div>
+                <h4 class="text-sm font-medium text-blue-900 mb-2">Important Notes:</h4>
+                <ul class="text-sm text-blue-800 space-y-1">
+                  <li>• Work hours are from {{ formatTime(companySettings?.workStartTime) }} to {{ formatTime(companySettings?.workEndTime) }}</li>
+                  <li>• You have {{ companySettings?.breakTimeMinutes || 0 }} minutes of break time</li>
+                  <li>• {{ companySettings?.graceLateMinutes || 0 }} minutes grace period for late arrivals</li>
+                  <li>• {{ companySettings?.graceEarlyLeaveMinutes || 0 }} minutes grace period for early departures</li>
+                  <li>• Half day is considered as {{ companySettings?.halfDayHours || 0 }} hours of work</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  </div>
+</div>
+
+<p-toast></p-toast>

@@ -7,6 +7,7 @@ import { EmployeeLayoutComponent } from './features/employee-layout/employee-lay
 import { EmployeeDashboardComponent } from './features/employee-dashboard/employee-dashboard';
 import { EmployeeProfileComponent } from './features/employee-profile/employee-profile';
 import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance';
+import { EmployeeCompanyDetailsComponent } from './features/employee-company-details/employee-company-details';
 import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
 import { Landing } from './features/landing/landing';
 import { CompanyRegister } from './features/company-register/company-register';
@@ -52,6 +53,7 @@ export const routes: Routes = [
             { path: 'dashboard', component: EmployeeDashboardComponent },
             { path: 'profile', component: EmployeeProfileComponent },
             { path: 'attendance', component: EmployeeAttendanceComponent },
+            { path: 'company-details', component: EmployeeCompanyDetailsComponent },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
