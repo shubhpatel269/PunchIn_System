@@ -44,11 +44,12 @@ interface MonthlyStats {
   totalDays: number;
   workingDays: number; // Working days for whole month
   workingDaysTillCurrent: number; // Working days from month start to current date
+  holidays: number; // Total holidays for whole month
+  holidaysTillCurrent: number; // Holidays from month start to current date
   presentDays: number;
   absentDays: number;
   lateDays: number;
   halfDays: number;
-  holidays: number;
   totalHours: number;
   averageHours: number;
   overtimeHours: number;
@@ -96,11 +97,12 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
     totalDays: 0,
     workingDays: 0, // Working days for whole month
     workingDaysTillCurrent: 0, // Working days from month start to current date
+    holidays: 0, // Total holidays for whole month
+    holidaysTillCurrent: 0, // Holidays from month start to current date
     presentDays: 0,
     absentDays: 0,
     lateDays: 0,
     halfDays: 0,
-    holidays: 0,
     totalHours: 0,
     averageHours: 0,
     overtimeHours: 0,
@@ -111,7 +113,8 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
   // Chart data
   attendanceChartData: any;
   hoursChartData: any;
-  chartOptions: any;
+  attendanceChartOptions: any;
+  hoursChartOptions: any;
 
   // Calendar view data
   timeSlots: any[] = [];
@@ -229,7 +232,7 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         this.companySettings = settings;
       },
       error: (error) => {
-        console.error('Error loading company settings:', error);
+        console.warn('Company settings not found, using default settings:', error);
         // Use default values if company settings fail to load
         this.companySettings = {
           companyId: companyId,
@@ -245,6 +248,7 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
           createdDate: new Date(),
           updatedDate: new Date()
         };
+        // Don't show error message as this is not critical for attendance display
       }
     });
   }
@@ -457,11 +461,12 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
       totalDays: combinedData.totalDays,
       workingDays: combinedData.workingDays, // Working days for whole month
       workingDaysTillCurrent: combinedData.workingDaysTillCurrent, // Working days till current date
+      holidays: combinedData.holidayDays, // Total holidays for whole month
+      holidaysTillCurrent: combinedData.holidayDaysTillCurrent, // Holidays till current date
       presentDays: combinedData.presentDays,
       absentDays: combinedData.absentDays,
       lateDays: combinedData.lateDays,
       halfDays: combinedData.halfDays,
-      holidays: combinedData.holidayDays,
       totalHours: this.parseTimeSpan(combinedData.totalWorkHours),
       averageHours: combinedData.averageDailyHours,
       overtimeHours: this.parseTimeSpan(combinedData.totalOvertimeHours),
@@ -724,11 +729,12 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
       totalDays: uniqueDays,
       workingDays,
       workingDaysTillCurrent: workingDays, // For now, use same as workingDays (can be enhanced later)
+      holidays,
+      holidaysTillCurrent: holidays, // For now, use same as holidays (can be enhanced later)
       presentDays,
       absentDays,
       lateDays,
       halfDays,
-      holidays,
       totalHours,
       averageHours: workingDays > 0 ? totalHours / workingDays : 0,
       overtimeHours,
@@ -747,7 +753,7 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
           this.monthlyStats.absentDays,
           this.monthlyStats.lateDays,
           this.monthlyStats.halfDays,
-          this.monthlyStats.holidays
+          this.monthlyStats.holidaysTillCurrent
         ],
         backgroundColor: ['#10B981', '#EF4444', '#F59E0B', '#3B82F6', '#6B7280'],
         borderWidth: 0
@@ -771,7 +777,8 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
       }]
     };
 
-    this.chartOptions = {
+    // Attendance distribution chart options (doughnut chart)
+    this.attendanceChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -781,9 +788,31 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         tooltip: {
           callbacks: {
             label: (context: any) => {
-              const days = context.parsed;
+              const label = context.label || '';
+              const value = context.parsed;
+              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    };
+
+    // Weekly hours trend chart options (line chart)
+    this.hoursChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const hours = context.parsed.y;
               const label = context.label;
-              return `${label}: ${days} days`;
+              return `${label}: ${hours.toFixed(1)} hours`;
             }
           }
         }
@@ -812,8 +841,8 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
     this.dailySummaryRecords.forEach(record => {
       const day = new Date(record.date).getDate();
       const weekIndex = Math.floor((day - 1) / 7);
-      if (weekIndex < 5) {
-        weeks[weekIndex] += record.totalHours;
+      if (weekIndex >= 0 && weekIndex < 5) {
+        weeks[weekIndex] += record.totalHours || 0;
       }
     });
     
@@ -841,7 +870,7 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
       }
     }
     
-    return labels.filter(label => label !== '');
+    return labels;
   }
 
   onMonthChange() {

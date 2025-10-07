@@ -63,11 +63,12 @@ export interface CombinedAttendanceResponse {
   totalDays: number;
   workingDays: number; // Working days for whole month
   workingDaysTillCurrent: number; // Working days from month start to current date
+  holidayDays: number; // Total holidays for whole month
+  holidayDaysTillCurrent: number; // Holidays from month start to current date
   presentDays: number;
   absentDays: number;
   lateDays: number;
   halfDays: number;
-  holidayDays: number;
   attendanceRate: number;
   
   // Hours statistics

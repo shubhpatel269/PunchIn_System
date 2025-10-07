@@ -140,7 +140,7 @@
             <p-chart 
               type="doughnut" 
               [data]="attendanceChartData" 
-              [options]="chartOptions">
+              [options]="attendanceChartOptions">
             </p-chart>
           </div>
         </ng-template>
@@ -159,7 +159,7 @@
             <p-chart 
               type="line" 
               [data]="hoursChartData" 
-              [options]="chartOptions">
+              [options]="hoursChartOptions">
             </p-chart>
           </div>
         </ng-template>
@@ -192,13 +192,6 @@
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Late Days:</span>
-              <div class="flex items-center space-x-2">
-                <span class="font-semibold">{{ monthlyStats.lateDays }}</span>
-                <p-tag value="Late" severity="warning" [icon]="'pi pi-clock'"></p-tag>
-              </div>
-            </div>
-            <div class="flex items-center justify-between">
               <span class="text-gray-600">Half Days:</span>
               <div class="flex items-center space-x-2">
                 <span class="font-semibold">{{ monthlyStats.halfDays }}</span>
@@ -206,9 +199,9 @@
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Holidays:</span>
+              <span class="text-gray-600">Holiday:</span>
               <div class="flex items-center space-x-2">
-                <span class="font-semibold">{{ monthlyStats.holidays }}</span>
+                <span class="font-semibold">{{ monthlyStats.holidaysTillCurrent }}</span>
                 <p-tag value="Holiday" severity="secondary" [icon]="'pi pi-calendar'"></p-tag>
               </div>
             </div>

@@ -18,7 +18,7 @@ import { AuthService } from '../../shared/services/auth.service';
 import { SessionService } from '../../shared/services/session.service';
 import { BreakService } from '../../shared/services/break.service';
 import { AttendanceService } from '../../shared/services/attendance.service';
-import { EmployeeService, TodayStatus } from '../../shared/services/employee.service';
+import { EmployeeService, TodayStatus, CombinedAttendanceResponse } from '../../shared/services/employee.service';
 import { MonthlyAttendanceOverviewDTO } from '../../shared/services/employee.service';
 import { WelcomePopupComponent } from './welcome-popup.component';
 
@@ -35,6 +35,8 @@ interface AttendanceStats {
   presentDays: number;
   absentDays: number;
   lateDays: number;
+  halfDays: number;
+  holidays: number;
   attendancePercentage: number;
   totalHours: number;
   averageHours: number;
@@ -71,6 +73,8 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     presentDays: 0,
     absentDays: 0,
     lateDays: 0,
+    halfDays: 0,
+    holidays: 0,
     attendancePercentage: 0,
     totalHours: 0,
     averageHours: 0
@@ -80,6 +84,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   attendanceChartData: any;
   hoursChartData: any;
   chartOptions: any;
+  attendanceChartOptions: any;
 
   // Recent attendance data from API
   recentAttendance: AttendanceRecord[] = [];
@@ -90,8 +95,11 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   // Today status from API
   todayStatus: TodayStatus | null = null;
-  monthOverview: MonthlyAttendanceOverviewDTO | null = null;
-  showIncludingWeekends: boolean = false;
+  
+  // Combined attendance data for charts
+  combinedAttendanceData: CombinedAttendanceResponse | null = null;
+  dailySummaryRecords: any[] = [];
+  
   private dashboardRefreshInterval: any;
 
   constructor(
@@ -113,8 +121,11 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.loadTodayAttendance();
     this.loadRecentAttendance();
     
-    // Load last 7 days working hours for better trend chart
-    this.loadLast7DaysWorkingHours();
+    // Initialize attendance chart options
+    this.initializeAttendanceChartOptions();
+    
+    // Load month overview for attendance statistics (includes hours chart data)
+    this.loadMonthOverview();
 
     // Detect user timezone (for displaying recent attendance times)
     try {
@@ -133,7 +144,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     this.dashboardRefreshInterval = setInterval(() => {
       this.loadTodayStatus();
       this.loadRecentAttendance();
-      this.loadLast7DaysWorkingHours(); // Refresh trend chart data
+      this.loadMonthOverview(); // Refresh attendance and hours chart data
     }, 30000);
 
     // Load current month overview once on init
@@ -148,6 +159,280 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       clearInterval(this.dashboardRefreshInterval);
       this.dashboardRefreshInterval = null;
     }
+  }
+
+  initializeCharts() {
+    // Attendance distribution chart
+    this.attendanceChartData = {
+      labels: ['Present', 'Absent', 'Half Day', 'Holiday'],
+      datasets: [{
+        data: [
+          this.attendanceStats.presentDays,
+          this.attendanceStats.absentDays,
+          this.attendanceStats.halfDays,
+          this.attendanceStats.holidays
+        ],
+        backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#6B7280'],
+        borderWidth: 0
+      }]
+    };
+
+    // Daily hours trend chart (last 7 days)
+    const dailyData = this.getLast7DaysHoursData();
+    const dayLabels = this.getLast7DaysLabels();
+    
+    this.hoursChartData = {
+      labels: dayLabels,
+      datasets: [{
+        label: 'Hours Worked',
+        data: dailyData,
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    };
+  }
+
+  initializeAttendanceChartOptions() {
+    // Attendance distribution chart options (doughnut chart)
+    this.attendanceChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const label = context.label || '';
+              const value = context.parsed;
+              const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    };
+
+    // Hours chart options (line chart)
+    this.chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const hours = context.parsed.y;
+              return `Hours: ${this.formatHoursFromDecimal(hours)}`;
+            }
+          }
+        }
+      },
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          max: 12,
+          ticks: {
+            callback: (value: any) => `${value}h`
+          }
+        } 
+      }
+    };
+  }
+
+  calculateMonthlyStatsFromCombined(combinedData: CombinedAttendanceResponse) {
+    // Use the summary data directly from the combined API
+    this.attendanceStats = {
+      totalDays: combinedData.totalDays,
+      presentDays: combinedData.presentDays,
+      absentDays: combinedData.absentDays,
+      lateDays: combinedData.lateDays,
+      halfDays: combinedData.halfDays,
+      holidays: combinedData.holidayDaysTillCurrent, // Use holidays till current date
+      attendancePercentage: combinedData.attendanceRate,
+      totalHours: this.parseTimeSpan(combinedData.totalWorkHours),
+      averageHours: combinedData.averageDailyHours
+    };
+  }
+
+  private parseTimeSpan(timeSpanString: string): number {
+    // Parse TimeSpan string like "08:30:00" to hours
+    if (!timeSpanString || timeSpanString === '00:00:00') {
+      return 0;
+    }
+    
+    const parts = timeSpanString.split(':');
+    if (parts.length >= 2) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      return hours + (minutes / 60);
+    }
+    
+    return 0;
+  }
+
+  transformCombinedDataToRecords(combinedData: CombinedAttendanceResponse): any[] {
+    // Transform the daily summary data from combined API to records format
+    return combinedData.dailyRecords.map(record => {
+      const parsedHours = this.parseTimeSpan(record.totalWorkHours);
+      
+      return {
+        date: record.date.split('T')[0], // Store only the date part (YYYY-MM-DD)
+        day: new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        punchIn: record.firstPunchIn,
+        punchOut: record.lastPunchOut,
+        totalHours: parsedHours,
+        totalHoursFormatted: this.formatWorkTime(parsedHours),
+        status: this.getAttendanceStatus(record),
+        totalBreak: this.parseTimeSpan(record.totalBreakTime),
+        totalBreakFormatted: this.formatWorkTime(this.parseTimeSpan(record.totalBreakTime)),
+        sessionCount: record.sessionCount,
+        breakCount: record.breakCount
+      };
+    });
+  }
+
+  private getAttendanceStatus(record: any): string {
+    if (record.isHoliday) return 'holiday';
+    if (record.totalWorkHours === '00:00:00') return 'absent';
+    if (this.parseTimeSpan(record.totalWorkHours) < 4) return 'half-day';
+    return 'present';
+  }
+
+  private formatWorkTime(hours: number): string {
+    if (hours === 0) return '0h';
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+    if (minutes === 0) {
+      return `${wholeHours}h`;
+    } else {
+      return `${wholeHours}h ${minutes}m`;
+    }
+  }
+
+  getLast7DaysHoursData(): number[] {
+    const days = [0, 0, 0, 0, 0, 0, 0]; // 7 days
+    const today = new Date();
+    
+    // Create a map of dates to hours for easy lookup
+    // Handle both date formats: "2025-10-07" and "2025-10-07T00:00:00"
+    const dateToHoursMap = new Map();
+    this.dailySummaryRecords.forEach(record => {
+      // Extract just the date part (YYYY-MM-DD) from the record date
+      const recordDate = record.date.split('T')[0];
+      dateToHoursMap.set(recordDate, record.totalHours || 0);
+    });
+    
+    // Get last 7 days including today
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      const hours = dateToHoursMap.get(dateString) || 0;
+      days[6 - i] = hours;
+    }
+    
+    return days;
+  }
+
+  getLast7DaysLabels(): string[] {
+    const labels = [];
+    const today = new Date();
+    
+    // Get last 7 days including today
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      
+      // Format as "MMM DD" (e.g., "Oct 07")
+      const dayLabel = date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: '2-digit' 
+      });
+      labels.push(dayLabel);
+    }
+    
+    return labels;
+  }
+
+  initializeFallbackCharts() {
+    // Fallback chart data when combined API fails
+    // Initialize attendance chart with current stats
+    this.attendanceChartData = {
+      labels: ['Present', 'Absent', 'Half Day', 'Holiday'],
+      datasets: [{
+        data: [
+          this.attendanceStats.presentDays,
+          this.attendanceStats.absentDays,
+          this.attendanceStats.halfDays,
+          this.attendanceStats.holidays
+        ],
+        backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#6B7280'],
+        borderWidth: 0
+      }]
+    };
+    
+    // Initialize hours chart with recent attendance data
+    this.initializeHoursChartFromRecentAttendance();
+  }
+
+  initializeHoursChartFromRecentAttendance() {
+    // Create daily data from recent attendance
+    const today = new Date();
+    const dailyData = [];
+    const dayLabels = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      // Find attendance record for this date
+      const record = this.recentAttendance.find(r => r.date === dateString);
+      const hours = record ? this.parseHours(record.totalHours) : 0;
+      
+      dailyData.push(hours);
+      dayLabels.push(date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }));
+    }
+    
+    this.hoursChartData = {
+      labels: dayLabels,
+      datasets: [{
+        label: 'Hours Worked',
+        data: dailyData,
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    };
+  }
+
+  private parseHours(timeString: string): number {
+    // Parse time string like "8h 30m" or "8.5h" to decimal hours
+    if (!timeString) return 0;
+    
+    const match = timeString.match(/(\d+)h(?:\s*(\d+)m)?/);
+    if (match) {
+      const hours = parseInt(match[1], 10);
+      const minutes = match[2] ? parseInt(match[2], 10) : 0;
+      return hours + (minutes / 60);
+    }
+    
+    // Try to parse as decimal hours
+    const decimalMatch = timeString.match(/(\d+\.?\d*)h?/);
+    if (decimalMatch) {
+      return parseFloat(decimalMatch[1]);
+    }
+    
+    return 0;
   }
 
   loadUserData() {
@@ -186,7 +471,10 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       this.attendanceService.getRecentAttendance(employeeId).subscribe({
         next: (data) => {
           this.recentAttendance = data;
-          this.initializeHoursChartFromRecent();
+          // Only initialize fallback charts if combined API hasn't loaded yet
+          if (!this.combinedAttendanceData) {
+            this.initializeHoursChartFromRecentAttendance();
+          }
         },
         error: (err) => {
           console.error('Failed to load recent attendance:', err);
@@ -258,6 +546,8 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       presentDays,
       absentDays,
       lateDays,
+      halfDays: 0, // Set to 0 for now
+      holidays: 0, // Set to 0 for now
       attendancePercentage: totalDays > 0 ? (presentDays / totalDays) * 100 : 0,
       totalHours,
       averageHours: totalDays > 0 ? totalHours / totalDays : 0
@@ -272,18 +562,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     return startTime > lateTime;
   }
 
-  private parseHours(timeString: string): number {
-    if (!timeString) return 0;
-    // Parse HH:MM:SS format to decimal hours
-    const parts = timeString.split(':');
-    if (parts.length >= 3) {
-      const hours = parseInt(parts[0], 10);
-      const minutes = parseInt(parts[1], 10);
-      const seconds = parseFloat(parts[2]);
-      return hours + (minutes / 60) + (seconds / 3600);
-    }
-    return 0;
-  }
 
   // Helper method to parse hours string to decimal for chart data
   private parseHoursToDecimal(timeString: string): number {
@@ -800,63 +1078,32 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = now.getUTCMonth() + 1; // 1-12
-    this.employeeService.getSelfMonthOverview(year, month).subscribe({
-      next: (ov) => {
-        this.monthOverview = ov;
-        // Default view uses Weekdays-only metrics; toggle can switch to including weekends
-        this.applyMonthOverviewToStats();
-        this.attendanceChartData = {
-          labels: ['Present', 'Absent'],
-          datasets: [{
-            data: [this.attendanceStats.presentDays, this.attendanceStats.absentDays],
-            backgroundColor: ['#10B981', '#EF4444'],
-            borderWidth: 0
-          }]
-        };
+    
+    // Use the same API as employee attendance component
+    this.employeeService.getSelfCombinedAttendance(year, month).subscribe({
+      next: (response) => {
+        console.log('Combined attendance data loaded:', response);
+        // Store combined data for daily summary
+        this.combinedAttendanceData = response;
+        this.dailySummaryRecords = this.transformCombinedDataToRecords(response);
+        this.calculateMonthlyStatsFromCombined(response);
+        this.initializeCharts();
       },
       error: (err) => {
-        console.error('MonthOverview API error:', err);
+        console.error('Combined attendance API error:', err);
         this.messageService.add({
           severity: 'error',
           summary: 'Monthly Overview Error',
           detail: 'Failed to load month overview. Please try again.',
           life: 3000
         });
+        
+        // Fallback: Try to use recent attendance data for hours chart
+        this.initializeFallbackCharts();
       }
     });
   }
 
-  handleWeekendToggle(event: any) {
-    this.showIncludingWeekends = !!event?.target?.checked;
-    this.applyMonthOverviewToStats();
-    if (this.monthOverview) {
-      this.attendanceChartData = {
-        labels: ['Present', 'Absent'],
-        datasets: [{
-          data: [this.attendanceStats.presentDays, this.attendanceStats.absentDays],
-          backgroundColor: ['#10B981', '#EF4444'],
-          borderWidth: 0
-        }]
-      };
-    }
-  }
-
-  private applyMonthOverviewToStats() {
-    const ov = this.monthOverview;
-    if (!ov) return;
-    if (this.showIncludingWeekends) {
-      this.attendanceStats.presentDays = ov.presentIncludingWeekends;
-      // Absent remains weekdays-based so weekends don't inflate absents
-      this.attendanceStats.absentDays = ov.absentWeekdays;
-      this.attendanceStats.lateDays = 0;
-      this.attendanceStats.attendancePercentage = ov.attendanceRateIncludingWeekends;
-    } else {
-      this.attendanceStats.presentDays = ov.presentWeekdays;
-      this.attendanceStats.absentDays = ov.absentWeekdays;
-      this.attendanceStats.lateDays = 0;
-      this.attendanceStats.attendancePercentage = ov.attendanceRateWeekdays;
-    }
-  }
 
   getStatusColor(record: AttendanceRecord): string {
     if (!record.sessionStart && !record.sessionEnd) return 'danger'; // absent

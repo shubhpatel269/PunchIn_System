@@ -78,8 +78,6 @@
                 <p class="text-green-500">Attendance Overview</p>
               </div>
               <div class="flex items-center space-x-3">
-                <label class="text-xs font-medium text-green-500">Include Weekends</label>
-                <input type="checkbox" class="accent-green-500 cursor-pointer ml-1" [checked]="showIncludingWeekends" (change)="handleWeekendToggle($event)" />
                 <i class="pi pi-chart-pie text-2xl opacity-80"></i>
               </div>
             </div>
@@ -94,6 +92,14 @@
             <div class="flex items-center justify-between">
               <span class="text-gray-600">Absent Days:</span>
               <span class="font-semibold text-red-600">{{ attendanceStats.absentDays }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Half Days:</span>
+              <span class="font-semibold text-blue-600">{{ attendanceStats.halfDays }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-600">Holiday:</span>
+              <span class="font-semibold text-gray-600">{{ attendanceStats.holidays }}</span>
             </div>
             <p-divider></p-divider>
             <div class="space-y-2">
@@ -176,7 +182,7 @@
             <p-chart 
               type="doughnut" 
               [data]="attendanceChartData" 
-              [options]="chartOptions">
+              [options]="attendanceChartOptions">
             </p-chart>
           </div>
         </ng-template>
@@ -187,7 +193,7 @@
         <ng-template pTemplate="header">
           <div class="p-4">
             <h3 class="text-lg font-semibold text-gray-900">Hours Worked Trend</h3>
-            <p class="text-sm text-gray-500">Last 7 days working hours with detailed breakdown</p>
+            <p class="text-sm text-gray-500">Last 7 days working hours (day-wise)</p>
           </div>
         </ng-template>
         <ng-template pTemplate="content">
