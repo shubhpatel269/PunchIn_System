@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -16,11 +16,6 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { HolidayService } from '../../shared/services/holiday.service';
 import { CompanyService } from '../../shared/services/company.service';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCalendarCellClassFunction } from '@angular/material/datepicker';
 
 interface Holiday {
   holidayId: number;
@@ -62,27 +57,31 @@ interface CompanySettings {
     InputTextModule,
     CheckboxModule,
     SelectModule,
-    ConfirmDialogModule,
-    MatDatepickerModule,
-    MatMenuModule,
-    MatIconModule,
-    MatButtonModule
+    ConfirmDialogModule
   ],
   templateUrl: './holiday-management.html',
   styleUrl: './holiday-management.css',
   encapsulation: ViewEncapsulation.None,
   providers: [MessageService, ConfirmationService]
 })
-export class HolidayManagementComponent implements OnInit, OnDestroy {
-  // Calendar and date selection
-  selectedDates: Date[] = [];
-  selectedDate: Date | null = null;
+export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('holidaysContainer', { static: false }) holidaysContainer!: ElementRef;
   
-  // Multiple date selection for Material Calendar
-  daysSelected: string[] = [];
+  // Calendar and date selection
+  selectedDate: Date | null = null;
   currentYear: number = new Date().getFullYear();
   selectedYear: number = this.currentYear;
   selectedMonth: number = new Date().getMonth() + 1;
+  
+  // Custom calendar properties
+  calendarYear: number = this.currentYear;
+  calendarMonth: number = new Date().getMonth();
+  calendarDays: any[] = [];
+  weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
   
   // Holiday data
   holidays: Holiday[] = [];
@@ -91,14 +90,13 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
   
   // UI state
   showAddDialog: boolean = false;
-  showBulkDialog: boolean = false;
-  showWeekendDialog: boolean = false;
-  showCopyYearDialog: boolean = false;
-  showSettingsDialog: boolean = false;
+  showAllDayDialog: boolean = false;
   
-  // Selection mode
-  selectionMode: 'single' | 'multiple' = 'single';
+  // Selection for bulk operations
   selectedHolidays: Holiday[] = [];
+  
+  // Holiday highlighting
+  highlightedHoliday: Holiday | null = null;
   
   // Forms
   newHoliday: Partial<Holiday> = {
@@ -107,17 +105,16 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
     isPaid: true
   };
   
-  bulkHolidays: Partial<Holiday>[] = [];
-  weekendSettings = {
+  allDaySettings = {
     year: this.currentYear,
-    includeSaturday: true,
-    includeSunday: true,
+    includeSunday: false,
+    includeMonday: false,
+    includeTuesday: false,
+    includeWednesday: false,
+    includeThursday: false,
+    includeFriday: false,
+    includeSaturday: false,
     isPaid: false
-  };
-  
-  copyYearSettings = {
-    sourceYear: this.currentYear - 1,
-    targetYear: this.currentYear
   };
   
   companySettings: CompanySettings | null = null;
@@ -141,6 +138,11 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadCompanySettings();
     this.loadHolidays();
+    this.generateCalendar();
+  }
+  
+  ngAfterViewInit() {
+    // ViewChild references are available here
   }
   
   ngOnDestroy() {
@@ -176,6 +178,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
         }));
         this.filteredHolidays = [...this.holidays];
         this.loading = false;
+        this.generateCalendar(); // Regenerate calendar to show holidays
       },
       error: (error: any) => {
         console.error('Error loading holidays:', error);
@@ -222,23 +225,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
     }
   }
   
-  // Calendar date selection
-  onDateSelect(event: any) {
-    console.log('Date selected:', event);
-    if (this.selectionMode === 'single') {
-      this.selectedDate = event;
-      this.selectedDates = [event];
-    } else {
-      this.selectedDates = event;
-    }
-  }
-  
-  // Toggle selection mode
-  toggleSelectionMode() {
-    this.selectionMode = this.selectionMode === 'single' ? 'multiple' : 'single';
-    this.selectedDates = [];
-    this.selectedDate = null;
-  }
   
   // Add single holiday
   addHoliday() {
@@ -305,120 +291,67 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
     });
   }
   
-  // Add multiple holidays
-  addMultipleHolidays() {
-    if (this.selectedDates.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: 'Please select dates'
-      });
-      return;
-    }
-    
+  // Add all-day holidays
+  addAllDayHolidays() {
     const companyId = this.getCompanyId();
     if (!companyId) return;
     
-    const holidays = this.selectedDates.map(date => {
-      // Convert user's local timezone to UTC for database storage
-      const selectedDate = new Date(date);
-      const utcDate = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()));
-      
-      return {
-        holidayDate: utcDate,
-        holidayName: `Holiday - ${utcDate.toLocaleDateString()}`,
-        isPaid: true
-      };
-    });
-    
-    this.holidayService.createBulkHolidays(companyId, holidays).subscribe({
-      next: (result: any) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: `${result.successCount} holidays added successfully`
-        });
-        if (result.errorCount > 0) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Warning',
-            detail: `${result.errorCount} holidays could not be added`
-          });
-        }
-        this.showBulkDialog = false;
-        this.selectedDates = [];
-        this.loadHolidays();
-      },
-      error: (error: any) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to add holidays'
-        });
-      }
-    });
-  }
-  
-  // Add weekend holidays
-  addWeekendHolidays() {
-    const companyId = this.getCompanyId();
-    if (!companyId) return;
-    
-    const weekendData = {
+    const allDayData = {
       companyId: companyId,
-      year: this.weekendSettings.year,
-      includeSaturday: this.weekendSettings.includeSaturday,
-      includeSunday: this.weekendSettings.includeSunday,
-      isPaid: this.weekendSettings.isPaid
+      year: this.allDaySettings.year,
+      includeSunday: this.allDaySettings.includeSunday,
+      includeMonday: this.allDaySettings.includeMonday,
+      includeTuesday: this.allDaySettings.includeTuesday,
+      includeWednesday: this.allDaySettings.includeWednesday,
+      includeThursday: this.allDaySettings.includeThursday,
+      includeFriday: this.allDaySettings.includeFriday,
+      includeSaturday: this.allDaySettings.includeSaturday,
+      isPaid: this.allDaySettings.isPaid
     };
     
-    console.log('Sending weekend data:', weekendData);
+    console.log('Sending all-day data:', allDayData);
     
-    this.holidayService.createWeekendHolidays(weekendData).subscribe({
-      next: (result: any) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: `${result.successCount} weekend holidays added successfully`
-        });
-        this.showWeekendDialog = false;
-        this.loadHolidays();
-      },
+     this.holidayService.createAllDayHolidays(allDayData).subscribe({
+       next: (result: any) => {
+         // Show appropriate message based on results
+         if (result.successCount > 0 && result.errorCount === 0) {
+           // All holidays added successfully
+           this.messageService.add({
+             severity: 'success',
+             summary: 'Success',
+             detail: `${result.successCount} holidays added successfully`
+           });
+         } else if (result.successCount > 0 && result.errorCount > 0) {
+           // Some holidays added, some already existed
+           this.messageService.add({
+             severity: 'info',
+             summary: 'Partial Success',
+             detail: `${result.successCount} holidays added, ${result.errorCount} already existed`
+           });
+         } else if (result.successCount === 0 && result.errorCount > 0) {
+           // All holidays already existed
+           this.messageService.add({
+             severity: 'warn',
+             summary: 'Info',
+             detail: `All ${result.errorCount} holidays already exist for the selected days`
+           });
+         } else {
+           // No holidays to add (shouldn't happen normally)
+           this.messageService.add({
+             severity: 'info',
+             summary: 'Info',
+             detail: 'No holidays were added'
+           });
+         }
+         this.showAllDayDialog = false;
+         this.loadHolidays();
+       },
       error: (error: any) => {
-        console.error('Weekend holiday error:', error);
+        console.error('All-day holiday error:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: error.error?.message || 'Failed to add weekend holidays'
-        });
-      }
-    });
-  }
-  
-  // Copy holidays from previous year
-  copyHolidaysFromYear() {
-    const companyId = this.getCompanyId();
-    if (!companyId) return;
-    
-    this.holidayService.copyHolidaysFromYear({
-      companyId: companyId,
-      sourceYear: this.copyYearSettings.sourceYear,
-      targetYear: this.copyYearSettings.targetYear
-    }).subscribe({
-      next: (result: any) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: `${result.successCount} holidays copied successfully`
-        });
-        this.showCopyYearDialog = false;
-        this.loadHolidays();
-      },
-      error: (error: any) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to copy holidays'
+          detail: error.error?.message || 'Failed to add holidays'
         });
       }
     });
@@ -450,51 +383,80 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
         });
       }
     });
-  }
-  
-  // Delete multiple holidays
-  deleteSelectedHolidays() {
-    if (this.selectedHolidays.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: 'Please select holidays to delete'
-      });
-      return;
-    }
-    
-    this.confirmationService.confirm({
-      message: `Are you sure you want to delete ${this.selectedHolidays.length} holidays?`,
-      header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        const holidayIds = this.selectedHolidays.map(h => h.holidayId);
-        const companyId = this.getCompanyId();
-        if (!companyId) return;
-        
-        this.holidayService.deleteBulkHolidays(companyId, holidayIds).subscribe({
-          next: (result: any) => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: `${result.successCount} holidays deleted successfully`
-            });
-            this.selectedHolidays = [];
-            this.loadHolidays();
-          },
-          error: (error: any) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to delete holidays'
-            });
-          }
-        });
-      }
-    });
-  }
-  
-  // Reset new holiday form
+   }
+   
+   // Delete multiple holidays (optimized)
+   deleteSelectedHolidays() {
+     if (this.selectedHolidays.length === 0) {
+       this.messageService.add({
+         severity: 'warn',
+         summary: 'Validation Error',
+         detail: 'Please select holidays to delete'
+       });
+       return;
+     }
+     
+     this.confirmationService.confirm({
+       message: `Are you sure you want to delete ${this.selectedHolidays.length} holidays?`,
+       header: 'Confirm Delete',
+       icon: 'pi pi-exclamation-triangle',
+       accept: () => {
+         const companyId = this.getCompanyId();
+         if (!companyId) return;
+         
+         const holidayIds = this.selectedHolidays.map(h => h.holidayId);
+         
+         this.holidayService.deleteBulkHolidays(companyId, holidayIds).subscribe({
+           next: (result: any) => {
+             // Show appropriate message based on results
+             if (result.successCount > 0 && result.errorCount === 0) {
+               // All holidays deleted successfully
+               this.messageService.add({
+                 severity: 'success',
+                 summary: 'Success',
+                 detail: `${result.successCount} holidays deleted successfully`
+               });
+             } else if (result.successCount > 0 && result.errorCount > 0) {
+               // Some holidays deleted, some not found
+               this.messageService.add({
+                 severity: 'warn',
+                 summary: 'Partial Success',
+                 detail: `${result.successCount} holidays deleted, ${result.errorCount} not found`
+               });
+             } else if (result.successCount === 0 && result.errorCount > 0) {
+               // No holidays deleted
+               this.messageService.add({
+                 severity: 'error',
+                 summary: 'Error',
+                 detail: `No holidays could be deleted (${result.errorCount} not found)`
+               });
+             } else {
+               // No holidays to delete
+               this.messageService.add({
+                 severity: 'info',
+                 summary: 'Info',
+                 detail: 'No holidays were deleted'
+               });
+             }
+             
+             this.selectedHolidays = [];
+             this.loadHolidays();
+           },
+           error: (error: any) => {
+             console.error('Bulk delete error:', error);
+             this.messageService.add({
+               severity: 'error',
+               summary: 'Error',
+               detail: error.error?.message || 'Failed to delete holidays'
+             });
+             this.selectedHolidays = [];
+           }
+         });
+       }
+     });
+   }
+   
+   // Reset new holiday form
   resetNewHoliday() {
     this.newHoliday = {
       holidayDate: new Date(),
@@ -540,69 +502,161 @@ export class HolidayManagementComponent implements OnInit, OnDestroy {
     });
   }
   
-  // Get selected date count
-  getSelectedDateCount(): number {
-    return this.selectedDates.length;
-  }
-
-  // Multiple date selection methods for Material Calendar
-  isSelected: MatCalendarCellClassFunction<Date> = (cellDate: Date, view: string) => {
-    if (view === 'month') {
-      const date =
-        cellDate.getFullYear() +
-        "-" +
-        ("00" + (cellDate.getMonth() + 1)).slice(-2) +
-        "-" +
-        ("00" + cellDate.getDate()).slice(-2);
-      return this.daysSelected.find(x => x == date) ? "selected" : "";
+  // Custom Calendar Methods
+  generateCalendar() {
+    this.calendarDays = [];
+    const firstDay = new Date(this.calendarYear, this.calendarMonth, 1);
+    const lastDay = new Date(this.calendarYear, this.calendarMonth + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const endDate = new Date(lastDay);
+    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dayDate = new Date(date);
+      const isCurrentMonth = dayDate.getMonth() === this.calendarMonth;
+      const isToday = this.isToday(dayDate);
+      const isSelected = this.selectedDate && this.isSameDate(dayDate, this.selectedDate);
+      const isHoliday = this.isHolidayDate(dayDate);
+      
+      this.calendarDays.push({
+        date: new Date(dayDate),
+        day: dayDate.getDate(),
+        isCurrentMonth: isCurrentMonth,
+        isToday: isToday,
+        isSelected: isSelected,
+        isHoliday: isHoliday,
+        holidayName: isHoliday ? this.getHolidayName(dayDate) : null
+      });
     }
-    return "";
-  };
-
-  selectDate(event: any, calendar: any) {
-    console.log('Date selected:', event);
-    const date =
-      event.getFullYear() +
-      "-" +
-      ("00" + (event.getMonth() + 1)).slice(-2) +
-      "-" +
-      ("00" + event.getDate()).slice(-2);
-    console.log('Formatted date:', date);
-    
-    const index = this.daysSelected.findIndex(x => x == date);
-    if (index < 0) {
-      this.daysSelected.push(date);
-      console.log('Date added to selection:', date);
-    } else {
-      this.daysSelected.splice(index, 1);
-      console.log('Date removed from selection:', date);
-    }
-
-    // Update selectedDates array for PrimeNG compatibility
-    this.selectedDates = this.daysSelected.map(dateStr => new Date(dateStr));
-    console.log('Selected dates:', this.selectedDates);
-    
-    calendar.updateTodaysDate();
-    
-    // Prevent the menu from closing automatically
-    return false;
-  }
-
-  // Clear all selected dates
-  clearSelectedDates() {
-    this.daysSelected = [];
-    this.selectedDates = [];
-  }
-
-  // Close calendar menu manually
-  closeCalendarMenu(menu: any) {
-    menu.close();
   }
   
-  // Clear selections
-  clearSelections() {
-    this.selectedDates = [];
-    this.selectedDate = null;
-    this.selectedHolidays = [];
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
   }
+  
+  isSameDate(date1: Date, date2: Date): boolean {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+  }
+  
+  isHolidayDate(date: Date): boolean {
+    return this.holidays.some(holiday => {
+      const holidayDate = new Date(holiday.holidayDate);
+      return holidayDate.getDate() === date.getDate() &&
+             holidayDate.getMonth() === date.getMonth() &&
+             holidayDate.getFullYear() === date.getFullYear();
+    });
+  }
+  
+  getHolidayName(date: Date): string | null {
+    const holiday = this.holidays.find(h => {
+      const holidayDate = new Date(h.holidayDate);
+      return holidayDate.getDate() === date.getDate() &&
+             holidayDate.getMonth() === date.getMonth() &&
+             holidayDate.getFullYear() === date.getFullYear();
+    });
+    return holiday ? holiday.holidayName : null;
+  }
+  
+  onCalendarDateClick(day: any) {
+    if (day.isCurrentMonth) {
+      this.selectedDate = day.date;
+      this.newHoliday.holidayDate = day.date;
+      
+      // Find and highlight the corresponding holiday if it exists
+      if (day.isHoliday && day.holidayName) {
+        this.highlightedHoliday = this.holidays.find(h => {
+          const holidayDate = new Date(h.holidayDate);
+          return holidayDate.getDate() === day.date.getDate() &&
+                 holidayDate.getMonth() === day.date.getMonth() &&
+                 holidayDate.getFullYear() === day.date.getFullYear();
+        }) || null;
+        
+        // Scroll to the highlighted holiday
+        this.scrollToHighlightedHoliday();
+      } else {
+        this.highlightedHoliday = null;
+      }
+      
+      this.generateCalendar(); // Regenerate to update selection
+    }
+  }
+  
+  previousMonth() {
+    this.calendarMonth--;
+    if (this.calendarMonth < 0) {
+      this.calendarMonth = 11;
+      this.calendarYear--;
+    }
+    this.generateCalendar();
+  }
+  
+  nextMonth() {
+    this.calendarMonth++;
+    if (this.calendarMonth > 11) {
+      this.calendarMonth = 0;
+      this.calendarYear++;
+    }
+    this.generateCalendar();
+  }
+  
+  goToToday() {
+    const today = new Date();
+    this.calendarYear = today.getFullYear();
+    this.calendarMonth = today.getMonth();
+    this.selectedDate = today;
+    this.newHoliday.holidayDate = today;
+    this.generateCalendar();
+  }
+  
+  clearSelection() {
+    this.selectedDate = null;
+    this.newHoliday.holidayDate = new Date();
+    this.highlightedHoliday = null;
+    this.generateCalendar();
+  }
+  
+  getDayClasses(day: any): string {
+    let classes = '';
+    
+    if (!day.isCurrentMonth) {
+      classes += 'text-gray-300 ';
+    } else if (day.isToday) {
+      classes += 'bg-blue-100 text-blue-900 font-semibold ';
+    } else if (day.isSelected) {
+      classes += 'bg-blue-600 text-white font-semibold ';
+    } else if (day.isHoliday) {
+      classes += 'bg-red-50 text-red-700 hover:bg-red-100 ';
+    } else {
+      classes += 'text-gray-700 hover:bg-gray-100 ';
+    }
+    
+    return classes.trim();
+  }
+  
+  isHolidayHighlighted(holiday: Holiday): boolean {
+    return this.highlightedHoliday?.holidayId === holiday.holidayId;
+  }
+  
+  scrollToHighlightedHoliday() {
+    if (this.highlightedHoliday && this.holidaysContainer) {
+      setTimeout(() => {
+        const highlightedElement = this.holidaysContainer.nativeElement.querySelector('.holiday-highlighted');
+        if (highlightedElement) {
+          highlightedElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }, 100); // Small delay to ensure DOM is updated
+    }
+  }
+  
 }

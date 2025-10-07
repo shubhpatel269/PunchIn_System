@@ -6,13 +6,14 @@
       <p class="text-gray-600">Manage company holidays and settings</p>
     </div>
 
-    <!-- Controls Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Year/Month Selection -->
-      <div class="bg-white rounded-lg shadow-sm  p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter Options</h3>
-        <div class="space-y-4">
-          <div>
+    <!-- Controls Section - Single Horizontal Card -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <!-- Filter Options -->
+        <div class="flex flex-col sm:flex-row gap-4 lg:flex-1">
+          <h3 class="text-lg font-semibold text-gray-900 lg:hidden">Filter Options</h3>
+          <div class="flex flex-col sm:flex-row gap-4 flex-1">
+            <div class="min-w-0 flex-1">
             <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
             <p-select 
               [options]="yearOptions" 
@@ -22,7 +23,7 @@
               class="w-full">
             </p-select>
           </div>
-          <div>
+            <div class="min-w-0 flex-1">
             <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
             <p-select 
               [options]="[
@@ -49,73 +50,23 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="bg-white rounded-lg shadow-sm  p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div class="space-y-3">
+        <!-- Quick Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 lg:flex-shrink-0">
+          <h3 class="text-lg font-semibold text-gray-900 lg:hidden">Quick Actions</h3>
+          <div class="flex flex-col sm:flex-row gap-3">
           <button 
             type="button"
-            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
             (click)="showAddDialog = true">
             <i class="pi pi-plus"></i>
             Add Holiday
           </button>
           <button 
             type="button"
-            class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-            (click)="showBulkDialog = true">
-            <i class="pi pi-calendar-plus"></i>
-            Add Multiple
-          </button>
-          <button 
-            type="button"
-            class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-            (click)="showWeekendDialog = true">
+              class="bg-purple-600 text-white px-6 py-2.5 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+              (click)="showAllDayDialog = true">
             <i class="pi pi-calendar"></i>
-            Add Weekends
-          </button>
-          <button 
-            type="button"
-            class="w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-            (click)="showCopyYearDialog = true">
-            <i class="pi pi-copy"></i>
-            Copy from Year
-          </button>
-        </div>
-      </div>
-
-      <!-- Selection Mode -->
-      <div class="bg-white rounded-lg shadow-sm  p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Selection Mode</h3>
-        <div class="space-y-4">
-          <div class="flex items-center space-x-3">
-            <p-checkbox 
-              [(ngModel)]="selectionMode" 
-              value="single"
-              (onChange)="toggleSelectionMode()"
-              [binary]="true">
-            </p-checkbox>
-            <label class="text-sm text-gray-700">Single Date Selection</label>
-          </div>
-          <div class="flex items-center space-x-3">
-            <p-checkbox 
-              [(ngModel)]="selectionMode" 
-              value="multiple"
-              (onChange)="toggleSelectionMode()"
-              [binary]="true">
-            </p-checkbox>
-            <label class="text-sm text-gray-700">Multiple Date Selection</label>
-          </div>
-          <div *ngIf="selectedDates.length > 0" class="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p class="text-sm text-blue-800">
-              <i class="pi pi-info-circle mr-2"></i>
-              {{ getSelectedDateCount() }} date(s) selected
-            </p>
-            <button 
-              type="button"
-              class="mt-2 text-xs text-blue-600 hover:text-blue-800"
-              (click)="clearSelections()">
-              Clear Selection
+              Add All Days
             </button>
           </div>
         </div>
@@ -124,19 +75,84 @@
 
     <!-- Calendar Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Calendar -->
-      <div class="bg-white rounded-lg shadow-sm  p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Calendar View</h3>
-        <p-datepicker 
-          [(ngModel)]="selectedDate"
-          [inline]="true"
-          [showOtherMonths]="false"
-          [selectOtherMonths]="false"
-          [showWeek]="true"
-          [showButtonBar]="true"
-          (onSelect)="onDateSelect($event)"
-          class="w-full">
-        </p-datepicker>
+      <!-- Custom Calendar -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Calendar View</h3>
+        </div>
+        
+        <!-- Calendar Header -->
+        <div class="flex items-center justify-between mb-4">
+          <button 
+            type="button"
+            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="previousMonth()"
+            title="Previous Month">
+            <i class="pi pi-chevron-left text-gray-600"></i>
+          </button>
+          
+          <h4 class="text-lg font-semibold text-gray-900">
+            {{ monthNames[calendarMonth] }} {{ calendarYear }}
+          </h4>
+          
+          <button 
+            type="button"
+            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="nextMonth()"
+            title="Next Month">
+            <i class="pi pi-chevron-right text-gray-600"></i>
+          </button>
+        </div>
+        
+        <!-- Calendar Grid -->
+        <div class="calendar-container">
+          <!-- Week day headers -->
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Su</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Mo</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Tu</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">We</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Th</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Fr</div>
+            <div class="text-center text-sm font-medium text-gray-500 p-2">Sa</div>
+          </div>
+          
+          <!-- Calendar days -->
+          <div class="grid grid-cols-7 gap-1">
+            <div 
+              *ngFor="let day of calendarDays; let i = index"
+              class="relative p-2 text-center cursor-pointer rounded-lg transition-colors"
+              [class]="getDayClasses(day)"
+              (click)="onCalendarDateClick(day)"
+              [title]="day.isHoliday ? day.holidayName : null">
+              
+              <span class="text-sm">{{ day.day }}</span>
+              
+              <!-- Holiday indicator -->
+              <div 
+                *ngIf="day.isHoliday"
+                class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+                [title]="day.holidayName">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Calendar Footer -->
+        <div class="flex justify-between mt-4 text-sm">
+          <button 
+            type="button"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+            (click)="goToToday()">
+            Today
+          </button>
+          <button 
+            type="button"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+            (click)="clearSelection()">
+            Clear
+          </button>
+        </div>
       </div>
 
       <!-- Holiday List -->
@@ -163,14 +179,22 @@
           <p class="text-gray-500">No holidays found for the selected period.</p>
         </div>
         
-        <div *ngIf="!loading && filteredHolidays.length > 0" class="space-y-2 max-h-96 overflow-y-auto">
+        <div #holidaysContainer *ngIf="!loading && filteredHolidays.length > 0" class="space-y-2 max-h-96 overflow-y-auto">
           <div *ngFor="let holiday of filteredHolidays" 
-               class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+               class="flex items-center justify-between p-3 rounded-lg transition-all duration-200"
+               [class]="isHolidayHighlighted(holiday) ? 'holiday-highlighted bg-blue-100 border-2 border-blue-300 shadow-md' : 'bg-gray-50 hover:bg-gray-100'">
             <div class="flex items-center space-x-3">
-              <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div class="w-2 h-2 rounded-full"
+                   [class]="isHolidayHighlighted(holiday) ? 'bg-blue-500' : 'bg-blue-500'"></div>
               <div>
-                <div class="font-medium text-gray-900">{{ holiday.holidayName }}</div>
-                <div class="text-sm text-gray-500">{{ formatDate(holiday.holidayDate) }}</div>
+                <div class="font-medium"
+                     [class]="isHolidayHighlighted(holiday) ? 'text-blue-900' : 'text-gray-900'">
+                  {{ holiday.holidayName }}
+                </div>
+                <div class="text-sm"
+                     [class]="isHolidayHighlighted(holiday) ? 'text-blue-700' : 'text-gray-500'">
+                  {{ formatDate(holiday.holidayDate) }}
+                </div>
               </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -233,19 +257,25 @@
         </ng-template>
         
         <ng-template pTemplate="body" let-holiday>
-          <tr>
+          <tr [class]="isHolidayHighlighted(holiday) ? 'holiday-highlighted bg-blue-50 border-l-4 border-blue-400' : ''">
             <td>
               <p-tableCheckbox [value]="holiday"></p-tableCheckbox>
             </td>
-            <td>{{ formatDate(holiday.holidayDate) }}</td>
-            <td>{{ holiday.holidayName }}</td>
+            <td [class]="isHolidayHighlighted(holiday) ? 'text-blue-900 font-medium' : ''">
+              {{ formatDate(holiday.holidayDate) }}
+            </td>
+            <td [class]="isHolidayHighlighted(holiday) ? 'text-blue-900 font-medium' : ''">
+              {{ holiday.holidayName }}
+            </td>
             <td>
               <p-tag 
                 [severity]="getHolidayStatusTag(holiday).severity"
                 [value]="getHolidayStatusTag(holiday).value">
               </p-tag>
             </td>
-            <td>{{ formatDate(holiday.createdDate) }}</td>
+            <td [class]="isHolidayHighlighted(holiday) ? 'text-blue-700' : ''">
+              {{ formatDate(holiday.createdDate) }}
+            </td>
             <td>
               <button 
                 type="button"
@@ -283,15 +313,14 @@
   <div class="space-y-4 h-full">
     <div class="flex-1">
       <label class="block text-sm font-medium text-gray-700 mb-2">Holiday Date</label>
-      <p-datepicker 
-        [(ngModel)]="newHoliday.holidayDate"
-        [showIcon]="true"
-        dateFormat="dd/mm/yy"
-        placeholder="Select date"
-        (onSelect)="onDateSelect($event)"
-        class="w-full h-full"
-        [appendTo]="'body'">
-      </p-datepicker>
+      <div class="border rounded-lg p-3 bg-gray-50">
+        <div class="text-sm text-gray-600 mb-2">
+          Selected: {{ newHoliday.holidayDate ? formatDate(newHoliday.holidayDate) : 'No date selected' }}
+        </div>
+        <div class="text-xs text-gray-500">
+          Click on a date in the calendar to select it
+        </div>
+      </div>
     </div>
     
     <div>
@@ -341,99 +370,10 @@
   </ng-template>
 </p-dialog>
 
-<!-- Bulk Add Dialog -->
+<!-- Add All Day Holidays Dialog -->
 <p-dialog 
-  header="Add Multiple Holidays" 
-  [(visible)]="showBulkDialog" 
-  [modal]="true" 
-  [style]="{width: '600px'}"
-  [closable]="true">
-  
-  <div class="space-y-4">
-    <!-- Material Calendar for Multiple Date Selection -->
-    <div class="flex justify-center mb-4">
-      <button mat-raised-button color="primary" [matMenuTriggerFor]="calendarMenu" class="flex items-center space-x-2">
-        <mat-icon>calendar_today</mat-icon>
-        <span>Select Dates</span>
-      </button>
-      <mat-menu #calendarMenu="matMenu" class="calendar-menu" [hasBackdrop]="false" [overlapTrigger]="false">
-        <div (click)="$event.stopPropagation()" (mousedown)="$event.preventDefault()" class="p-4">
-          <mat-calendar #calendar 
-             (selectedChange)="selectDate($event,calendar)" 
-              [dateClass]="isSelected">
-          </mat-calendar>
-          <div class="flex justify-end mt-4">
-            <button mat-button color="primary" (click)="closeCalendarMenu(calendarMenu)">
-              Done
-            </button>
-          </div>
-        </div>
-      </mat-menu>
-    </div>
-    
-    <div class="p-4 bg-blue-50 rounded-lg">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <i class="pi pi-info-circle text-blue-600"></i>
-          <span class="text-sm text-blue-800">
-            {{ getSelectedDateCount() }} date(s) selected for bulk holiday creation
-          </span>
-        </div>
-        <button 
-          *ngIf="selectedDates.length > 0"
-          type="button"
-          pButton 
-          label="Clear All" 
-          (click)="clearSelectedDates()"
-          class="p-button-sm p-button-outlined">
-        </button>
-      </div>
-    </div>
-    
-    <div *ngIf="selectedDates.length === 0" class="text-center py-8">
-      <i class="pi pi-calendar-times text-gray-400 text-4xl mb-4"></i>
-      <h4 class="text-lg font-semibold text-gray-900 mb-2">No Dates Selected</h4>
-      <p class="text-gray-500 mb-4">Click the "Select Dates" button above to open the calendar and choose multiple dates.</p>
-      <div class="text-sm text-gray-400">
-        <i class="pi pi-info-circle mr-2"></i>
-        You can select multiple dates by clicking on them in the calendar
-      </div>
-    </div>
-    
-    <div *ngIf="selectedDates.length > 0" class="space-y-2 max-h-48 overflow-y-auto">
-      <div *ngFor="let date of selectedDates" 
-           class="flex items-center justify-between p-2 bg-gray-50 rounded">
-        <span class="text-sm text-gray-700">{{ formatDate(date) }}</span>
-        <span class="text-xs text-gray-500">Holiday - {{ date.toLocaleDateString() }}</span>
-      </div>
-    </div>
-  </div>
-  
-  <ng-template pTemplate="footer">
-    <div class="flex justify-end space-x-2">
-      <button 
-        type="button"
-        pButton 
-        label="Cancel" 
-        (click)="showBulkDialog = false"
-        class="p-button-secondary">
-      </button>
-      <button 
-        type="button"
-        pButton 
-        label="Add Holidays" 
-        (click)="addMultipleHolidays()"
-        [disabled]="selectedDates.length === 0"
-        class="p-button-primary">
-      </button>
-    </div>
-  </ng-template>
-</p-dialog>
-
-<!-- Weekend Holidays Dialog -->
-<p-dialog 
-  header="Add Weekend Holidays" 
-  [(visible)]="showWeekendDialog" 
+  header="Add All Day Holidays" 
+  [(visible)]="showAllDayDialog" 
   [modal]="true" 
   [style]="{width: '500px'}"
   [closable]="true">
@@ -443,94 +383,87 @@
       <label class="block text-sm font-medium text-gray-700 mb-2">Year</label>
       <p-select 
         [options]="yearOptions" 
-        [(ngModel)]="weekendSettings.year"
+        [(ngModel)]="allDaySettings.year"
         placeholder="Select Year"
         class="w-full">
       </p-select>
     </div>
     
     <div class="space-y-3">
+      <h4 class="text-sm font-medium text-gray-700">Select Days of Week</h4>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex items-center space-x-3">
+          <p-checkbox 
+            [(ngModel)]="allDaySettings.includeSunday"
+            [binary]="true">
+          </p-checkbox>
+          <label class="text-sm text-gray-700">Sunday</label>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <p-checkbox 
+            [(ngModel)]="allDaySettings.includeMonday"
+            [binary]="true">
+          </p-checkbox>
+          <label class="text-sm text-gray-700">Monday</label>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <p-checkbox 
+            [(ngModel)]="allDaySettings.includeTuesday"
+            [binary]="true">
+          </p-checkbox>
+          <label class="text-sm text-gray-700">Tuesday</label>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+          <p-checkbox 
+            [(ngModel)]="allDaySettings.includeWednesday"
+            [binary]="true">
+          </p-checkbox>
+          <label class="text-sm text-gray-700">Wednesday</label>
+        </div>
+        
       <div class="flex items-center space-x-3">
         <p-checkbox 
-          [(ngModel)]="weekendSettings.includeSaturday"
+            [(ngModel)]="allDaySettings.includeThursday"
           [binary]="true">
         </p-checkbox>
-        <label class="text-sm text-gray-700">Include Saturdays</label>
+          <label class="text-sm text-gray-700">Thursday</label>
       </div>
       
       <div class="flex items-center space-x-3">
         <p-checkbox 
-          [(ngModel)]="weekendSettings.includeSunday"
+            [(ngModel)]="allDaySettings.includeFriday"
           [binary]="true">
         </p-checkbox>
-        <label class="text-sm text-gray-700">Include Sundays</label>
+          <label class="text-sm text-gray-700">Friday</label>
       </div>
       
       <div class="flex items-center space-x-3">
         <p-checkbox 
-          [(ngModel)]="weekendSettings.isPaid"
+            [(ngModel)]="allDaySettings.includeSaturday"
+            [binary]="true">
+          </p-checkbox>
+          <label class="text-sm text-gray-700">Saturday</label>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3 mt-4">
+        <p-checkbox 
+          [(ngModel)]="allDaySettings.isPaid"
           [binary]="true">
         </p-checkbox>
         <label class="text-sm text-gray-700">Paid Holidays</label>
-      </div>
     </div>
   </div>
   
-  <ng-template pTemplate="footer">
-    <div class="flex justify-end space-x-2">
-      <button 
-        type="button"
-        pButton 
-        label="Cancel" 
-        (click)="showWeekendDialog = false"
-        class="p-button-secondary">
-      </button>
-      <button 
-        type="button"
-        pButton 
-        label="Add Weekend Holidays" 
-        (click)="addWeekendHolidays()"
-        class="p-button-primary">
-      </button>
-    </div>
-  </ng-template>
-</p-dialog>
-
-<!-- Copy Year Dialog -->
-<p-dialog 
-  header="Copy Holidays from Year" 
-  [(visible)]="showCopyYearDialog" 
-  [modal]="true" 
-  [style]="{width: '500px'}"
-  [closable]="true">
-  
-  <div class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">Source Year</label>
-      <p-select 
-        [options]="yearOptions" 
-        [(ngModel)]="copyYearSettings.sourceYear"
-        placeholder="Select Source Year"
-        class="w-full">
-      </p-select>
-    </div>
-    
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-2">Target Year</label>
-      <p-select 
-        [options]="yearOptions" 
-        [(ngModel)]="copyYearSettings.targetYear"
-        placeholder="Select Target Year"
-        class="w-full">
-      </p-select>
-    </div>
-    
-    <div class="p-4 bg-yellow-50 rounded-lg">
+    <div class="p-4 bg-blue-50 rounded-lg">
       <div class="flex items-center space-x-2">
-        <i class="pi pi-exclamation-triangle text-yellow-600"></i>
-        <span class="text-sm text-yellow-800">
-          This will copy all holidays from {{ copyYearSettings.sourceYear }} to {{ copyYearSettings.targetYear }}.
-          Existing holidays for the target year will be skipped.
+        <i class="pi pi-info-circle text-blue-600"></i>
+        <span class="text-sm text-blue-800">
+          This will create holidays for all selected days throughout the entire year {{ allDaySettings.year }}.
         </span>
       </div>
     </div>
@@ -542,14 +475,14 @@
         type="button"
         pButton 
         label="Cancel" 
-        (click)="showCopyYearDialog = false"
+        (click)="showAllDayDialog = false"
         class="p-button-secondary">
       </button>
       <button 
         type="button"
         pButton 
-        label="Copy Holidays" 
-        (click)="copyHolidaysFromYear()"
+        label="Add Holidays" 
+        (click)="addAllDayHolidays()"
         class="p-button-primary">
       </button>
     </div>

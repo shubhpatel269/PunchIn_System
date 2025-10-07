@@ -383,6 +383,79 @@ button[matMenuTriggerFor]:hover {
   color: #3b82f6;
 }
 
+/* Custom Calendar Styles */
+.calendar-container {
+  min-height: 280px;
+}
+
+.calendar-container .grid {
+  gap: 2px;
+}
+
+.calendar-container .relative {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.calendar-container .relative:hover {
+  transform: scale(1.05);
+}
+
+/* Holiday indicator animation */
+.calendar-container .bg-red-500 {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Selected date highlight */
+.calendar-container .bg-blue-600 {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Today highlight */
+.calendar-container .bg-blue-100 {
+  border: 2px solid #3b82f6;
+}
+
+/* Holiday dates styling */
+.calendar-container .bg-red-50 {
+  border: 1px solid #fca5a5;
+  font-weight: 500;
+}
+
+/* Holiday highlighting styles */
+.holiday-highlighted {
+  animation: highlightPulse 0.5s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Smooth transitions for holiday highlighting */
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .grid-cols-1.lg\\:grid-cols-3 {

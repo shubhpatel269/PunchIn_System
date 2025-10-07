@@ -34,27 +34,23 @@ export interface CreateHolidayDto {
   isPaid: boolean;
 }
 
-export interface CreateBulkHolidayDto {
-  companyId: number;
-  holidays: {
-    holidayDate: Date;
-    holidayName: string;
-    isPaid: boolean;
-  }[];
-}
 
 export interface CreateWeekendHolidayDto {
   companyId: number;
   year: number;
-  includeSaturday: boolean;
   includeSunday: boolean;
+  includeMonday: boolean;
+  includeTuesday: boolean;
+  includeWednesday: boolean;
+  includeThursday: boolean;
+  includeFriday: boolean;
+  includeSaturday: boolean;
   isPaid: boolean;
 }
 
-export interface CopyHolidayYearDto {
+export interface DeleteBulkHolidayDto {
   companyId: number;
-  sourceYear: number;
-  targetYear: number;
+  holidayIds: number[];
 }
 
 export interface BulkHolidayResult {
@@ -162,34 +158,14 @@ export class HolidayService {
     );
   }
 
-  createBulkHolidays(companyId: number, holidays: CreateBulkHolidayDto['holidays']): Observable<BulkHolidayResult> {
-    const payload: CreateBulkHolidayDto = {
-      companyId,
-      holidays
-    };
-    
-    return this.http.post<BulkHolidayResult>(`${this.apiUrl}/CompanyHoliday/bulk`, payload, {
+  createAllDayHolidays(weekendData: CreateWeekendHolidayDto): Observable<BulkHolidayResult> {
+    return this.http.post<BulkHolidayResult>(`${this.apiUrl}/CompanyHoliday/all-days`, weekendData, {
       headers: this.getAuthHeaders()
     }).pipe(
       catchError(error => throwError(() => error))
     );
   }
 
-  createWeekendHolidays(weekendData: CreateWeekendHolidayDto): Observable<BulkHolidayResult> {
-    return this.http.post<BulkHolidayResult>(`${this.apiUrl}/CompanyHoliday/weekends`, weekendData, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(error => throwError(() => error))
-    );
-  }
-
-  copyHolidaysFromYear(copyData: CopyHolidayYearDto): Observable<BulkHolidayResult> {
-    return this.http.post<BulkHolidayResult>(`${this.apiUrl}/CompanyHoliday/copy-year`, copyData, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(error => throwError(() => error))
-    );
-  }
 
   updateHoliday(holidayId: number, holiday: Partial<CompanyHoliday>): Observable<CompanyHoliday> {
     return this.http.put<CompanyHoliday>(`${this.apiUrl}/CompanyHoliday/${holidayId}`, holiday, {
@@ -208,7 +184,7 @@ export class HolidayService {
   }
 
   deleteBulkHolidays(companyId: number, holidayIds: number[]): Observable<BulkHolidayResult> {
-    const payload = {
+    const payload: DeleteBulkHolidayDto = {
       companyId,
       holidayIds
     };
@@ -220,6 +196,7 @@ export class HolidayService {
       catchError(error => throwError(() => error))
     );
   }
+
 
   // Utility Methods
   isWorkingDay(companyId: number, date: Date): Observable<boolean> {
