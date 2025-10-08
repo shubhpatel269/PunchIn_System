@@ -1,62 +1,110 @@
 import { Routes } from '@angular/router';
-import { AdminDashboard } from './features/admin-dashboard/admin-dashboard';
-import { Login } from './features/login/login';
-import { ManageDesignation } from './features/manage-designation/manage-designation';
-import { ManageEmployee } from './features/manage-employee/manage-employee';
-import { EmployeeLayoutComponent } from './features/employee-layout/employee-layout';
-import { EmployeeDashboardComponent } from './features/employee-dashboard/employee-dashboard';
-import { EmployeeProfileComponent } from './features/employee-profile/employee-profile';
-import { EmployeeAttendanceComponent } from './features/employee-attendance/employee-attendance';
-import { EmployeeCompanyDetailsComponent } from './features/employee-company-details/employee-company-details';
-import ManageCompanyAdmin from './features/manage-company-admin/manage-company-admin';
-import { Landing } from './features/landing/landing';
-import { CompanyRegister } from './features/company-register/company-register';
-import { NotFound } from './not-found/not-found';
-import ManageCompanyProfile from './features/company-profile/company-profile';
 import { AdminGuard } from './shared/guards/admin.guard';
 import { EmployeeGuard } from './shared/guards/employee.guard';
-import { AttendanceDashboardComponent } from './features/attendance-dashboard/attendance-dashboard';
-import { AddNewProfileComponent } from './features/add-new-profile/add-new-profile';
-import { EmployeePunchInComponent } from './features/employee-punchin/employee-punchin';
-import { HolidayManagementComponent } from './features/holiday-management/holiday-management';
-import { CompanySettingsComponent } from './features/company-settings/company-settings';
 
 export const routes: Routes = [
-    { path: '', component: Landing },
-    { path: 'register', component: CompanyRegister },
+    // Public routes with lazy loading
+    { 
+        path: '', 
+        loadComponent: () => import('./features/landing/landing').then(m => m.Landing)
+    },
+    { 
+        path: 'register', 
+        loadComponent: () => import('./features/company-register/company-register').then(m => m.CompanyRegister)
+    },
+    { 
+        path: 'login', 
+        loadComponent: () => import('./features/login/login').then(m => m.Login)
+    },
     
-    { path: 'login', component: Login },
+    // Admin routes with lazy loading
     {
         path: 'admin', 
-        component: AdminDashboard, 
+        loadComponent: () => import('./features/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard), 
         canActivate: [AdminGuard],
         children: [
-            { path: 'dashboard', component: AttendanceDashboardComponent },
-            { path: 'manage-admin', component: ManageCompanyAdmin },
-            { path: 'manage-designation', component: ManageDesignation },
-            { path: 'manage-employee', component: ManageEmployee },   
-            { path: 'add-employee', component: AddNewProfileComponent },
-            { path: 'edit-employee/:id', component: AddNewProfileComponent },
-            { path: 'employee-attendance/:id', loadComponent: () => import('./features/employee-attendance/employee-attendance').then(m => m.EmployeeAttendanceComponent) },
-            { path: 'employee-punchins/:id', component: EmployeePunchInComponent },
-            { path: 'holiday-management', component: HolidayManagementComponent },
-            { path: 'company-settings', component: CompanySettingsComponent },
-            { path: 'profile', loadComponent: () => import('./features/profile/profile').then(m => m.Profile) },
+            { 
+                path: 'dashboard', 
+                loadComponent: () => import('./features/attendance-dashboard/attendance-dashboard').then(m => m.AttendanceDashboardComponent)
+            },
+            { 
+                path: 'manage-admin', 
+                loadComponent: () => import('./features/manage-company-admin/manage-company-admin').then(m => m.default)
+            },
+            { 
+                path: 'manage-designation', 
+                loadComponent: () => import('./features/manage-designation/manage-designation').then(m => m.ManageDesignation)
+            },
+            { 
+                path: 'manage-employee', 
+                loadComponent: () => import('./features/manage-employee/manage-employee').then(m => m.ManageEmployee)
+            },   
+            { 
+                path: 'add-employee', 
+                loadComponent: () => import('./features/add-new-profile/add-new-profile').then(m => m.AddNewProfileComponent)
+            },
+            { 
+                path: 'edit-employee/:id', 
+                loadComponent: () => import('./features/add-new-profile/add-new-profile').then(m => m.AddNewProfileComponent)
+            },
+            { 
+                path: 'employee-attendance/:id', 
+                loadComponent: () => import('./features/employee-attendance/employee-attendance').then(m => m.EmployeeAttendanceComponent)
+            },
+            { 
+                path: 'employee-punchins/:id', 
+                loadComponent: () => import('./features/employee-punchin/employee-punchin').then(m => m.EmployeePunchInComponent)
+            },
+            { 
+                path: 'employee-activity-log/:employeeId/:sessionId', 
+                loadComponent: () => import('./features/employee-activity-log/employee-activity-log').then(m => m.EmployeeActivityLogComponent)
+            },
+            { 
+                path: 'holiday-management', 
+                loadComponent: () => import('./features/holiday-management/holiday-management').then(m => m.HolidayManagementComponent)
+            },
+            { 
+                path: 'company-settings', 
+                loadComponent: () => import('./features/company-settings/company-settings').then(m => m.CompanySettingsComponent)
+            },
+            { 
+                path: 'profile', 
+                loadComponent: () => import('./features/profile/profile').then(m => m.Profile)
+            },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
+    
+    // Employee routes with lazy loading
     {
         path: 'employee', 
-        component: EmployeeLayoutComponent, 
+        loadComponent: () => import('./features/employee-layout/employee-layout').then(m => m.EmployeeLayoutComponent), 
         canActivate: [EmployeeGuard],
         children: [
-            { path: 'dashboard', component: EmployeeDashboardComponent },
-            { path: 'profile', component: EmployeeProfileComponent },
-            { path: 'attendance', component: EmployeeAttendanceComponent },
-            { path: 'company-details', component: EmployeeCompanyDetailsComponent },
+            { 
+                path: 'dashboard', 
+                loadComponent: () => import('./features/employee-dashboard/employee-dashboard').then(m => m.EmployeeDashboardComponent)
+            },
+            { 
+                path: 'profile', 
+                loadComponent: () => import('./features/employee-profile/employee-profile').then(m => m.EmployeeProfileComponent)
+            },
+            { 
+                path: 'attendance', 
+                loadComponent: () => import('./features/employee-attendance/employee-attendance').then(m => m.EmployeeAttendanceComponent)
+            },
+            { 
+                path: 'company-details', 
+                loadComponent: () => import('./features/employee-company-details/employee-company-details').then(m => m.EmployeeCompanyDetailsComponent)
+            },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     },
-    { path: 'notfound', component: NotFound },
+    
+    // Error routes with lazy loading
+    { 
+        path: 'notfound', 
+        loadComponent: () => import('./not-found/not-found').then(m => m.NotFound)
+    },
     { path: '**', redirectTo: 'notfound'}
 ];

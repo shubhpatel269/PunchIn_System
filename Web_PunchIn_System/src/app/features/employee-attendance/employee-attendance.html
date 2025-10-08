@@ -60,67 +60,104 @@
       <!-- Total Working Days -->
       <p-card>
         <ng-template pTemplate="content">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
-              <i class="pi pi-calendar text-blue-600 text-xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.workingDays }}</h3>
-            <p class="text-sm text-gray-500">Total Working Days</p>
-            <p class="text-xs text-gray-400 mt-1">{{ monthlyStats.workingDaysTillCurrent }} till today</p>
+          <div *ngIf="isLoadingAttendanceData; else workingDaysContent" class="text-center">
+            <p-skeleton width="3rem" height="3rem" shape="circle" class="mx-auto mb-3"></p-skeleton>
+            <p-skeleton width="3rem" height="2rem" class="mx-auto mb-2"></p-skeleton>
+            <p-skeleton width="8rem" height="1rem" class="mx-auto mb-1"></p-skeleton>
+            <p-skeleton width="6rem" height="0.75rem" class="mx-auto"></p-skeleton>
           </div>
+          <ng-template #workingDaysContent>
+            <div class="text-center">
+              <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
+                <i class="pi pi-calendar text-blue-600 text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.workingDays }}</h3>
+              <p class="text-sm text-gray-500">Total Working Days</p>
+              <p class="text-xs text-gray-400 mt-1">{{ monthlyStats.workingDaysTillCurrent }} till today</p>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
       <!-- Present Days -->
       <p-card>
         <ng-template pTemplate="content">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
-              <i class="pi pi-check-circle text-green-600 text-xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.presentDays }}</h3>
-            <p class="text-sm text-gray-500">Present Days</p>
+          <div *ngIf="isLoadingAttendanceData; else presentDaysContent" class="text-center">
+            <p-skeleton width="3rem" height="3rem" shape="circle" class="mx-auto mb-3"></p-skeleton>
+            <p-skeleton width="2rem" height="2rem" class="mx-auto mb-2"></p-skeleton>
+            <p-skeleton width="6rem" height="1rem" class="mx-auto"></p-skeleton>
           </div>
+          <ng-template #presentDaysContent>
+            <div class="text-center">
+              <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
+                <i class="pi pi-check-circle text-green-600 text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.presentDays }}</h3>
+              <p class="text-sm text-gray-500">Present Days</p>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
       <!-- Half Days -->
       <p-card>
         <ng-template pTemplate="content">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3">
-              <i class="pi pi-minus-circle text-yellow-600 text-xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.halfDays }}</h3>
-            <p class="text-sm text-gray-500">Half Days</p>
+          <div *ngIf="isLoadingAttendanceData; else halfDaysContent" class="text-center">
+            <p-skeleton width="3rem" height="3rem" shape="circle" class="mx-auto mb-3"></p-skeleton>
+            <p-skeleton width="2rem" height="2rem" class="mx-auto mb-2"></p-skeleton>
+            <p-skeleton width="6rem" height="1rem" class="mx-auto"></p-skeleton>
           </div>
+          <ng-template #halfDaysContent>
+            <div class="text-center">
+              <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3">
+                <i class="pi pi-minus-circle text-yellow-600 text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.halfDays }}</h3>
+              <p class="text-sm text-gray-500">Half Days</p>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
       <!-- Total Hours -->
       <p-card>
         <ng-template pTemplate="content">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
-              <i class="pi pi-clock text-purple-600 text-xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ formatWorkTime(monthlyStats.totalHours) }}</h3>
-            <p class="text-sm text-gray-500">Total Hours</p>
+          <div *ngIf="isLoadingAttendanceData; else totalHoursContent" class="text-center">
+            <p-skeleton width="3rem" height="3rem" shape="circle" class="mx-auto mb-3"></p-skeleton>
+            <p-skeleton width="4rem" height="2rem" class="mx-auto mb-2"></p-skeleton>
+            <p-skeleton width="6rem" height="1rem" class="mx-auto"></p-skeleton>
           </div>
+          <ng-template #totalHoursContent>
+            <div class="text-center">
+              <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
+                <i class="pi pi-clock text-purple-600 text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ formatWorkTime(monthlyStats.totalHours) }}</h3>
+              <p class="text-sm text-gray-500">Total Hours</p>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
       <!-- Attendance Rate -->
       <p-card>
         <ng-template pTemplate="content">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-3">
-              <i class="pi pi-percentage text-orange-600 text-xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.attendancePercentage.toFixed(1) }}%</h3>
-            <p class="text-sm text-gray-500">Attendance Rate</p>
-            <p class="text-xs text-gray-400 mt-1">Based on {{ monthlyStats.workingDaysTillCurrent }} working days</p>
+          <div *ngIf="isLoadingAttendanceData; else attendanceRateContent" class="text-center">
+            <p-skeleton width="3rem" height="3rem" shape="circle" class="mx-auto mb-3"></p-skeleton>
+            <p-skeleton width="3rem" height="2rem" class="mx-auto mb-2"></p-skeleton>
+            <p-skeleton width="6rem" height="1rem" class="mx-auto mb-1"></p-skeleton>
+            <p-skeleton width="8rem" height="0.75rem" class="mx-auto"></p-skeleton>
           </div>
+          <ng-template #attendanceRateContent>
+            <div class="text-center">
+              <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-3">
+                <i class="pi pi-percentage text-orange-600 text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900">{{ monthlyStats.attendancePercentage.toFixed(1) }}%</h3>
+              <p class="text-sm text-gray-500">Attendance Rate</p>
+              <p class="text-xs text-gray-400 mt-1">Based on {{ monthlyStats.workingDaysTillCurrent }} working days</p>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
     </div>
@@ -136,13 +173,18 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="h-64">
-            <p-chart 
-              type="doughnut" 
-              [data]="attendanceChartData" 
-              [options]="attendanceChartOptions">
-            </p-chart>
+          <div *ngIf="isLoadingCharts; else attendanceChartContent" class="h-64 flex items-center justify-center">
+            <p-skeleton width="16rem" height="16rem" shape="circle"></p-skeleton>
           </div>
+          <ng-template #attendanceChartContent>
+            <div class="h-64">
+              <p-chart 
+                type="doughnut" 
+                [data]="attendanceChartData" 
+                [options]="attendanceChartOptions">
+              </p-chart>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
@@ -155,13 +197,18 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="h-64">
-            <p-chart 
-              type="line" 
-              [data]="hoursChartData" 
-              [options]="hoursChartOptions">
-            </p-chart>
+          <div *ngIf="isLoadingCharts; else hoursChartContent" class="h-64">
+            <p-skeleton width="100%" height="16rem"></p-skeleton>
           </div>
+          <ng-template #hoursChartContent>
+            <div class="h-64">
+              <p-chart 
+                type="line" 
+                [data]="hoursChartData" 
+                [options]="hoursChartOptions">
+              </p-chart>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
     </div>
@@ -355,6 +402,7 @@
                 <th>Break Count</th>
                 <th>Total Break</th>
                 <th>Location</th>
+                <th>Activity Log</th>
               </tr>
             </ng-template>
             
@@ -410,6 +458,17 @@
                     (click)="viewLocationTracking(record.sessionId)"
                     title="View Location Tracking">
                     <i class="pi pi-eye text-blue-600"></i>
+                  </button>
+                  <span *ngIf="!record.sessionId" class="text-gray-400">-</span>
+                </td>
+                <td>
+                  <button 
+                    *ngIf="record.sessionId" 
+                    type="button"
+                    class="p-0 hover:bg-gray-100 transition-colors"
+                    (click)="viewActivityLog(record.sessionId)"
+                    title="View Activity Log">
+                    <i class="pi pi-history text-green-600"></i>
                   </button>
                   <span *ngIf="!record.sessionId" class="text-gray-400">-</span>
                 </td>

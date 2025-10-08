@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 // Removed p-dropdown usage in favor of native select
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
 import { AuthService } from '../../shared/services/auth.service';
 import { SessionService } from '../../shared/services/session.service';
 import { BreakService } from '../../shared/services/break.service';
@@ -57,6 +58,7 @@ interface AttendanceStats {
     AvatarModule,
     TagModule,
     ToastModule,
+    SkeletonModule,
     WelcomePopupComponent
   ],
   providers: [MessageService],
@@ -101,6 +103,13 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   combinedAttendanceData: CombinedAttendanceResponse | null = null;
   dailySummaryRecords: any[] = [];
   
+  // Loading states for skeleton
+  isLoadingTodayStatus: boolean = true;
+  isLoadingAttendanceStats: boolean = true;
+  isLoadingRecentAttendance: boolean = true;
+  isLoadingCharts: boolean = true;
+  isLoadingUserData: boolean = true;
+  
   private dashboardRefreshInterval: any;
 
   constructor(
@@ -118,6 +127,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.isLoadingUserData = true;
     this.loadUserData();
     this.loadEmployeeProfile();
     this.loadTodayAttendance();
@@ -444,6 +454,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/login']);
     }
+    this.isLoadingUserData = false;
   }
 
   loadEmployeeProfile() {
@@ -453,7 +464,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
           this.employeeProfile = employee;
         },
         error: (error) => {
-          console.error('Error loading employee profile:', error);
           // Don't show error to user as this is not critical for dashboard functionality
         }
       });
@@ -461,6 +471,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadTodayAttendance() {
+    this.isLoadingTodayStatus = true;
     const today = new Date().toISOString().split('T')[0];
     const todayRecord = this.recentAttendance.find(record => record.date === today);
     
@@ -479,21 +490,24 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         };
       }
     }
+    this.isLoadingTodayStatus = false;
   }
 
   loadRecentAttendance() {
+    this.isLoadingRecentAttendance = true;
     const employeeId = this.user?.employeeId;
     if (employeeId) {
       this.attendanceService.getRecentAttendance(employeeId).subscribe({
         next: (data) => {
           this.recentAttendance = data;
+          this.isLoadingRecentAttendance = false;
           // Only initialize fallback charts if combined API hasn't loaded yet
           if (!this.combinedAttendanceData) {
             this.initializeHoursChartFromRecentAttendance();
           }
         },
         error: (err) => {
-          console.error('Failed to load recent attendance:', err);
+          this.isLoadingRecentAttendance = false;
           this.messageService.add({
             severity: 'warn',
             summary: 'Data Load Failed',
@@ -531,7 +545,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
               this.initializeHoursChartFromCombinedData(data, prevData, sevenDaysAgo, today);
             },
             error: (err) => {
-              console.error('Failed to load previous month data:', err);
               // Use only current month data
               this.initializeHoursChartFromCombinedData(data, null, sevenDaysAgo, today);
             }
@@ -542,7 +555,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('Failed to load combined attendance data:', err);
         // Fallback to recent attendance if combined data fails
         this.loadRecentAttendance();
       }
@@ -1066,7 +1078,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.error('TodayStatus API error:', err);
         this.messageService.add({
           severity: 'error',
           summary: 'Today Status Error',
@@ -1091,6 +1102,8 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadMonthOverview() {
+    this.isLoadingAttendanceStats = true;
+    this.isLoadingCharts = true;
     const now = new Date();
     const year = now.getUTCFullYear();
     const month = now.getUTCMonth() + 1; // 1-12
@@ -1098,15 +1111,17 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
     // Use the same API as employee attendance component
     this.employeeService.getSelfCombinedAttendance(year, month).subscribe({
       next: (response) => {
-        console.log('Combined attendance data loaded:', response);
         // Store combined data for daily summary
         this.combinedAttendanceData = response;
         this.dailySummaryRecords = this.transformCombinedDataToRecords(response);
         this.calculateMonthlyStatsFromCombined(response);
         this.initializeCharts();
+        this.isLoadingAttendanceStats = false;
+        this.isLoadingCharts = false;
       },
       error: (err) => {
-        console.error('Combined attendance API error:', err);
+        this.isLoadingAttendanceStats = false;
+        this.isLoadingCharts = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Monthly Overview Error',
@@ -1236,7 +1251,6 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
         try {
           this.welcomeUserData = JSON.parse(punchInData);
         } catch (error) {
-          console.error('Error parsing punch in user data:', error);
           // Set default user data if parsing fails
           this.welcomeUserData = {
             name: this.user?.name || 'Employee',

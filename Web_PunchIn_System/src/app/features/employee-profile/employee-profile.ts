@@ -13,6 +13,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { EmployeeService, Employee } from '../../shared/services/employee.service';
@@ -47,6 +48,7 @@ interface EmployeeProfile {
     AvatarModule,
     TagModule,
     ToastModule,
+    SkeletonModule,
     ConfirmDialogModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -58,6 +60,10 @@ export class EmployeeProfileComponent implements OnInit {
   profile: EmployeeProfile | null = null;
   isEditing: boolean = false;
   isLoading: boolean = false;
+  
+  // Loading states for skeleton
+  isLoadingUserData: boolean = true;
+  isLoadingProfile: boolean = true;
   
   // Form data
   editForm: Partial<EmployeeProfile> = {};
@@ -76,9 +82,11 @@ export class EmployeeProfileComponent implements OnInit {
   }
 
   loadUserData() {
+    this.isLoadingUserData = true;
     // Check if user is authenticated
     if (!this.authService.isAuthenticatedSync()) {
       this.router.navigate(['/login']);
+      this.isLoadingUserData = false;
       return;
     }
 
@@ -94,9 +102,11 @@ export class EmployeeProfileComponent implements OnInit {
         this.router.navigate(['/login']);
       }
     }
+    this.isLoadingUserData = false;
   }
 
   loadProfile() {
+    this.isLoadingProfile = true;
     if (!this.user?.employeeId) {
       this.messageService.add({
         severity: 'error',
@@ -105,6 +115,7 @@ export class EmployeeProfileComponent implements OnInit {
         life: 4000
       });
       this.router.navigate(['/login']);
+      this.isLoadingProfile = false;
       return;
     }
 
@@ -125,6 +136,7 @@ export class EmployeeProfileComponent implements OnInit {
           employeeFaceImage: employee.employeeFaceImage
         };
         this.isLoading = false;
+        this.isLoadingProfile = false;
       },
       error: (error) => {
         console.error('Error loading employee profile:', error);
@@ -146,6 +158,7 @@ export class EmployeeProfileComponent implements OnInit {
           life: 4000
         });
         this.isLoading = false;
+        this.isLoadingProfile = false;
       }
     });
   }

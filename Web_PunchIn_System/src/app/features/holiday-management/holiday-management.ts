@@ -160,7 +160,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
           this.companySettings = settings;
         },
         error: (error: any) => {
-          console.error('Error loading company settings:', error);
+          // Error loading company settings
         }
       });
     }
@@ -183,7 +183,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
         this.generateCalendar(); // Regenerate calendar to show holidays
       },
       error: (error: any) => {
-        console.error('Error loading holidays:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -199,11 +198,8 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
     const userData = localStorage.getItem('user_data');
     if (userData) {
       const user = JSON.parse(userData);
-      console.log('User from localStorage:', user);
-      console.log('Company ID:', user.companyId);
       return user.companyId || null;
     }
-    console.log('No user_data found in localStorage');
     return null;
   }
   
@@ -230,11 +226,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
   
   // Add single holiday
   addHoliday() {
-    console.log('addHoliday called');
-    console.log('newHoliday:', this.newHoliday);
-    
     if (!this.newHoliday.holidayDate || !this.newHoliday.holidayName) {
-      console.log('Validation failed - missing required fields');
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
@@ -244,9 +236,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
     }
     
     const companyId = this.getCompanyId();
-    console.log('Company ID:', companyId);
     if (!companyId) {
-      console.log('No company ID found');
       return;
     }
     
@@ -255,12 +245,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
     // Create UTC date by using the date components directly
     const utcDate = new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()));
     
-    console.log('Date conversion debug:');
-    console.log('Original date:', this.newHoliday.holidayDate);
-    console.log('Selected date:', selectedDate);
-    console.log('UTC date:', utcDate);
-    console.log('UTC ISO string:', utcDate.toISOString());
-    
     const holidayData = {
       companyId: companyId,
       holidayDate: utcDate,
@@ -268,11 +252,8 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
       isPaid: this.newHoliday.isPaid || true
     };
     
-    console.log('Sending holiday data:', holidayData);
-    
     this.holidayService.createHoliday(holidayData).subscribe({
       next: (response) => {
-        console.log('Holiday created successfully:', response);
         this.messageService.add({
           severity: 'success',
           summary: 'Success',
@@ -283,7 +264,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
         this.loadHolidays();
       },
       error: (error: any) => {
-        console.error('Error creating holiday:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -311,9 +291,7 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
       isPaid: this.allDaySettings.isPaid
     };
     
-    console.log('Sending all-day data:', allDayData);
-    
-     this.holidayService.createAllDayHolidays(allDayData).subscribe({
+    this.holidayService.createAllDayHolidays(allDayData).subscribe({
       next: (result: any) => {
          // Show appropriate message based on results
          if (result.successCount > 0 && result.errorCount === 0) {
@@ -349,7 +327,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
         this.loadHolidays();
       },
       error: (error: any) => {
-        console.error('All-day holiday error:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -445,7 +422,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
             this.loadHolidays();
           },
           error: (error: any) => {
-             console.error('Bulk delete error:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
@@ -477,8 +453,6 @@ export class HolidayManagementComponent implements OnInit, OnDestroy, AfterViewI
   
   // Get company timezone from company settings
   getCompanyTimezone(): string {
-    console.log('Company settings:', this.companySettings);
-    console.log('Company timezone:', this.companySettings?.timeZone);
     // This should come from company settings, for now using default
     return this.companySettings?.timeZone || 'Asia/Kolkata';
   }

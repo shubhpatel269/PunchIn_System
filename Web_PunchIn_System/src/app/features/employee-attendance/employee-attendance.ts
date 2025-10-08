@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -13,6 +13,7 @@ import { DividerModule } from 'primeng/divider';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { SkeletonModule } from 'primeng/skeleton';
 import { AttendanceService, AttendanceRecordDTO, SessionRecord } from '../../shared/services/attendance.service';
 import { EmployeeService, CombinedAttendanceResponse, DailyAttendanceSummary } from '../../shared/services/employee.service';
 import { LocationLogService } from '../../shared/services/location-log.service';
@@ -81,13 +82,14 @@ interface LocationData {
     SelectModule,
     DividerModule,
     ProgressBarModule,
-    ToastModule
+    ToastModule,
+    SkeletonModule
   ],
   providers: [MessageService],
   templateUrl: './employee-attendance.html',
   styleUrl: './employee-attendance.css'
 })
-export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
+export class EmployeeAttendanceComponent implements OnInit, AfterViewInit, OnDestroy {
   user: any = null;
   selectedMonth: number = new Date().getMonth();
   selectedYear: number = new Date().getFullYear();
@@ -174,6 +176,13 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
   
   // Company settings for dynamic calculations
   private companySettings: CompanySettings | null = null;
+  
+  // Loading states for skeleton
+  isLoadingAttendanceData: boolean = true;
+  isLoadingCharts: boolean = true;
+  isLoadingUserData: boolean = true;
+  isLoadingCompanySettings: boolean = true;
+  isLoadingLocationData: boolean = false;
 
   constructor(
     private router: Router,
@@ -187,9 +196,6 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    // Load company settings first
-    this.loadCompanySettings();
-    
     // Check if this is an admin viewing a specific employee
     this.route.params.subscribe(params => {
       if (params['id']) {
@@ -200,6 +206,8 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         this.loadAttendanceData();
       } else {
         this.loadUserData();
+        // Load company settings after user data is loaded
+        this.loadCompanySettings();
         // Load attendance data after user data is set
         this.loadAttendanceData();
       }
@@ -214,28 +222,66 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  loadUserData() {
-    const userData = localStorage.getItem('punchInUser');
-    if (userData) {
-      this.user = JSON.parse(userData);
-    } else {
-      this.router.navigate(['/login']);
+  ngOnDestroy() {
+    // Clean up map to prevent memory leaks
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
     }
   }
 
+  loadUserData() {
+    this.isLoadingUserData = true;
+    // First try to get user data from AuthService (user_data key)
+    const userData = localStorage.getItem('user_data');
+    
+    if (userData) {
+      this.user = JSON.parse(userData);
+    } else {
+      // Fallback to punchInUser if user_data is not available
+      const punchInUserData = localStorage.getItem('punchInUser');
+      
+      if (punchInUserData) {
+        this.user = JSON.parse(punchInUserData);
+      } else {
+        this.router.navigate(['/login']);
+      }
+    }
+    this.isLoadingUserData = false;
+  }
+
   loadCompanySettings() {
-    // Get company ID from user data or use default
-    const companyId = this.user?.companyId || 1; // Default to company ID 1
+    this.isLoadingCompanySettings = true;
+    // Get company ID from user data
+    const companyId = this.user?.companyId;
+    
+    if (!companyId) {
+      console.warn('No company ID found in user data');
+      this.isLoadingCompanySettings = false;
+      return;
+    }
     
     this.companySettingsService.getCompanySettings(companyId).subscribe({
       next: (settings) => {
         this.companySettings = settings;
+        this.isLoadingCompanySettings = false;
       },
       error: (error) => {
         console.warn('Company settings not found, using default settings:', error);
+        this.isLoadingCompanySettings = false;
+        
+        // Handle different error types
+        if (error.status === 404) {
+          console.log('Company settings not found - using defaults');
+        } else if (error.status === 500) {
+          console.error('Server error loading company settings:', error);
+        } else {
+          console.error('Error loading company settings:', error);
+        }
+        
         // Use default values if company settings fail to load
         this.companySettings = {
-          companyId: companyId,
+          companyId: this.user?.companyId || 0,
           workStartTime: '09:00:00',
           workEndTime: '18:00:00',
           graceLateMinutes: 15,
@@ -265,6 +311,9 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
   }
 
   loadAttendanceData() {
+    this.isLoadingAttendanceData = true;
+    this.isLoadingCharts = true;
+    
     if (!this.user?.employeeId) {
       this.messageService.add({
         severity: 'error',
@@ -272,6 +321,8 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         detail: 'Employee ID not found',
         life: 3000
       });
+      this.isLoadingAttendanceData = false;
+      this.isLoadingCharts = false;
       return;
     }
 
@@ -294,11 +345,13 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         this.dailySummaryRecords = this.transformCombinedDataToRecords(response);
         this.calculateMonthlyStatsFromCombined(response);
         this.initializeCharts();
+        this.isLoadingCharts = false;
         // Initialize calendar after data is loaded
         this.initializeCalendar();
       },
       error: (error) => {
         console.error('Error loading combined attendance data:', error);
+        this.isLoadingCharts = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -339,9 +392,12 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
           if (this.calendarView === 'week') {
             this.generateWeeklyCalendarDays();
           }
+          
+          this.isLoadingAttendanceData = false;
         },
         error: (error) => {
           console.error('Error loading detailed sessions data:', error);
+          this.isLoadingAttendanceData = false;
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -1624,10 +1680,10 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         this.locationData = data;
         this.loadingLocationData = false;
         
-        // Initialize map after data is loaded
+        // Initialize map after data is loaded with proper DOM readiness check
         setTimeout(() => {
-          this.initializeMap();
-        }, 100);
+          this.initializeMapSafely();
+        }, 200);
       },
       error: (error) => {
         this.loadingLocationData = false;
@@ -1639,6 +1695,12 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
         });
       }
     });
+  }
+
+  // Activity log methods
+  viewActivityLog(sessionId: number) {
+    // Navigate to activity log page
+    this.router.navigate(['/admin/employee-activity-log', this.user?.employeeId, sessionId]);
   }
 
   closeLocationModal() {
@@ -1668,6 +1730,28 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
     return `+${diffMinutes}m`;
   }
 
+  initializeMapSafely() {
+    // Check if DOM is ready
+    if (document.readyState !== 'complete') {
+      // Wait a bit more and try again
+      setTimeout(() => {
+        this.initializeMapSafely();
+      }, 100);
+      return;
+    }
+    
+    // Additional check to ensure the map container is available
+    const mapContainer = document.getElementById('locationMap');
+    if (!mapContainer) {
+      setTimeout(() => {
+        this.initializeMapSafely();
+      }, 100);
+      return;
+    }
+    
+    this.initializeMap();
+  }
+
   initializeMap() {
     if (this.locationData.length === 0) return;
 
@@ -1683,8 +1767,13 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit {
       this.map = null;
     }
 
-    // Create Leaflet map
-    this.map = L.map('locationMap').setView([0, 0], 13);
+    try {
+      // Create Leaflet map with error handling
+      this.map = L.map('locationMap').setView([0, 0], 13);
+    } catch (error) {
+      console.error('Error initializing Leaflet map:', error);
+      return;
+    }
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

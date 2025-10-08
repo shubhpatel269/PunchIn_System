@@ -30,8 +30,11 @@ import { HolidayService, CompanyHoliday } from '../../shared/services/holiday.se
 export class EmployeeCompanyDetailsComponent implements OnInit {
   companyProfile: CompanyProfile | null = null;
   companySettings: CompanySettings | null = null;
-  loading = true;
   error: string | null = null;
+  
+  // Loading states for skeleton
+  isLoadingCompanyData: boolean = true;
+  isLoadingHolidays: boolean = true;
 
   // Holiday-related properties
   holidays: CompanyHoliday[] = [];
@@ -84,19 +87,30 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
   }
 
   loadCompanyData() {
-    this.loading = true;
+    this.isLoadingCompanyData = true;
     this.error = null;
 
-    // Get company ID from user data
-    const userData = localStorage.getItem('punchInUser');
+    // Get company ID from user data - try user_data first, then punchInUser
+    let userData = localStorage.getItem('user_data');
+    if (!userData) {
+      userData = localStorage.getItem('punchInUser');
+    }
+    
     if (!userData) {
       this.error = 'User data not found';
-      this.loading = false;
+      this.isLoadingCompanyData = false;
       return;
     }
 
     const user = JSON.parse(userData);
-    const companyId = user.companyId || 1; // Default to company ID 1
+    const companyId = user.companyId;
+    
+    if (!companyId) {
+      console.warn('No company ID found in user data');
+      this.error = 'No company ID found in user data';
+      this.isLoadingCompanyData = false;
+      return;
+    }
 
     // Load company profile
     this.companyProfileService.getCompanyProfile(companyId).subscribe({
@@ -112,7 +126,7 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
           detail: 'Failed to load company profile information',
           life: 3000
         });
-        this.loading = false;
+        this.isLoadingCompanyData = false;
       }
     });
 
@@ -130,14 +144,14 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
           detail: 'Failed to load company settings information',
           life: 3000
         });
-        this.loading = false;
+        this.isLoadingCompanyData = false;
       }
     });
   }
 
   private checkDataLoaded() {
     if (this.companyProfile && this.companySettings) {
-      this.loading = false;
+      this.isLoadingCompanyData = false;
     }
   }
 
@@ -176,8 +190,12 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
 
   // Holiday-related methods
   loadHolidays() {
+    this.isLoadingHolidays = true;
     const companyId = this.getCompanyId();
-    if (!companyId) return;
+    if (!companyId) {
+      this.isLoadingHolidays = false;
+      return;
+    }
     
     this.holidayService.getCompanyHolidays(companyId, this.selectedYear).subscribe({
       next: (holidays: CompanyHoliday[]) => {
@@ -187,9 +205,11 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
         }));
         this.filteredHolidays = [...this.holidays];
         this.generateCalendar();
+        this.isLoadingHolidays = false;
       },
       error: (error: any) => {
         console.error('Error loading holidays:', error);
+        this.isLoadingHolidays = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -200,7 +220,12 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
   }
 
   getCompanyId(): number | null {
-    const userData = localStorage.getItem('punchInUser');
+    // Try user_data first, then punchInUser
+    let userData = localStorage.getItem('user_data');
+    if (!userData) {
+      userData = localStorage.getItem('punchInUser');
+    }
+    
     if (userData) {
       const user = JSON.parse(userData);
       return user.companyId || null;

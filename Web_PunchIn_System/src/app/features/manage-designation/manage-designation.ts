@@ -246,8 +246,12 @@ export class ManageDesignation implements OnInit {
     }
 
     if (this.selectedDesignation.id === 0) {
-      // Get companyId from stored user data
-      const userData = localStorage.getItem('punchInUser');
+      // Get companyId from stored user data - try user_data first, then punchInUser
+      let userData = localStorage.getItem('user_data');
+      if (!userData) {
+        userData = localStorage.getItem('punchInUser');
+      }
+      
       let companyId = 4; // Default fallback
       
       if (userData) {

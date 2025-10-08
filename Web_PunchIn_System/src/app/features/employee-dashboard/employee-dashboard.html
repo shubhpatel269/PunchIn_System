@@ -5,14 +5,25 @@
       <div class="flex justify-between items-center py-4">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-3">
-            <p-avatar 
-              [label]="user?.name?.charAt(0) || 'U'" 
-              size="large" 
-              styleClass="bg-blue-500 text-white font-semibold">
-            </p-avatar>
+            <div *ngIf="isLoadingUserData; else userAvatar">
+              <p-skeleton width="3rem" height="3rem" shape="circle"></p-skeleton>
+            </div>
+            <ng-template #userAvatar>
+              <p-avatar 
+                [label]="user?.name?.charAt(0) || 'U'" 
+                size="large" 
+                styleClass="bg-blue-500 text-white font-semibold">
+              </p-avatar>
+            </ng-template>
             <div>
-              <h1 class="text-xl font-semibold text-gray-900">Welcome, {{ user?.name || 'Employee' }}</h1>
-              <p class="text-sm text-gray-500">{{ currentTime }}</p>
+              <div *ngIf="isLoadingUserData; else userName">
+                <p-skeleton width="12rem" height="1.5rem" class="mb-2"></p-skeleton>
+                <p-skeleton width="8rem" height="1rem"></p-skeleton>
+              </div>
+              <ng-template #userName>
+                <h1 class="text-xl font-semibold text-gray-900">Welcome, {{ user?.name || 'Employee' }}</h1>
+                <p class="text-sm text-gray-500">{{ currentTime }}</p>
+              </ng-template>
             </div>
           </div>
         </div>
@@ -38,33 +49,54 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="space-y-4">
+          <div *ngIf="isLoadingTodayStatus; else todayStatusContent" class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Session Start:</span>
-              <p-tag 
-                [value]="todayAttendance?.sessionStart ? formatTime(todayAttendance?.sessionStart) : 'Not started'" 
-                [severity]="todayAttendance?.sessionStart ? 'success' : 'danger'"
-                [icon]="todayAttendance?.sessionStart ? 'pi pi-check' : 'pi pi-times'">
-              </p-tag>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Session End:</span>
-              <p-tag 
-                [value]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? formatTime(todayAttendance?.sessionEnd) : 'Running') : '-'" 
-                [severity]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'success' : 'warning') : 'secondary'"
-                [icon]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'pi pi-check' : 'pi pi-spin pi-spinner') : 'pi pi-minus'">
-              </p-tag>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Break Time:</span>
-              <span class="font-semibold">{{ getTodayBreakDisplay() }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="3rem" height="1rem"></p-skeleton>
             </div>
             <p-divider></p-divider>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Total Hours:</span>
-              <span class="font-semibold text-lg">{{ getTodayElapsedWorkDisplay() }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="4rem" height="1.5rem"></p-skeleton>
             </div>
           </div>
+          <ng-template #todayStatusContent>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Session Start:</span>
+                <p-tag 
+                  [value]="todayAttendance?.sessionStart ? formatTime(todayAttendance?.sessionStart) : 'Not started'" 
+                  [severity]="todayAttendance?.sessionStart ? 'success' : 'danger'"
+                  [icon]="todayAttendance?.sessionStart ? 'pi pi-check' : 'pi pi-times'">
+                </p-tag>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Session End:</span>
+                <p-tag 
+                  [value]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? formatTime(todayAttendance?.sessionEnd) : 'Running') : '-'" 
+                  [severity]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'success' : 'warning') : 'secondary'"
+                  [icon]="todayAttendance?.sessionStart ? (todayAttendance?.sessionEnd ? 'pi pi-check' : 'pi pi-spin pi-spinner') : 'pi pi-minus'">
+                </p-tag>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Break Time:</span>
+                <span class="font-semibold">{{ getTodayBreakDisplay() }}</span>
+              </div>
+              <p-divider></p-divider>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Total Hours:</span>
+                <span class="font-semibold text-lg">{{ getTodayElapsedWorkDisplay() }}</span>
+              </div>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
@@ -84,35 +116,63 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="space-y-4">
+          <div *ngIf="isLoadingAttendanceStats; else attendanceStatsContent" class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Present Days:</span>
-              <span class="font-semibold text-green-600">{{ attendanceStats.presentDays }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="2rem" height="1rem"></p-skeleton>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Absent Days:</span>
-              <span class="font-semibold text-red-600">{{ attendanceStats.absentDays }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="2rem" height="1rem"></p-skeleton>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Half Days:</span>
-              <span class="font-semibold text-blue-600">{{ attendanceStats.halfDays }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="2rem" height="1rem"></p-skeleton>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-gray-600">Holiday:</span>
-              <span class="font-semibold text-gray-600">{{ attendanceStats.holidays }}</span>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+              <p-skeleton width="2rem" height="1rem"></p-skeleton>
             </div>
             <p-divider></p-divider>
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
-                <span>Attendance Rate</span>
-                <span>{{ attendanceStats.attendancePercentage.toFixed(1) }}%</span>
+                <p-skeleton width="6rem" height="1rem"></p-skeleton>
+                <p-skeleton width="3rem" height="1rem"></p-skeleton>
               </div>
-              <p-progressBar 
-                [value]="attendanceStats.attendancePercentage" 
-                styleClass="h-2">
-              </p-progressBar>
-              </div>
+              <p-skeleton width="100%" height="0.5rem"></p-skeleton>
             </div>
+          </div>
+          <ng-template #attendanceStatsContent>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Present Days:</span>
+                <span class="font-semibold text-green-600">{{ attendanceStats.presentDays }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Absent Days:</span>
+                <span class="font-semibold text-red-600">{{ attendanceStats.absentDays }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Half Days:</span>
+                <span class="font-semibold text-blue-600">{{ attendanceStats.halfDays }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-600">Holiday:</span>
+                <span class="font-semibold text-gray-600">{{ attendanceStats.holidays }}</span>
+              </div>
+              <p-divider></p-divider>
+              <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                  <span>Attendance Rate</span>
+                  <span>{{ attendanceStats.attendancePercentage.toFixed(1) }}%</span>
+                </div>
+                <p-progressBar 
+                  [value]="attendanceStats.attendancePercentage" 
+                  styleClass="h-2">
+                </p-progressBar>
+                </div>
+              </div>
+            </ng-template>
           </ng-template>
         </p-card>
 
@@ -178,13 +238,18 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="h-64">
-            <p-chart 
-              type="doughnut" 
-              [data]="attendanceChartData" 
-              [options]="attendanceChartOptions">
-            </p-chart>
+          <div *ngIf="isLoadingCharts; else attendanceChartContent" class="h-64 flex items-center justify-center">
+            <p-skeleton width="16rem" height="16rem" shape="circle"></p-skeleton>
           </div>
+          <ng-template #attendanceChartContent>
+            <div class="h-64">
+              <p-chart 
+                type="doughnut" 
+                [data]="attendanceChartData" 
+                [options]="attendanceChartOptions">
+              </p-chart>
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
 
@@ -197,17 +262,22 @@
           </div>
         </ng-template>
         <ng-template pTemplate="content">
-          <div class="h-64">
-            <p-chart 
-              type="line" 
-              [data]="hoursChartData" 
-              [options]="chartOptions">
-            </p-chart>
+          <div *ngIf="isLoadingCharts; else hoursChartContent" class="h-64">
+            <p-skeleton width="100%" height="16rem"></p-skeleton>
           </div>
-          <div class="mt-4 text-xs text-gray-500 text-center">
-            <i class="pi pi-info-circle mr-1"></i>
-            Hover over data points to see exact hours worked
-          </div>
+          <ng-template #hoursChartContent>
+            <div class="h-64">
+              <p-chart 
+                type="line" 
+                [data]="hoursChartData" 
+                [options]="chartOptions">
+              </p-chart>
+            </div>
+            <div class="mt-4 text-xs text-gray-500 text-center">
+              <i class="pi pi-info-circle mr-1"></i>
+              Hover over data points to see exact hours worked
+            </div>
+          </ng-template>
         </ng-template>
       </p-card>
     </div>
@@ -221,7 +291,7 @@
         </div>
       </ng-template>
       <ng-template pTemplate="content">
-        <div class="overflow-x-auto">
+        <div *ngIf="isLoadingRecentAttendance; else recentAttendanceContent" class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="border-b border-gray-200">
@@ -229,36 +299,70 @@
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch In</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch Out</th>
                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Hours</th>
-                 <th class="text-left py-3 px-4 font-semibold text-gray-700">Break Time</th>
+                <th class="text-left py-3 px-4 font-semibold text-gray-700">Break Time</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let record of recentAttendance" class="border-b border-gray-100 hover:bg-gray-50">
+              <tr *ngFor="let i of [1,2,3,4,5]" class="border-b border-gray-100">
                 <td class="py-3 px-4">
-                  {{ formatDate(record.date) }}
+                  <p-skeleton width="6rem" height="1rem"></p-skeleton>
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.sessionStart; else noSessionStart">{{ formatTime(record.sessionStart) }}</span>
-                  <ng-template #noSessionStart>
-                    <span class="text-gray-400">-</span>
-                  </ng-template>
+                  <p-skeleton width="4rem" height="1rem"></p-skeleton>
                 </td>
                 <td class="py-3 px-4">
-                  <span *ngIf="record.sessionEnd; else noSessionEnd">{{ formatTime(record.sessionEnd) }}</span>
-                  <ng-template #noSessionEnd>
-                    <span class="text-gray-400">-</span>
-                  </ng-template>
+                  <p-skeleton width="4rem" height="1rem"></p-skeleton>
                 </td>
                 <td class="py-3 px-4">
-                  <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
+                  <p-skeleton width="3rem" height="1rem"></p-skeleton>
                 </td>
-                 <td class="py-3 px-4">
-                  <span class="font-medium">{{ record.totalBreak ? formatHours(record.totalBreak) : '-' }}</span>
-                 </td>
+                <td class="py-3 px-4">
+                  <p-skeleton width="3rem" height="1rem"></p-skeleton>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+        <ng-template #recentAttendanceContent>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-gray-200">
+                  <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                  <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch In</th>
+                  <th class="text-left py-3 px-4 font-semibold text-gray-700">Punch Out</th>
+                  <th class="text-left py-3 px-4 font-semibold text-gray-700">Hours</th>
+                   <th class="text-left py-3 px-4 font-semibold text-gray-700">Break Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let record of recentAttendance" class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="py-3 px-4">
+                    {{ formatDate(record.date) }}
+                  </td>
+                  <td class="py-3 px-4">
+                    <span *ngIf="record.sessionStart; else noSessionStart">{{ formatTime(record.sessionStart) }}</span>
+                    <ng-template #noSessionStart>
+                      <span class="text-gray-400">-</span>
+                    </ng-template>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span *ngIf="record.sessionEnd; else noSessionEnd">{{ formatTime(record.sessionEnd) }}</span>
+                    <ng-template #noSessionEnd>
+                      <span class="text-gray-400">-</span>
+                    </ng-template>
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="font-medium">{{ formatHours(record.totalHours) }}</span>
+                  </td>
+                   <td class="py-3 px-4">
+                    <span class="font-medium">{{ record.totalBreak ? formatHours(record.totalBreak) : '-' }}</span>
+                   </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-template>
       </ng-template>
     </p-card>
   </div>

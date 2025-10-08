@@ -1,0 +1,222 @@
+<div class="activity-log-container">
+  <!-- Header -->
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">
+        <i class="pi pi-history mr-2"></i>
+        Employee Activity Log
+      </h2>
+      <p class="text-gray-600">
+        Session ID: {{ sessionId }} | Employee: {{ employeeName }}
+      </p>
+    </div>
+    <div>
+      <p-button 
+        label="Back" 
+        icon="pi pi-arrow-left" 
+        severity="secondary"
+        (onClick)="goBack()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Session Overview Cards -->
+  <div class="grid mb-6">
+    <div class="col-12 md:col-4">
+      <p-card class="text-center h-full">
+        <div class="text-2xl font-bold text-green-600">
+          {{ totalActiveTime > 0 ? activityLogService.formatDuration(totalActiveTime) : '0s' }}
+        </div>
+        <div class="text-sm text-gray-600">Total Active Time</div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-4">
+      <p-card class="text-center h-full">
+        <div class="text-2xl font-bold text-purple-600">{{ activitySummary.length }}</div>
+        <div class="text-sm text-gray-600">Applications Used</div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-4">
+      <p-card class="text-center h-full">
+        <div class="text-2xl font-bold text-orange-600">{{ activityLogs.length }}</div>
+        <div class="text-sm text-gray-600">Total Activities</div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Application Usage Overview -->
+  <div class="mb-6">
+    <p-card header="Application Usage Overview">
+      <div *ngIf="isLoadingSummary; else summaryOverviewContent">
+        <p-skeleton height="200px"></p-skeleton>
+      </div>
+      <ng-template #summaryOverviewContent>
+        <div *ngIf="activitySummary.length > 0; else noSummaryOverviewData">
+          <div *ngFor="let app of activitySummary.slice(0, 8)" class="mb-3">
+            <div class="flex justify-content-between align-items-center mb-2">
+              <div class="flex align-items-center">
+                <i [class]="getApplicationIcon(app.applicationName)" class="mr-2 text-lg"></i>
+                <span class="font-medium">{{ app.applicationName }}</span>
+                <p-tag 
+                  *ngIf="app.isCurrentlyActive" 
+                  value="Active" 
+                  severity="success" 
+                  class="ml-2">
+                </p-tag>
+              </div>
+              <span class="font-bold">{{ app.formattedDuration }}</span>
+            </div>
+            <p-progressBar 
+              [value]="app.percentage" 
+              [showValue]="false"
+              styleClass="mb-2">
+            </p-progressBar>
+            <div class="text-xs text-gray-600">
+              {{ app.activityCount }} activities | {{ app.formattedFirstActivity }} - {{ app.formattedLastActivity }}
+            </div>
+          </div>
+        </div>
+        <ng-template #noSummaryOverviewData>
+          <div class="text-center text-gray-500 py-8">
+            <i class="pi pi-chart-bar text-4xl mb-3"></i>
+            <p>No activity data available</p>
+          </div>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Detailed Application Summary Table -->
+  <div class="mb-6">
+    <p-card header="Detailed Application Summary">
+      <div *ngIf="isLoadingSummary; else summaryTableContent">
+        <p-skeleton height="400px"></p-skeleton>
+      </div>
+      <ng-template #summaryTableContent>
+        <p-table 
+          [value]="activitySummary" 
+          [paginator]="true" 
+          [rows]="10"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} applications"
+          styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Application</th>
+              <th>Duration</th>
+              <th>Activities</th>
+              <th>First Activity</th>
+              <th>Last Activity</th>
+              <th>Status</th>
+              <th>Usage %</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-app>
+            <tr>
+              <td>
+                <div class="flex align-items-center">
+                  <i [class]="getApplicationIcon(app.applicationName)" class="mr-2"></i>
+                  <span>{{ app.applicationName }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="font-medium">{{ app.formattedDuration }}</span>
+              </td>
+              <td>{{ app.activityCount }}</td>
+              <td>{{ app.formattedFirstActivity }}</td>
+              <td>{{ app.formattedLastActivity }}</td>
+              <td>
+                <p-tag 
+                  [value]="app.isCurrentlyActive ? 'Active' : 'Inactive'" 
+                  [severity]="app.isCurrentlyActive ? 'success' : 'secondary'">
+                </p-tag>
+              </td>
+              <td>
+                <div class="flex align-items-center">
+                  <span class="mr-2">{{ app.percentage | number:'1.1-1' }}%</span>
+                  <p-progressBar 
+                    [value]="app.percentage" 
+                    [showValue]="false"
+                    styleClass="flex-1">
+                  </p-progressBar>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Detailed Activity Log Section -->
+  <div class="mb-6">
+    <p-card header="Detailed Activity Log">
+        <div *ngIf="isLoadingLogs; else logsContent">
+          <p-skeleton height="500px"></p-skeleton>
+        </div>
+        <ng-template #logsContent>
+          <div *ngIf="activityLogs.length > 0; else noLogsData">
+            <p-table 
+              [value]="activityLogs" 
+              [paginator]="true" 
+              [rows]="20"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} activities"
+              styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Time</th>
+                  <th>Application</th>
+                  <th>Activity Type</th>
+                  <th>Window Title</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-log>
+                <tr>
+                  <td>{{ log.formattedTimestamp }}</td>
+                  <td>
+                    <div class="flex align-items-center">
+                      <i [class]="getApplicationIcon(log.applicationName)" class="mr-2"></i>
+                      <span>{{ log.applicationName }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-tag 
+                      [value]="log.activityTypeDisplay" 
+                      [severity]="log.activityTypeColor">
+                    </p-tag>
+                  </td>
+                  <td>
+                    <span 
+                      *ngIf="log.windowTitle" 
+                      title="{{ log.windowTitle }}"
+                      class="cursor-help">
+                      {{ log.windowTitle.length > 50 ? (log.windowTitle | slice:0:50) + '...' : log.windowTitle }}
+                    </span>
+                    <span *ngIf="!log.windowTitle" class="text-gray-400">-</span>
+                  </td>
+                  <td>{{ log.formattedDuration }}</td>
+                  <td>
+                    <p-tag 
+                      [value]="log.isActiveWindow ? 'Active' : 'Inactive'" 
+                      [severity]="log.isActiveWindow ? 'success' : 'secondary'">
+                    </p-tag>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <ng-template #noLogsData>
+            <div class="text-center text-gray-500 py-8">
+              <i class="pi pi-history text-4xl mb-3"></i>
+              <p>No activity logs found for this session</p>
+            </div>
+          </ng-template>
+        </ng-template>
+      </p-card>
+  </div>
+</div>
+
+<p-toast></p-toast>
