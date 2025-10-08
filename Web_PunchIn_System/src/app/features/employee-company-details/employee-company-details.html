@@ -88,15 +88,6 @@
                   <strong>Founded:</strong> {{ companyProfile?.companyCreatedAt | date:'mediumDate' }}
                 </p>
               </div>
-              
-              <div class="flex items-center space-x-2">
-                <span class="text-sm font-medium text-gray-700">Status:</span>
-                <p-tag 
-                  [value]="!companyProfile?.companyIsDeleted ? 'Active' : 'Inactive'" 
-                  [severity]="!companyProfile?.companyIsDeleted ? 'success' : 'danger'"
-                  [icon]="!companyProfile?.companyIsDeleted ? 'pi pi-check-circle' : 'pi pi-times-circle'">
-                </p-tag>
-              </div>
             </div>
           </div>
         </ng-template>
