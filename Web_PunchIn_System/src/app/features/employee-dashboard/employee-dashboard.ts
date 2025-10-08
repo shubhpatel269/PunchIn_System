@@ -65,6 +65,7 @@ interface AttendanceStats {
 })
 export class EmployeeDashboardComponent implements OnInit, OnDestroy {
   user: any = null;
+  employeeProfile: any = null;
   currentTime: string = '';
   userTimezone: string = '';
   todayAttendance: AttendanceRecord | null = null;
@@ -118,6 +119,7 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadUserData();
+    this.loadEmployeeProfile();
     this.loadTodayAttendance();
     this.loadRecentAttendance();
     
@@ -441,6 +443,20 @@ export class EmployeeDashboardComponent implements OnInit, OnDestroy {
       this.user = JSON.parse(userData);
     } else {
       this.router.navigate(['/login']);
+    }
+  }
+
+  loadEmployeeProfile() {
+    if (this.user?.employeeId) {
+      this.employeeService.getEmployeeById(this.user.employeeId).subscribe({
+        next: (employee: any) => {
+          this.employeeProfile = employee;
+        },
+        error: (error) => {
+          console.error('Error loading employee profile:', error);
+          // Don't show error to user as this is not critical for dashboard functionality
+        }
+      });
     }
   }
 

@@ -1,5 +1,19 @@
 /* Custom styles for employee profile */
 
+/* Prevent all image dragging globally */
+img {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
 /* Card hover effects */
 .p-card {
   transition: all 0.3s ease;
@@ -31,10 +45,67 @@ input:not([readonly]):focus, textarea:not([readonly]):focus {
 .p-avatar {
   border: 3px solid #e5e7eb;
   transition: all 0.3s ease;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
 }
 
 .p-avatar:hover {
   border-color: #3b82f6;
+}
+
+/* Force large avatar size */
+.p-avatar.xlarge {
+  width: 11.5rem !important;
+  height: 11.5rem !important;
+  font-size: 2.1rem !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+/* Ensure avatar image fills the container */
+.p-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: none !important;
+}
+
+/* Specific class for large profile avatar */
+.profile-avatar-large {
+  width: 11.5rem !important;
+  height: 11.5rem !important;
+  min-width: 11.5rem !important;
+  min-height: 11.5rem !important;
+  font-size: 2.1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
 }
 
 /* Button styles */

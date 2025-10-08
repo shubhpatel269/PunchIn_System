@@ -50,12 +50,14 @@
           <ng-template pTemplate="content">
             <div class="text-center space-y-6">
               <!-- Profile Image -->
-              <div class="relative inline-block">
+              <div class="relative inline-block" draggable="false" ondragstart="return false">
                 <p-avatar 
                   [image]="profile?.employeeFaceImage" 
-                  [label]="((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) || ''"
+                  [label]="!profile?.employeeFaceImage ? ((profile?.employeeFirstName?.charAt(0) || '') + (profile?.employeeLastName?.charAt(0) || '')) : ''"
                   size="xlarge" 
-                  styleClass="bg-blue-500 text-white font-semibold text-2xl">
+                  styleClass="bg-blue-500 text-white font-semibold text-4xl w-46 h-46 profile-avatar-large"
+                  draggable="false"
+                  ondragstart="return false">
                 </p-avatar>
               </div>
 
