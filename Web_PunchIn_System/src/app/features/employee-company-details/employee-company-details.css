@@ -257,12 +257,6 @@ a:hover {
   }
 }
 
-/* Focus support for keyboard navigation */
-[data-tooltip-position][title]:focus::after,
-[data-tooltip-position][title]:focus::before {
-  opacity: 1;
-  transform: scale(1);
-}
 
 /* Edge case handling - prevent tooltips from going off-screen */
 [data-tooltip-position="top-left"][title]:hover::after {
@@ -524,13 +518,6 @@ a:hover {
   z-index: 10;
   border: 1px solid #e5e7eb; /* Subtle border instead of scale */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Focus states for keyboard navigation */
-[data-tooltip-position][title]:focus {
-  outline: 1px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 6px;
 }
 
 /* Active states for touch devices */

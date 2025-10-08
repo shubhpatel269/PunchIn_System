@@ -156,10 +156,6 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
     }
   }
 
-  getWorkingDaysDisplay(): string {
-    // Default working days for most companies
-    return 'Monday, Tuesday, Wednesday, Thursday, Friday';
-  }
 
   getCompanyTypeColor(type: string): string {
     switch (type?.toLowerCase()) {
@@ -332,19 +328,9 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
   }
 
   getDayTooltip(day: any): string {
-    // Only show tooltips for holidays
+    // Only show tooltips for holidays - just the holiday name
     if (day.isHoliday && day.holidayName) {
-      const holiday = this.holidays.find(h => {
-        const holidayDate = new Date(h.holidayDate);
-        return holidayDate.getDate() === day.date.getDate() &&
-               holidayDate.getMonth() === day.date.getMonth() &&
-               holidayDate.getFullYear() === day.date.getFullYear();
-      });
-      
-      if (holiday) {
-        const status = holiday.isPaid ? 'Paid Holiday' : 'Unpaid Holiday';
-        return `${day.holidayName}\n${status}\n${this.formatDate(day.date)}`;
-      }
+      return day.holidayName;
     }
     // Return empty string for non-holiday days (no tooltip)
     return '';
@@ -418,29 +404,6 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
     this.currentHoveredDay = null;
   }
 
-  onDayClick(day: any) {
-    // Handle day click for keyboard and mouse interactions
-    if (day.isHoliday) {
-      // Announce holiday information to screen readers
-      const holiday = this.holidays.find(h => {
-        const holidayDate = new Date(h.holidayDate);
-        return holidayDate.getDate() === day.date.getDate() &&
-               holidayDate.getMonth() === day.date.getMonth() &&
-               holidayDate.getFullYear() === day.date.getFullYear();
-      });
-      
-      if (holiday) {
-        const status = holiday.isPaid ? 'Paid Holiday' : 'Unpaid Holiday';
-        const message = `${holiday.holidayName} - ${status} on ${this.formatDate(day.date)}`;
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Holiday Information',
-          detail: message,
-          life: 3000
-        });
-      }
-    }
-  }
 
   getAriaLabel(day: any): string {
     if (day.isHoliday && day.holidayName) {

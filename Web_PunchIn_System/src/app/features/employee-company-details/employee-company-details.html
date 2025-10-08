@@ -134,12 +134,7 @@
                     {{ formatTime(companySettings?.workEndTime) }}
                   </span>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Working Days:</span>
-                  <span class="text-sm font-medium text-gray-900">
-                    {{ getWorkingDaysDisplay() }}
-                  </span>
-                </div>
+               
               </div>
             </div>
 
@@ -243,18 +238,13 @@
                 <div class="grid grid-cols-7 gap-1">
                   <div 
                     *ngFor="let day of calendarDays; let i = index"
-                    class="relative p-2 text-center rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    class="relative p-2 text-center rounded-lg transition-colors cursor-pointer"
                     [class]="getDayClasses(day)"
                     [title]="day.isHoliday ? getDayTooltip(day) : null"
                     [attr.data-tooltip-position]="day.isHoliday ? getTooltipPosition(i) : null"
                     [attr.aria-label]="getAriaLabel(day)"
-                    [attr.tabindex]="day.isCurrentMonth ? '0' : '-1'"
-                    role="button"
                     (mouseenter)="onDayHover(day, i)"
-                    (mouseleave)="onDayLeave()"
-                    (keydown.enter)="onDayClick(day)"
-                    (keydown.space)="onDayClick(day)"
-                    (click)="onDayClick(day)">
+                    (mouseleave)="onDayLeave()">
                     
                     <span class="text-sm">{{ day.day }}</span>
                     
