@@ -149,3 +149,424 @@ a:hover {
 .pi-times-circle {
   color: #ef4444;
 }
+
+/* Holiday Calendar Styles */
+.calendar-container {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-container .grid {
+  display: grid;
+}
+
+.calendar-container .grid-cols-7 {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-container .gap-1 {
+  gap: 0.25rem;
+}
+
+.calendar-container .mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+/* Holiday indicator styles */
+.holiday-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+}
+
+/* Calendar day hover effects */
+.calendar-day {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  position: relative;
+}
+
+.calendar-day:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* Holiday day hover effects */
+.calendar-day[title]:hover {
+  background-color: #fef2f2 !important;
+  border: 2px solid #ef4444;
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* Holiday list styles */
+.holiday-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.holiday-item:hover {
+  background-color: #f3f4f6;
+  transform: translateX(2px);
+}
+
+/* Loading skeleton styles */
+.p-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Advanced tooltip features */
+[data-tooltip-position][title] {
+  position: relative;
+  overflow: visible;
+}
+
+/* Tooltip delay and smooth transitions */
+[data-tooltip-position][title]:hover::after,
+[data-tooltip-position][title]:hover::before {
+  transition-delay: 0.1s;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  [data-tooltip-position][title]:hover::after,
+  [data-tooltip-position][title]:hover::before {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  [data-tooltip-position][title]:hover::after {
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+  }
+}
+
+/* Focus support for keyboard navigation */
+[data-tooltip-position][title]:focus::after,
+[data-tooltip-position][title]:focus::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Edge case handling - prevent tooltips from going off-screen */
+[data-tooltip-position="top-left"][title]:hover::after {
+  max-width: min(200px, calc(100vw - 20px));
+}
+
+[data-tooltip-position="top-right"][title]:hover::after {
+  max-width: min(200px, calc(100vw - 20px));
+}
+
+/* Responsive calendar with advanced mobile handling */
+@media (max-width: 640px) {
+  .calendar-container .grid-cols-7 {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  
+  .calendar-container .p-2 {
+    padding: 0.25rem;
+  }
+  
+  .calendar-container .text-sm {
+    font-size: 0.75rem;
+  }
+  
+  /* Mobile tooltip optimizations */
+  [data-tooltip-position][title]:hover::after {
+    max-width: 150px;
+    font-size: 11px;
+    padding: 6px 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Smart mobile positioning - avoid screen edges */
+  [data-tooltip-position="top-left"][title]:hover::after,
+  [data-tooltip-position="top-center"][title]:hover::after,
+  [data-tooltip-position="top-right"][title]:hover::after {
+    top: 100%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) scale(1);
+    margin-top: 5px;
+    margin-bottom: 0;
+  }
+  
+  [data-tooltip-position="top-left"][title]:hover::before,
+  [data-tooltip-position="top-center"][title]:hover::before,
+  [data-tooltip-position="top-right"][title]:hover::before {
+    top: 100%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-top-color: transparent;
+    border-bottom-color: #1f2937;
+    margin-top: -5px;
+    margin-bottom: 0;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  [data-tooltip-position][title]:hover::after {
+    max-width: 180px;
+    font-size: 11px;
+    padding: 7px 10px;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1025px) {
+  [data-tooltip-position][title]:hover::after {
+    max-width: 220px;
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
+
+/* Print styles - hide tooltips when printing */
+@media print {
+  [data-tooltip-position][title]:hover::after,
+  [data-tooltip-position][title]:hover::before {
+    display: none;
+  }
+}
+
+/* Holiday status tags */
+.holiday-paid {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.holiday-unpaid {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Enhanced tooltip styling with sophisticated positioning */
+[title] {
+  position: relative;
+}
+
+/* Base tooltip styles - only for elements with actual tooltips */
+[data-tooltip-position][title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background-color: #1f2937;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: pre-line;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 200px;
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease-out;
+  pointer-events: none;
+}
+
+[data-tooltip-position][title]:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Arrow styles - only for elements with actual tooltips */
+[data-tooltip-position][title]:hover::before {
+  content: '';
+  position: absolute;
+  border: 5px solid transparent;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.2s ease-out;
+}
+
+[data-tooltip-position][title]:hover::before {
+  opacity: 1;
+}
+
+/* Top positions - tooltips appear above */
+[data-tooltip-position="top-left"][title]:hover::after {
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 5px;
+}
+
+[data-tooltip-position="top-left"][title]:hover::before {
+  bottom: 100%;
+  left: 10px;
+  border-top-color: #1f2937;
+  margin-bottom: -5px;
+}
+
+[data-tooltip-position="top-center"][title]:hover::after {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  margin-bottom: 5px;
+}
+
+[data-tooltip-position="top-center"][title]:hover::before {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: #1f2937;
+  margin-bottom: -5px;
+}
+
+[data-tooltip-position="top-right"][title]:hover::after {
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 5px;
+}
+
+[data-tooltip-position="top-right"][title]:hover::before {
+  bottom: 100%;
+  right: 10px;
+  border-top-color: #1f2937;
+  margin-bottom: -5px;
+}
+
+/* Bottom positions - tooltips appear below */
+[data-tooltip-position="bottom-left"][title]:hover::after {
+  top: 100%;
+  left: 0;
+  margin-top: 5px;
+}
+
+[data-tooltip-position="bottom-left"][title]:hover::before {
+  top: 100%;
+  left: 10px;
+  border-bottom-color: #1f2937;
+  margin-top: -5px;
+}
+
+[data-tooltip-position="bottom-center"][title]:hover::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  margin-top: 5px;
+}
+
+[data-tooltip-position="bottom-center"][title]:hover::before {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: #1f2937;
+  margin-top: -5px;
+}
+
+[data-tooltip-position="bottom-right"][title]:hover::after {
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+}
+
+[data-tooltip-position="bottom-right"][title]:hover::before {
+  top: 100%;
+  right: 10px;
+  border-bottom-color: #1f2937;
+  margin-top: -5px;
+}
+
+/* Holiday indicator animation */
+.holiday-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Performance optimizations */
+[data-tooltip-position][title] {
+  will-change: transform;
+}
+
+[data-tooltip-position][title]:hover::after,
+[data-tooltip-position][title]:hover::before {
+  will-change: auto;
+}
+
+/* Enhanced visual feedback - prevent layout shift */
+[data-tooltip-position][title] {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent; /* Reserve space for border */
+}
+
+[data-tooltip-position][title]:hover {
+  z-index: 10;
+  border: 1px solid #e5e7eb; /* Subtle border instead of scale */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus states for keyboard navigation */
+[data-tooltip-position][title]:focus {
+  outline: 1px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Active states for touch devices */
+[data-tooltip-position][title]:active {
+  transform: scale(0.98);
+}
+
+/* Improved holiday day styling - prevent layout shift */
+[data-tooltip-position][title]:hover:has(.bg-red-500) {
+  background-color: #fef2f2 !important;
+  border: 1px solid #ef4444; /* Same border width as default */
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Loading state improvements */
+.calendar-container:has([data-tooltip-position][title]:hover) {
+  position: relative;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  [data-tooltip-position][title]:hover::after {
+    background-color: #374151;
+    color: #f9fafb;
+    border: 1px solid #4b5563;
+  }
+  
+  [data-tooltip-position="top-left"][title]:hover::before,
+  [data-tooltip-position="top-center"][title]:hover::before,
+  [data-tooltip-position="top-right"][title]:hover::before {
+    border-top-color: #374151;
+  }
+  
+  [data-tooltip-position="bottom-left"][title]:hover::before,
+  [data-tooltip-position="bottom-center"][title]:hover::before,
+  [data-tooltip-position="bottom-right"][title]:hover::before {
+    border-bottom-color: #374151;
+  }
+}

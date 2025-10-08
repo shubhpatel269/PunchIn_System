@@ -190,6 +190,90 @@
         </ng-template>
       </p-card>
 
+      <!-- Holiday Calendar -->
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="px-4 py-3">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="pi pi-calendar mr-2 text-red-500"></i>
+              Company Holidays
+            </h3>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+          <div class="space-y-4">
+            <!-- Calendar View -->
+            <div class="bg-white rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-lg font-semibold text-gray-900">
+                  {{ monthNames[calendarMonth] }} {{ calendarYear }}
+                </h4>
+                <div class="flex items-center space-x-2">
+                  <button 
+                    type="button"
+                    class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    (click)="previousMonth()"
+                    title="Previous Month">
+                    <i class="pi pi-chevron-left text-gray-600"></i>
+                  </button>
+                  <button 
+                    type="button"
+                    class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    (click)="nextMonth()"
+                    title="Next Month">
+                    <i class="pi pi-chevron-right text-gray-600"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Calendar Grid -->
+              <div class="calendar-container">
+                <!-- Week day headers -->
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Su</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Mo</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Tu</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">We</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Th</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Fr</div>
+                  <div class="text-center text-sm font-medium text-gray-500 p-2">Sa</div>
+                </div>
+                
+                <!-- Calendar days -->
+                <div class="grid grid-cols-7 gap-1">
+                  <div 
+                    *ngFor="let day of calendarDays; let i = index"
+                    class="relative p-2 text-center rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    [class]="getDayClasses(day)"
+                    [title]="day.isHoliday ? getDayTooltip(day) : null"
+                    [attr.data-tooltip-position]="day.isHoliday ? getTooltipPosition(i) : null"
+                    [attr.aria-label]="getAriaLabel(day)"
+                    [attr.tabindex]="day.isCurrentMonth ? '0' : '-1'"
+                    role="button"
+                    (mouseenter)="onDayHover(day, i)"
+                    (mouseleave)="onDayLeave()"
+                    (keydown.enter)="onDayClick(day)"
+                    (keydown.space)="onDayClick(day)"
+                    (click)="onDayClick(day)">
+                    
+                    <span class="text-sm">{{ day.day }}</span>
+                    
+                    <!-- Holiday indicator with accessibility -->
+                    <div 
+                      *ngIf="day.isHoliday"
+                      class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+                      [attr.aria-label]="'Holiday indicator for ' + day.holidayName"
+                      role="img">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ng-template>
+      </p-card>
+
       <!-- Summary Card -->
       <p-card>
         <ng-template pTemplate="header">

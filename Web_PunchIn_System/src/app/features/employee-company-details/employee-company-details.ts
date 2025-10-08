@@ -1,19 +1,26 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
+import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { CompanyProfileService, CompanyProfile } from '../../shared/services/company-profile.service';
 import { CompanySettingsService, CompanySettings } from '../../shared/services/company-settings.service';
+import { HolidayService, CompanyHoliday } from '../../shared/services/holiday.service';
 
 @Component({
   selector: 'app-employee-company-details',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     CardModule,
     TagModule,
+    SelectModule,
+    SkeletonModule,
     ToastModule
   ],
   providers: [MessageService],
@@ -26,14 +33,54 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
+  // Holiday-related properties
+  holidays: CompanyHoliday[] = [];
+  filteredHolidays: CompanyHoliday[] = [];
+  selectedYear: number = new Date().getFullYear();
+  selectedMonth: number = 0; // 0 for all months
+  calendarYear: number = new Date().getFullYear();
+  calendarMonth: number = new Date().getMonth();
+  calendarDays: any[] = [];
+  
+  // Year and month options
+  yearOptions: number[] = [];
+  monthOptions = [
+    { label: 'All Months', value: 0 },
+    { label: 'January', value: 1 },
+    { label: 'February', value: 2 },
+    { label: 'March', value: 3 },
+    { label: 'April', value: 4 },
+    { label: 'May', value: 5 },
+    { label: 'June', value: 6 },
+    { label: 'July', value: 7 },
+    { label: 'August', value: 8 },
+    { label: 'September', value: 9 },
+    { label: 'October', value: 10 },
+    { label: 'November', value: 11 },
+    { label: 'December', value: 12 }
+  ];
+  
+  monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   constructor(
     private companyProfileService: CompanyProfileService,
     private companySettingsService: CompanySettingsService,
+    private holidayService: HolidayService,
     private messageService: MessageService
-  ) {}
+  ) {
+    // Generate year options (current year ± 5 years)
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+      this.yearOptions.push(i);
+    }
+  }
 
   ngOnInit() {
     this.loadCompanyData();
+    this.loadHolidays();
   }
 
   loadCompanyData() {
@@ -129,5 +176,286 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
       default:
         return 'gray';
     }
+  }
+
+  // Holiday-related methods
+  loadHolidays() {
+    const companyId = this.getCompanyId();
+    if (!companyId) return;
+    
+    this.holidayService.getCompanyHolidays(companyId, this.selectedYear).subscribe({
+      next: (holidays: CompanyHoliday[]) => {
+        this.holidays = holidays.map((h: any) => ({
+          ...h,
+          holidayDate: new Date(h.holidayDate)
+        }));
+        this.filteredHolidays = [...this.holidays];
+        this.generateCalendar();
+      },
+      error: (error: any) => {
+        console.error('Error loading holidays:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load holidays'
+        });
+      }
+    });
+  }
+
+  getCompanyId(): number | null {
+    const userData = localStorage.getItem('punchInUser');
+    if (userData) {
+      const user = JSON.parse(userData);
+      return user.companyId || null;
+    }
+    return null;
+  }
+
+  onYearChange() {
+    this.loadHolidays();
+  }
+
+  onMonthChange() {
+    this.filterHolidaysByMonth();
+  }
+
+  filterHolidaysByMonth() {
+    if (this.selectedMonth === 0) {
+      this.filteredHolidays = [...this.holidays];
+    } else {
+      this.filteredHolidays = this.holidays.filter(h => 
+        h.holidayDate.getMonth() + 1 === this.selectedMonth
+      );
+    }
+  }
+
+  generateCalendar() {
+    this.calendarDays = [];
+    const firstDay = new Date(this.calendarYear, this.calendarMonth, 1);
+    const lastDay = new Date(this.calendarYear, this.calendarMonth + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const endDate = new Date(lastDay);
+    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dayDate = new Date(date);
+      const isCurrentMonth = dayDate.getMonth() === this.calendarMonth;
+      const isToday = this.isToday(dayDate);
+      const isHoliday = this.isHolidayDate(dayDate);
+      
+      this.calendarDays.push({
+        date: new Date(dayDate),
+        day: dayDate.getDate(),
+        isCurrentMonth: isCurrentMonth,
+        isToday: isToday,
+        isHoliday: isHoliday,
+        holidayName: isHoliday ? this.getHolidayName(dayDate) : null
+      });
+    }
+  }
+
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  isHolidayDate(date: Date): boolean {
+    return this.holidays.some(holiday => {
+      const holidayDate = new Date(holiday.holidayDate);
+      return holidayDate.getDate() === date.getDate() &&
+             holidayDate.getMonth() === date.getMonth() &&
+             holidayDate.getFullYear() === date.getFullYear();
+    });
+  }
+
+  getHolidayName(date: Date): string | null {
+    const holiday = this.holidays.find(h => {
+      const holidayDate = new Date(h.holidayDate);
+      return holidayDate.getDate() === date.getDate() &&
+             holidayDate.getMonth() === date.getMonth() &&
+             holidayDate.getFullYear() === date.getFullYear();
+    });
+    return holiday ? holiday.holidayName : null;
+  }
+
+  previousMonth() {
+    this.calendarMonth--;
+    if (this.calendarMonth < 0) {
+      this.calendarMonth = 11;
+      this.calendarYear--;
+    }
+    this.generateCalendar();
+  }
+
+  nextMonth() {
+    this.calendarMonth++;
+    if (this.calendarMonth > 11) {
+      this.calendarMonth = 0;
+      this.calendarYear++;
+    }
+    this.generateCalendar();
+  }
+
+  getDayClasses(day: any): string {
+    let classes = '';
+    
+    if (!day.isCurrentMonth) {
+      classes += 'text-gray-300 ';
+    } else if (day.isToday) {
+      classes += 'bg-blue-100 text-blue-900 font-semibold ';
+    } else if (day.isHoliday) {
+      classes += 'bg-red-50 text-red-700 hover:bg-red-100 ';
+    } else {
+      classes += 'text-gray-700 hover:bg-gray-100 ';
+    }
+    
+    return classes.trim();
+  }
+
+  formatDate(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) {
+      return 'Invalid Date';
+    }
+    
+    return dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  getDayTooltip(day: any): string {
+    // Only show tooltips for holidays
+    if (day.isHoliday && day.holidayName) {
+      const holiday = this.holidays.find(h => {
+        const holidayDate = new Date(h.holidayDate);
+        return holidayDate.getDate() === day.date.getDate() &&
+               holidayDate.getMonth() === day.date.getMonth() &&
+               holidayDate.getFullYear() === day.date.getFullYear();
+      });
+      
+      if (holiday) {
+        const status = holiday.isPaid ? 'Paid Holiday' : 'Unpaid Holiday';
+        return `${day.holidayName}\n${status}\n${this.formatDate(day.date)}`;
+      }
+    }
+    // Return empty string for non-holiday days (no tooltip)
+    return '';
+  }
+
+  getTooltipPosition(index: number): string {
+    // Calculate which section of the calendar this day is in
+    // Calendar has 7 columns, so we can determine position based on index
+    const row = Math.floor(index / 7);
+    const col = index % 7;
+    const totalRows = Math.ceil(this.calendarDays.length / 7);
+    
+    // More sophisticated positioning logic
+    // Consider edge cases and provide better tooltip placement
+    
+    // Check if we're in the first or last row (edge cases)
+    const isFirstRow = row === 0;
+    const isLastRow = row === totalRows - 1;
+    const isFirstCol = col === 0;
+    const isLastCol = col === 6;
+    
+    // Determine optimal tooltip position based on calendar position
+    if (isFirstRow) {
+      // Top row - show tooltips below
+      if (col < 2) return 'bottom-right';
+      if (col < 5) return 'bottom-center';
+      return 'bottom-left';
+    } else if (isLastRow) {
+      // Bottom row - show tooltips above
+      if (col < 2) return 'top-right';
+      if (col < 5) return 'top-center';
+      return 'top-left';
+    } else {
+      // Middle rows - use quadrant logic
+      if (row < totalRows / 2) {
+        // Upper half
+        if (col < 2) return 'bottom-right';
+        if (col < 5) return 'bottom-center';
+        return 'bottom-left';
+      } else {
+        // Lower half
+        if (col < 2) return 'top-right';
+        if (col < 5) return 'top-center';
+        return 'top-left';
+      }
+    }
+  }
+
+  private hoverTimeout: any = null;
+  private currentHoveredDay: any = null;
+
+  onDayHover(day: any, index: number) {
+    // Clear any existing timeout
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+    }
+    
+    // Set a small delay for better UX
+    this.hoverTimeout = setTimeout(() => {
+      this.currentHoveredDay = day;
+      // Add any additional hover effects here if needed
+    }, 100);
+  }
+
+  onDayLeave() {
+    // Clear timeout on leave
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
+    }
+    this.currentHoveredDay = null;
+  }
+
+  onDayClick(day: any) {
+    // Handle day click for keyboard and mouse interactions
+    if (day.isHoliday) {
+      // Announce holiday information to screen readers
+      const holiday = this.holidays.find(h => {
+        const holidayDate = new Date(h.holidayDate);
+        return holidayDate.getDate() === day.date.getDate() &&
+               holidayDate.getMonth() === day.date.getMonth() &&
+               holidayDate.getFullYear() === day.date.getFullYear();
+      });
+      
+      if (holiday) {
+        const status = holiday.isPaid ? 'Paid Holiday' : 'Unpaid Holiday';
+        const message = `${holiday.holidayName} - ${status} on ${this.formatDate(day.date)}`;
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Holiday Information',
+          detail: message,
+          life: 3000
+        });
+      }
+    }
+  }
+
+  getAriaLabel(day: any): string {
+    if (day.isHoliday && day.holidayName) {
+      const holiday = this.holidays.find(h => {
+        const holidayDate = new Date(h.holidayDate);
+        return holidayDate.getDate() === day.date.getDate() &&
+               holidayDate.getMonth() === day.date.getMonth() &&
+               holidayDate.getFullYear() === day.date.getFullYear();
+      });
+      
+      if (holiday) {
+        const status = holiday.isPaid ? 'Paid Holiday' : 'Unpaid Holiday';
+        return `${day.day} - ${holiday.holidayName} - ${status}`;
+      }
+    }
+    return `${day.day} - ${this.formatDate(day.date)}`;
   }
 }
