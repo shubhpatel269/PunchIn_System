@@ -420,10 +420,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support and questions:
-- 📧 Email: support@punchinsystem.com
-- 📚 Documentation: [docs.punchinsystem.com](https://docs.punchinsystem.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/PunchIn_System/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/your-username/PunchIn_System/discussions)
+- 📧 Email: shubhpatel269@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/shubhpatel269/PunchIn_System/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/shubhpatel269/PunchIn_System/discussions)
 
 ## 🙏 Acknowledgments
 
