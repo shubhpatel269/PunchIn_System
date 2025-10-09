@@ -415,7 +415,7 @@ ENTRYPOINT ["dotnet", "PunchInSystem.API.dll"]
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This is a private project. All rights reserved. This software is proprietary and confidential.
 
 ## 📞 Support
 
