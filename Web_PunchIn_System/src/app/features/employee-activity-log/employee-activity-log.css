@@ -186,6 +186,7 @@
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
+  display: inline-block;
 }
 
 @keyframes loading {
@@ -194,6 +195,70 @@
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* Skeleton specific styles for better UX */
+.skeleton-card {
+  background: linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.skeleton-table-header {
+  background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-table-row {
+  background: linear-gradient(90deg, #ffffff 25%, #fafbfc 50%, #ffffff 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Skeleton spacing utilities */
+.skeleton-gap-2 > * + * {
+  margin-left: 0.5rem;
+}
+
+.skeleton-gap-3 > * + * {
+  margin-left: 0.75rem;
+}
+
+.skeleton-gap-4 > * + * {
+  margin-left: 1rem;
+}
+
+/* Skeleton flex utilities */
+.skeleton-flex {
+  display: flex;
+}
+
+.skeleton-flex-1 {
+  flex: 1;
+}
+
+.skeleton-align-center {
+  align-items: center;
+}
+
+.skeleton-justify-between {
+  justify-content: space-between;
+}
+
+/* Skeleton responsive behavior */
+@media (max-width: 768px) {
+  .skeleton-mobile-stack {
+    flex-direction: column;
+  }
+  
+  .skeleton-mobile-stack > * + * {
+    margin-left: 0;
+    margin-top: 0.5rem;
   }
 }
 

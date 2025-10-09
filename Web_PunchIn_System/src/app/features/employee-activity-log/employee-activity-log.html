@@ -24,22 +24,40 @@
   <div class="grid mb-6">
     <div class="col-12 md:col-4">
       <p-card class="text-center h-full">
-        <div class="text-2xl font-bold text-green-600">
-          {{ totalActiveTime > 0 ? activityLogService.formatDuration(totalActiveTime) : '0s' }}
+        <div *ngIf="isLoadingLogs || isLoadingSummary; else totalActiveTimeContent">
+          <p-skeleton height="2rem" width="60%" class="mx-auto mb-2"></p-skeleton>
+          <p-skeleton height="1rem" width="80%" class="mx-auto"></p-skeleton>
         </div>
-        <div class="text-sm text-gray-600">Total Active Time</div>
+        <ng-template #totalActiveTimeContent>
+          <div class="text-2xl font-bold text-green-600">
+            {{ totalActiveTime > 0 ? activityLogService.formatDuration(totalActiveTime) : '0s' }}
+          </div>
+          <div class="text-sm text-gray-600">Total Active Time</div>
+        </ng-template>
       </p-card>
     </div>
     <div class="col-12 md:col-4">
       <p-card class="text-center h-full">
-        <div class="text-2xl font-bold text-purple-600">{{ activitySummary.length }}</div>
-        <div class="text-sm text-gray-600">Applications Used</div>
+        <div *ngIf="isLoadingLogs || isLoadingSummary; else applicationsUsedContent">
+          <p-skeleton height="2rem" width="40%" class="mx-auto mb-2"></p-skeleton>
+          <p-skeleton height="1rem" width="90%" class="mx-auto"></p-skeleton>
+        </div>
+        <ng-template #applicationsUsedContent>
+          <div class="text-2xl font-bold text-purple-600">{{ activitySummary.length }}</div>
+          <div class="text-sm text-gray-600">Applications Used</div>
+        </ng-template>
       </p-card>
     </div>
     <div class="col-12 md:col-4">
       <p-card class="text-center h-full">
-        <div class="text-2xl font-bold text-orange-600">{{ activityLogs.length }}</div>
-        <div class="text-sm text-gray-600">Total Activities</div>
+        <div *ngIf="isLoadingLogs || isLoadingSummary; else totalActivitiesContent">
+          <p-skeleton height="2rem" width="50%" class="mx-auto mb-2"></p-skeleton>
+          <p-skeleton height="1rem" width="85%" class="mx-auto"></p-skeleton>
+        </div>
+        <ng-template #totalActivitiesContent>
+          <div class="text-2xl font-bold text-orange-600">{{ activityLogs.length }}</div>
+          <div class="text-sm text-gray-600">Total Activities</div>
+        </ng-template>
       </p-card>
     </div>
   </div>
@@ -48,7 +66,23 @@
   <div class="mb-6">
     <p-card header="Application Usage Overview">
       <div *ngIf="isLoadingSummary; else summaryOverviewContent">
-        <p-skeleton height="200px"></p-skeleton>
+        <!-- Application usage skeleton -->
+        <div class="space-y-4">
+          <div *ngFor="let item of [1,2,3,4,5]" class="flex justify-content-between align-items-center">
+            <div class="flex align-items-center flex-1">
+              <p-skeleton height="1.5rem" width="1.5rem" class="mr-3"></p-skeleton>
+              <p-skeleton height="1rem" width="120px"></p-skeleton>
+              <p-skeleton height="1.5rem" width="60px" class="ml-3"></p-skeleton>
+            </div>
+            <p-skeleton height="1rem" width="60px"></p-skeleton>
+          </div>
+          <div *ngFor="let item of [1,2,3,4,5]" class="mb-2">
+            <p-skeleton height="8px" width="100%"></p-skeleton>
+          </div>
+          <div *ngFor="let item of [1,2,3,4,5]" class="mb-2">
+            <p-skeleton height="0.75rem" width="200px"></p-skeleton>
+          </div>
+        </div>
       </div>
       <ng-template #summaryOverviewContent>
         <div *ngIf="activitySummary.length > 0; else noSummaryOverviewData">
@@ -90,7 +124,54 @@
   <div class="mb-6">
     <p-card header="Detailed Application Summary">
       <div *ngIf="isLoadingSummary; else summaryTableContent">
-        <p-skeleton height="400px"></p-skeleton>
+        <!-- Table skeleton -->
+        <div class="p-datatable p-datatable-sm">
+          <!-- Table header skeleton -->
+          <div class="p-datatable-header" style="padding: 1rem; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+            <div class="flex justify-content-between align-items-center">
+              <div class="flex gap-4">
+                <p-skeleton height="1rem" width="100px"></p-skeleton>
+                <p-skeleton height="1rem" width="80px"></p-skeleton>
+                <p-skeleton height="1rem" width="90px"></p-skeleton>
+                <p-skeleton height="1rem" width="120px"></p-skeleton>
+                <p-skeleton height="1rem" width="120px"></p-skeleton>
+                <p-skeleton height="1rem" width="70px"></p-skeleton>
+              </div>
+            </div>
+          </div>
+          <!-- Table body skeleton -->
+          <div class="p-datatable-tbody" style="background-color: #ffffff;">
+            <div *ngFor="let item of [1,2,3,4,5,6,7,8]" class="p-datatable-row" style="border-bottom: 1px solid #f3f4f6; padding: 1rem;">
+              <div class="flex align-items-center gap-4">
+                <div class="flex align-items-center flex-1">
+                  <p-skeleton height="1rem" width="1rem" class="mr-2"></p-skeleton>
+                  <p-skeleton height="1rem" width="120px"></p-skeleton>
+                </div>
+                <p-skeleton height="1rem" width="60px"></p-skeleton>
+                <p-skeleton height="1rem" width="40px"></p-skeleton>
+                <p-skeleton height="1rem" width="100px"></p-skeleton>
+                <p-skeleton height="1rem" width="100px"></p-skeleton>
+                <div class="flex align-items-center flex-1">
+                  <p-skeleton height="1rem" width="50px" class="mr-2"></p-skeleton>
+                  <p-skeleton height="8px" width="100px"></p-skeleton>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Pagination skeleton -->
+          <div class="p-paginator" style="padding: 1rem; background-color: #ffffff; border-top: 1px solid #e5e7eb;">
+            <div class="flex justify-content-between align-items-center">
+              <p-skeleton height="1rem" width="200px"></p-skeleton>
+              <div class="flex gap-2">
+                <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                <p-skeleton height="2rem" width="2rem"></p-skeleton>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <ng-template #summaryTableContent>
         <p-table 
@@ -145,7 +226,54 @@
   <div class="mb-6">
     <p-card header="Detailed Activity Log">
         <div *ngIf="isLoadingLogs; else logsContent">
-          <p-skeleton height="500px"></p-skeleton>
+          <!-- Activity log table skeleton -->
+          <div class="p-datatable p-datatable-sm">
+            <!-- Table header skeleton -->
+            <div class="p-datatable-header" style="padding: 1rem; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+              <div class="flex justify-content-between align-items-center">
+                <div class="flex gap-4">
+                  <p-skeleton height="1rem" width="80px"></p-skeleton>
+                  <p-skeleton height="1rem" width="100px"></p-skeleton>
+                  <p-skeleton height="1rem" width="120px"></p-skeleton>
+                  <p-skeleton height="1rem" width="150px"></p-skeleton>
+                  <p-skeleton height="1rem" width="80px"></p-skeleton>
+                </div>
+              </div>
+            </div>
+            <!-- Table body skeleton -->
+            <div class="p-datatable-tbody" style="background-color: #ffffff;">
+              <div *ngFor="let item of [1,2,3,4,5,6,7,8,9,10]" class="p-datatable-row" style="border-bottom: 1px solid #f3f4f6; padding: 1rem;">
+                <div class="flex align-items-center gap-4">
+                  <!-- Time column -->
+                  <p-skeleton height="1rem" width="140px"></p-skeleton>
+                  <!-- Application column -->
+                  <div class="flex align-items-center flex-1">
+                    <p-skeleton height="1rem" width="1rem" class="mr-2"></p-skeleton>
+                    <p-skeleton height="1rem" width="120px"></p-skeleton>
+                  </div>
+                  <!-- Activity Type column -->
+                  <p-skeleton height="1.5rem" width="100px"></p-skeleton>
+                  <!-- Window Title column -->
+                  <p-skeleton height="1rem" width="180px"></p-skeleton>
+                  <!-- Duration column -->
+                  <p-skeleton height="1rem" width="70px"></p-skeleton>
+                </div>
+              </div>
+            </div>
+            <!-- Pagination skeleton -->
+            <div class="p-paginator" style="padding: 1rem; background-color: #ffffff; border-top: 1px solid #e5e7eb;">
+              <div class="flex justify-content-between align-items-center">
+                <p-skeleton height="1rem" width="250px"></p-skeleton>
+                <div class="flex gap-2">
+                  <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                  <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                  <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                  <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                  <p-skeleton height="2rem" width="2rem"></p-skeleton>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <ng-template #logsContent>
           <div *ngIf="activityLogs.length > 0; else noLogsData">
