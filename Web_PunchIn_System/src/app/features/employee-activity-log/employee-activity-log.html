@@ -107,7 +107,6 @@
               <th>Activities</th>
               <th>First Activity</th>
               <th>Last Activity</th>
-              <th>Status</th>
               <th>Usage %</th>
             </tr>
           </ng-template>
@@ -125,12 +124,6 @@
               <td>{{ app.activityCount }}</td>
               <td>{{ app.formattedFirstActivity }}</td>
               <td>{{ app.formattedLastActivity }}</td>
-              <td>
-                <p-tag 
-                  [value]="app.isCurrentlyActive ? 'Active' : 'Inactive'" 
-                  [severity]="app.isCurrentlyActive ? 'success' : 'secondary'">
-                </p-tag>
-              </td>
               <td>
                 <div class="flex align-items-center">
                   <span class="mr-2">{{ app.percentage | number:'1.1-1' }}%</span>
@@ -170,7 +163,6 @@
                   <th>Activity Type</th>
                   <th>Window Title</th>
                   <th>Duration</th>
-                  <th>Status</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-log>
@@ -197,12 +189,11 @@
                     </span>
                     <span *ngIf="!log.windowTitle" class="text-gray-400">-</span>
                   </td>
-                  <td>{{ log.formattedDuration }}</td>
                   <td>
-                    <p-tag 
-                      [value]="log.isActiveWindow ? 'Active' : 'Inactive'" 
-                      [severity]="log.isActiveWindow ? 'success' : 'secondary'">
-                    </p-tag>
+                    <span [class]="log.isRunning ? 'text-green-600 font-bold' : ''">
+                      {{ getFormattedDuration(log) }}
+                    </span>
+                    <i *ngIf="log.isRunning" class="pi pi-circle-fill text-green-600 ml-1" style="font-size: 8px;"></i>
                   </td>
                 </tr>
               </ng-template>

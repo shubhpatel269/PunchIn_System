@@ -684,10 +684,50 @@
       </div>
       
       <div class="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
-        <!-- Loading State -->
-        <div *ngIf="loadingLocationData" class="flex items-center justify-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span class="ml-2 text-gray-600">Loading location data...</span>
+        <!-- Loading State with Skeleton -->
+        <div *ngIf="loadingLocationData" class="space-y-6">
+          <!-- Map Skeleton -->
+          <div class="bg-gray-100 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+              <p-skeleton width="8rem" height="1.5rem"></p-skeleton>
+              <p-skeleton width="6rem" height="1rem"></p-skeleton>
+            </div>
+            <div class="location-map-container">
+              <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                <div class="text-center">
+                  <p-skeleton width="4rem" height="4rem" shape="circle" class="mx-auto mb-2"></p-skeleton>
+                  <p-skeleton width="12rem" height="1rem" class="mx-auto"></p-skeleton>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Location List Skeleton -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+              <p-skeleton width="12rem" height="1.5rem"></p-skeleton>
+              <p-skeleton width="4rem" height="1rem"></p-skeleton>
+            </div>
+            <div class="space-y-3 max-h-48 overflow-hidden">
+              <!-- Skeleton location items -->
+              <div *ngFor="let item of [1,2,3,4,5]" class="flex items-center justify-between p-3 bg-white rounded-lg border">
+                <div class="flex items-center space-x-3">
+                  <p-skeleton width="1.5rem" height="1.5rem" shape="circle"></p-skeleton>
+                  <div class="space-y-2">
+                    <p-skeleton width="10rem" height="1rem"></p-skeleton>
+                    <p-skeleton width="16rem" height="0.75rem"></p-skeleton>
+                  </div>
+                </div>
+                <p-skeleton width="3rem" height="0.75rem"></p-skeleton>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Loading indicator -->
+          <div class="flex items-center justify-center py-4">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="ml-2 text-gray-600 text-sm">Loading location data...</span>
+          </div>
         </div>
         
         <!-- Location Data -->

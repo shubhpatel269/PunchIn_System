@@ -17,6 +17,7 @@ interface ActivityLogWithDisplay extends ActivityLog {
   formattedDuration: string;
   activityTypeDisplay: string;
   activityTypeColor: string;
+  isRunning: boolean;
 }
 
 interface ActivitySummaryWithDisplay extends ActivityLogSummary {
@@ -49,6 +50,7 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
   employeeName: string = 'Employee';
   sessionStartTime: string | null = null;
   sessionEndTime: string | null = null;
+  isSessionActive: boolean = false;
   
   // Data
   activityLogs: ActivityLogWithDisplay[] = [];
@@ -65,6 +67,9 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
   // Statistics
   totalSessionTime: number = 0;
   totalActiveTime: number = 0;
+  
+  // Timer for refreshing running durations
+  private refreshTimer: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -83,6 +88,7 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
         this.employeeName = `Employee ${this.employeeId}`; // This could be enhanced to fetch actual employee name
         this.loadSessionData();
         this.loadActivityData();
+        this.startRefreshTimer();
       } else {
         this.messageService.add({
           severity: 'error',
@@ -96,12 +102,21 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Cleanup if needed
+    // Cleanup timer
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
   }
 
   loadSessionData() {
-    // Load session details if needed
-    // For now, we'll use the sessionId directly
+    if (!this.sessionId || !this.employeeId) return;
+    
+    // Check if session is active by looking at session status
+    // For now, we'll determine if session is active based on whether there's an end time
+    // You can enhance this by calling a session API endpoint
+    this.isSessionActive = !this.sessionEndTime; // If no end time, session is active
+    
+    console.log(`[ActivityLog] Session ${this.sessionId} is ${this.isSessionActive ? 'ACTIVE' : 'ENDED'}`);
   }
 
   loadActivityData() {
@@ -118,12 +133,13 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
         // Calculate actual durations based on timestamps since agent logs DurationSeconds as 0
         const logsWithCalculatedDurations = this.calculateActivityDurations(logs);
         
-        this.activityLogs = logsWithCalculatedDurations.map(log => ({
+        this.activityLogs = logsWithCalculatedDurations.map((log, index) => ({
           ...log,
           formattedTimestamp: this.activityLogService.formatTimestamp(log.activityTimestamp),
           formattedDuration: log.durationSeconds ? this.activityLogService.formatDuration(log.durationSeconds) : '-',
           activityTypeDisplay: this.activityLogService.getActivityTypeDisplayName(log.activityType),
-          activityTypeColor: this.activityLogService.getActivityTypeColor(log.activityType)
+          activityTypeColor: this.activityLogService.getActivityTypeColor(log.activityType),
+          isRunning: index === logsWithCalculatedDurations.length - 1 && this.isSessionActive
         }));
         
         console.log(`[ActivityLog] Processed ${this.activityLogs.length} activity logs`);
@@ -169,9 +185,21 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
       
       // For the last log, we can't calculate duration (no next activity)
       if (i === sortedLogs.length - 1) {
-        // For the last activity, assume it lasted until the end of session or 5 minutes
-        currentLog.durationSeconds = 300; // 5 minutes default
-        console.log(`[ActivityLog] Last activity: ${currentLog.applicationName} - Default duration: 5 minutes`);
+        // For the last activity, check if session is active
+        if (this.isSessionActive) {
+          // Calculate duration from last activity time to current time
+          const currentTime = new Date().getTime();
+          const lastActivityTime = new Date(currentLog.activityTimestamp).getTime();
+          const durationSeconds = Math.floor((currentTime - lastActivityTime) / 1000);
+          
+          // Cap duration at reasonable limits (max 1 hour)
+          currentLog.durationSeconds = Math.min(Math.max(durationSeconds, 1), 3600);
+          console.log(`[ActivityLog] Last activity (RUNNING): ${currentLog.applicationName} - Duration: ${durationSeconds}s (capped: ${currentLog.durationSeconds}s)`);
+        } else {
+          // Session ended, use default duration for last activity
+          currentLog.durationSeconds = 300; // 5 minutes default
+          console.log(`[ActivityLog] Last activity (ENDED): ${currentLog.applicationName} - Default duration: 5 minutes`);
+        }
       } else {
         const nextLog = sortedLogs[i + 1];
         const currentTime = new Date(currentLog.activityTimestamp).getTime();
@@ -269,6 +297,37 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  startRefreshTimer() {
+    // Only start timer if session is active
+    if (this.isSessionActive) {
+      this.refreshTimer = setInterval(() => {
+        // Update the duration for the last (running) activity
+        if (this.activityLogs.length > 0) {
+          const lastLog = this.activityLogs[this.activityLogs.length - 1];
+          if (lastLog.isRunning) {
+            // Recalculate duration from last activity time to current time
+            const currentTime = new Date().getTime();
+            const lastActivityTime = new Date(lastLog.activityTimestamp).getTime();
+            const durationSeconds = Math.floor((currentTime - lastActivityTime) / 1000);
+            
+            // Update the duration
+            lastLog.durationSeconds = Math.min(Math.max(durationSeconds, 1), 3600);
+            
+            // Trigger change detection
+            this.activityLogs = [...this.activityLogs];
+          }
+        }
+      }, 5000); // Update every 5 seconds
+    }
+  }
+
+  getFormattedDuration(log: ActivityLogWithDisplay): string {
+    if (log.isRunning) {
+      return 'Running';
+    }
+    return log.durationSeconds ? this.activityLogService.formatDuration(log.durationSeconds) : '-';
+  }
 
   getApplicationIcon(applicationName: string): string {
     // Simple icon mapping based on application name
