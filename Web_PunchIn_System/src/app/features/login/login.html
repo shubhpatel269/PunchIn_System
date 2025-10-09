@@ -171,10 +171,10 @@
       <!-- RIGHT CARD: Illustration or Camera -->
       <div class="flex-1 flex items-center justify-center">
         <ng-container *ngIf="activeTab === 'none'">
-          <img src="/assets/images/illustration.svg" alt="Illustration" class="w-96 selection max-w-full" />
+          <img src="/assets/images/illustration.svg" alt="Illustration" class="w-96 selection max-w-full" draggable="false" />
         </ng-container>
         <ng-container *ngIf="activeTab === 'admin'">
-          <img src="/assets/images/admin-illustration.png" alt="Illustration" class="w-96 max-w-full" />
+          <img src="/assets/images/admin-illustration.png" alt="Illustration" class="w-96 max-w-full" draggable="false" />
         </ng-container>
         <ng-container *ngIf="activeTab === 'user'">
           <!-- Camera Card (Face Recognition) -->

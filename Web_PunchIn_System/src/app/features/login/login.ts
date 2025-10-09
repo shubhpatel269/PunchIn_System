@@ -148,9 +148,6 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   switchToAdminTab() {
-    if (this.isFaceDetected) {
-      return;
-    }
     if (this.faceDetectionInterval) {
       clearInterval(this.faceDetectionInterval);
       this.faceDetectionInterval = null;
@@ -227,12 +224,6 @@ export class Login implements AfterViewInit, OnDestroy {
       this.detectFaceWithBlink();
     } catch (error) {
       
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Initialization Error',
-        detail: 'Failed to initialize face recognition. Please refresh the page and try again.',
-        life: 5000
-      });
     }
   }
 
@@ -270,12 +261,6 @@ export class Login implements AfterViewInit, OnDestroy {
           numFaces: 1
         });
       } catch (fallbackError) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to initialize face detection. Please refresh the page.',
-          life: 5000
-        });
       }
     }
   }
@@ -453,13 +438,6 @@ export class Login implements AfterViewInit, OnDestroy {
         const faceDescriptor = Array.from(result.descriptor);
         this.lastFaceDescriptor = faceDescriptor;
         
-        // Show processing message immediately
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Processing',
-          detail: 'Verifying your identity...',
-          life: 2000
-        });
         
         // Send to backend for verification with timeout
         const faceLoginSubscription = this.authService.faceLogin(faceDescriptor).subscribe({
@@ -536,12 +514,6 @@ export class Login implements AfterViewInit, OnDestroy {
         this.showBlinkInstruction = true;
       }
     } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Recognition Error',
-        detail: 'An error occurred during face recognition.',
-        life: 3000
-      });
       this.blinkVerified = false;
     }
   }
@@ -579,12 +551,6 @@ export class Login implements AfterViewInit, OnDestroy {
             const imageData = this.captureSnapshot();
             this.requestLocationAndSave(imageData);
             this.stopVideo();
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Face Detected',
-              detail: `Name: ${bestMatch.name}!`,
-              life: 4000
-            });
             this.detectedUser = `User: ${bestMatch.name}`
           } else {
             this.isFaceDetected = false;
@@ -788,12 +754,6 @@ export class Login implements AfterViewInit, OnDestroy {
           
           // Check if face descriptor is valid
           if (!this.lastFaceDescriptor || this.lastFaceDescriptor.length === 0) {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Face Recognition Error',
-              detail: 'Face descriptor not available. Please try again.',
-              life: 4000
-            });
             return;
           }
           
@@ -833,12 +793,6 @@ export class Login implements AfterViewInit, OnDestroy {
               this.startNavigationCountdown();
             },
             error: (err) => {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Punch-In Failed',
-                detail: 'Could not record punch. Please try again.',
-                life: 3000
-              });
             }
           });
         }
@@ -1030,12 +984,6 @@ export class Login implements AfterViewInit, OnDestroy {
     // clearTimeout(this.sessionTimer);
     this.sessionActive = false;
 
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Session Ended',
-      detail: 'Your 4-hour session has ended automatically.',
-      life: 4000
-    });
 
   }
 
