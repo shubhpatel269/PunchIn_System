@@ -18,6 +18,7 @@ interface ActivityLogWithDisplay extends ActivityLog {
   activityTypeDisplay: string;
   activityTypeColor: string;
   isRunning: boolean;
+  isIdleAdjusted?: boolean; // Flag to indicate if this activity was adjusted for idle time
 }
 
 interface ActivitySummaryWithDisplay extends ActivityLogSummary {
@@ -139,7 +140,8 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
           formattedDuration: log.durationSeconds ? this.activityLogService.formatDuration(log.durationSeconds) : '-',
           activityTypeDisplay: this.activityLogService.getActivityTypeDisplayName(log.activityType),
           activityTypeColor: this.activityLogService.getActivityTypeColor(log.activityType),
-          isRunning: index === logsWithCalculatedDurations.length - 1 && this.isSessionActive
+          isRunning: index === logsWithCalculatedDurations.length - 1 && this.isSessionActive,
+          isIdleAdjusted: (log as any).isIdleAdjusted || false
         }));
         
         console.log(`[ActivityLog] Processed ${this.activityLogs.length} activity logs`);
@@ -167,6 +169,7 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
   /**
    * Calculate actual durations for activity logs based on timestamps
    * Since the agent logs DurationSeconds as 0, we need to calculate it from timestamps
+   * Special handling for idle states to prevent double-counting idle time
    */
   private calculateActivityDurations(logs: ActivityLog[]): ActivityLog[] {
     if (logs.length === 0) return logs;
@@ -179,6 +182,8 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
     );
 
     const logsWithDurations: ActivityLog[] = [];
+    const IDLE_THRESHOLD_MINUTES = 5; // 5 minutes idle threshold
+    const IDLE_THRESHOLD_SECONDS = IDLE_THRESHOLD_MINUTES * 60;
 
     for (let i = 0; i < sortedLogs.length; i++) {
       const currentLog = { ...sortedLogs[i] };
@@ -217,10 +222,91 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
       logsWithDurations.push(currentLog);
     }
 
-    const totalCalculatedTime = logsWithDurations.reduce((sum, log) => sum + (log.durationSeconds || 0), 0);
+    // Now apply idle state adjustments
+    const adjustedLogs = this.adjustIdleStateDurations(logsWithDurations, IDLE_THRESHOLD_SECONDS);
+
+    const totalCalculatedTime = adjustedLogs.reduce((sum, log) => sum + (log.durationSeconds || 0), 0);
     console.log(`[ActivityLog] Total calculated time: ${totalCalculatedTime} seconds (${Math.round(totalCalculatedTime / 60)} minutes)`);
 
-    return logsWithDurations;
+    return adjustedLogs;
+  }
+
+  /**
+   * Adjust durations to properly handle idle states
+   * When an IDLE_STATE activity is detected, subtract the idle time from the previous activity
+   * and ensure the idle activity gets the proper duration
+   */
+  private adjustIdleStateDurations(logs: ActivityLog[], idleThresholdSeconds: number): ActivityLog[] {
+    console.log(`[ActivityLog] Adjusting durations for idle states with threshold: ${idleThresholdSeconds}s`);
+
+    for (let i = 0; i < logs.length; i++) {
+      const currentLog = logs[i];
+      
+      // Check if current activity is an idle state
+      if (currentLog.activityType === 'IDLE_STATE' && currentLog.applicationName === 'System') {
+        console.log(`[ActivityLog] Found IDLE_STATE activity at index ${i}`);
+        
+        // Find the previous non-idle activity
+        let previousNonIdleIndex = -1;
+        for (let j = i - 1; j >= 0; j--) {
+          if (logs[j].activityType !== 'IDLE_STATE' && logs[j].applicationName !== 'System') {
+            previousNonIdleIndex = j;
+            break;
+          }
+        }
+        
+        if (previousNonIdleIndex !== -1) {
+          const previousLog = logs[previousNonIdleIndex];
+          const previousDuration = previousLog.durationSeconds || 0;
+          
+          console.log(`[ActivityLog] Previous activity: ${previousLog.applicationName}, Duration: ${previousDuration}s`);
+          
+          // Check if the previous activity duration is significantly longer than expected
+          // This indicates it includes idle time that should be attributed to the idle state
+          if (previousDuration >= idleThresholdSeconds) {
+            // Calculate the actual idle duration
+            // For cases like 5m 59s, we want to extract approximately 5 minutes for idle
+            let idleDuration: number;
+            
+            if (previousDuration >= idleThresholdSeconds && previousDuration <= idleThresholdSeconds + 120) {
+              // If duration is close to threshold (within 2 minutes), use the threshold
+              idleDuration = idleThresholdSeconds;
+            } else if (previousDuration > idleThresholdSeconds + 120) {
+              // If duration is much longer, use a reasonable idle duration
+              idleDuration = Math.min(idleThresholdSeconds, 300); // Max 5 minutes for idle
+            } else {
+              // Fallback to a portion of the duration
+              idleDuration = Math.min(previousDuration * 0.8, idleThresholdSeconds);
+            }
+            
+            const adjustedPreviousDuration = Math.max(previousDuration - idleDuration, 60); // Minimum 1 minute
+            
+            // Update the previous activity duration and mark as adjusted
+            logs[previousNonIdleIndex].durationSeconds = adjustedPreviousDuration;
+            (logs[previousNonIdleIndex] as any).isIdleAdjusted = true;
+            
+            // Update the idle activity duration
+            currentLog.durationSeconds = idleDuration;
+            
+            console.log(`[ActivityLog] Adjusted durations:`);
+            console.log(`  - ${previousLog.applicationName}: ${previousDuration}s -> ${adjustedPreviousDuration}s`);
+            console.log(`  - IDLE_STATE: ${currentLog.durationSeconds}s -> ${idleDuration}s`);
+            
+            // Special case: If the next activity is ACTIVE_STATE, it should have minimal duration
+            if (i + 1 < logs.length) {
+              const nextLog = logs[i + 1];
+              if (nextLog.activityType === 'ACTIVE_STATE' && nextLog.applicationName === 'System') {
+                // ACTIVE_STATE typically represents the transition back to active, should be minimal
+                nextLog.durationSeconds = Math.min(nextLog.durationSeconds || 1, 60); // Max 1 minute
+                console.log(`[ActivityLog] Adjusted ACTIVE_STATE duration to: ${nextLog.durationSeconds}s`);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return logs;
   }
 
   /**
