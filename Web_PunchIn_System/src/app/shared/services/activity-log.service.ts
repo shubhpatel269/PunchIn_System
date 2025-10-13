@@ -142,7 +142,6 @@ export class ActivityLogService {
         hour12: true
       });
     } catch (error) {
-      console.error('Error formatting timestamp:', error);
       return timestamp;
     }
   }

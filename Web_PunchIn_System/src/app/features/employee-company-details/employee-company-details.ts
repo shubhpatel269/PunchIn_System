@@ -106,7 +106,6 @@ export class EmployeeCompanyDetailsComponent implements OnInit {
     const companyId = user.companyId;
     
     if (!companyId) {
-      console.warn('No company ID found in user data');
       this.error = 'No company ID found in user data';
       this.isLoadingCompanyData = false;
       return;

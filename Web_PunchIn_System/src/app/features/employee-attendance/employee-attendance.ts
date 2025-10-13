@@ -256,7 +256,6 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit, OnDes
     const companyId = this.user?.companyId;
     
     if (!companyId) {
-      console.warn('No company ID found in user data');
       this.isLoadingCompanySettings = false;
       return;
     }
@@ -267,12 +266,11 @@ export class EmployeeAttendanceComponent implements OnInit, AfterViewInit, OnDes
         this.isLoadingCompanySettings = false;
       },
       error: (error) => {
-        console.warn('Company settings not found, using default settings:', error);
         this.isLoadingCompanySettings = false;
         
         // Handle different error types
         if (error.status === 404) {
-          console.log('Company settings not found - using defaults');
+          // Using default settings
         } else if (error.status === 500) {
           console.error('Server error loading company settings:', error);
         } else {

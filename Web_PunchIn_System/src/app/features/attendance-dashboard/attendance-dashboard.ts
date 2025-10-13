@@ -296,7 +296,6 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   getTodayPunchInsDetails() {
     this.dashboardService.getTodayPunchIns().subscribe({
       next: (data) => {
-        console.log('Today Punch-ins:', data);
         // You can implement a modal or detailed view here
       },
       error: (error) => {
@@ -313,7 +312,6 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   getActiveSessionsDetails() {
     this.dashboardService.getActiveSessions().subscribe({
       next: (data: ActiveSessionsResponse) => {
-        console.log('Active Sessions:', data);
         // You can implement a modal or detailed view here
       },
       error: (error) => {
@@ -330,7 +328,6 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   getEmployeesOnBreakDetails() {
     this.dashboardService.getEmployeesOnBreak().subscribe({
       next: (data: EmployeesOnBreakResponse) => {
-        console.log('Employees on Break:', data);
         // You can implement a modal or detailed view here
       },
       error: (error) => {
@@ -347,7 +344,6 @@ export class AttendanceDashboardComponent implements OnInit, OnDestroy {
   getCompanyEmployeeCountDetails(companyId: number) {
     this.dashboardService.getCompanyEmployeeCount(companyId).subscribe({
       next: (data: CompanyEmployeeCount) => {
-        console.log('Company Employee Count:', data);
         // You can implement a modal or detailed view here
       },
       error: (error) => {

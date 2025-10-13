@@ -289,7 +289,6 @@ export class AddNewProfileComponent implements OnInit {
           if (this.videoRef && this.videoRef.nativeElement) {
             this.videoRef.nativeElement.srcObject = stream;
             this.videoRef.nativeElement.play();
-            console.log('Camera started successfully');
           }
         })
         .catch((err) => {
@@ -516,9 +515,6 @@ export class AddNewProfileComponent implements OnInit {
           employeeLocationHome: formData.location,
           employeeIsActive: true
         };
-        console.log(employeeData);
-        
-        
         
         // Call API to create or update employee
         const apiCall = this.isEditMode 

@@ -49,7 +49,6 @@ export class EmployeePunchInService {
   }
 
   private handleError(error: any) {
-    console.error('Employee Punch-In Service Error:', error);
     return throwError(() => error);
   }
 }

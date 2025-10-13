@@ -116,8 +116,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
     // For now, we'll determine if session is active based on whether there's an end time
     // You can enhance this by calling a session API endpoint
     this.isSessionActive = !this.sessionEndTime; // If no end time, session is active
-    
-    console.log(`[ActivityLog] Session ${this.sessionId} is ${this.isSessionActive ? 'ACTIVE' : 'ENDED'}`);
   }
 
   loadActivityData() {
@@ -129,8 +127,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
     
     this.activityLogService.getActivityLogsBySession(this.sessionId).subscribe({
       next: (logs) => {
-        console.log(`[ActivityLog] Loaded ${logs.length} activity logs from API`);
-        
         // Calculate actual durations based on timestamps since agent logs DurationSeconds as 0
         const logsWithCalculatedDurations = this.calculateActivityDurations(logs);
         
@@ -143,8 +139,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
           isRunning: index === logsWithCalculatedDurations.length - 1 && this.isSessionActive,
           isIdleAdjusted: (log as any).isIdleAdjusted || false
         }));
-        
-        console.log(`[ActivityLog] Processed ${this.activityLogs.length} activity logs`);
         
         // Calculate summary from the processed logs
         this.calculateSummaryFromLogs();
@@ -174,8 +168,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
   private calculateActivityDurations(logs: ActivityLog[]): ActivityLog[] {
     if (logs.length === 0) return logs;
 
-    console.log(`[ActivityLog] Calculating durations for ${logs.length} activity logs`);
-
     // Sort logs by timestamp
     const sortedLogs = [...logs].sort((a, b) => 
       new Date(a.activityTimestamp).getTime() - new Date(b.activityTimestamp).getTime()
@@ -199,11 +191,9 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
           
           // Cap duration at reasonable limits (max 1 hour)
           currentLog.durationSeconds = Math.min(Math.max(durationSeconds, 1), 3600);
-          console.log(`[ActivityLog] Last activity (RUNNING): ${currentLog.applicationName} - Duration: ${durationSeconds}s (capped: ${currentLog.durationSeconds}s)`);
         } else {
           // Session ended, use default duration for last activity
           currentLog.durationSeconds = 300; // 5 minutes default
-          console.log(`[ActivityLog] Last activity (ENDED): ${currentLog.applicationName} - Default duration: 5 minutes`);
         }
       } else {
         const nextLog = sortedLogs[i + 1];
@@ -215,8 +205,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
         
         // Cap duration at reasonable limits (max 1 hour per activity)
         currentLog.durationSeconds = Math.min(Math.max(durationSeconds, 1), 3600);
-        
-        console.log(`[ActivityLog] ${currentLog.applicationName}: ${durationSeconds}s (capped: ${currentLog.durationSeconds}s)`);
       }
       
       logsWithDurations.push(currentLog);
@@ -224,9 +212,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
 
     // Now apply idle state adjustments
     const adjustedLogs = this.adjustIdleStateDurations(logsWithDurations, IDLE_THRESHOLD_SECONDS);
-
-    const totalCalculatedTime = adjustedLogs.reduce((sum, log) => sum + (log.durationSeconds || 0), 0);
-    console.log(`[ActivityLog] Total calculated time: ${totalCalculatedTime} seconds (${Math.round(totalCalculatedTime / 60)} minutes)`);
 
     return adjustedLogs;
   }
@@ -237,14 +222,12 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
    * and ensure the idle activity gets the proper duration
    */
   private adjustIdleStateDurations(logs: ActivityLog[], idleThresholdSeconds: number): ActivityLog[] {
-    console.log(`[ActivityLog] Adjusting durations for idle states with threshold: ${idleThresholdSeconds}s`);
 
     for (let i = 0; i < logs.length; i++) {
       const currentLog = logs[i];
       
       // Check if current activity is an idle state
       if (currentLog.activityType === 'IDLE_STATE' && currentLog.applicationName === 'System') {
-        console.log(`[ActivityLog] Found IDLE_STATE activity at index ${i}`);
         
         // Find the previous non-idle activity
         let previousNonIdleIndex = -1;
@@ -258,8 +241,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
         if (previousNonIdleIndex !== -1) {
           const previousLog = logs[previousNonIdleIndex];
           const previousDuration = previousLog.durationSeconds || 0;
-          
-          console.log(`[ActivityLog] Previous activity: ${previousLog.applicationName}, Duration: ${previousDuration}s`);
           
           // Check if the previous activity duration is significantly longer than expected
           // This indicates it includes idle time that should be attributed to the idle state
@@ -288,17 +269,12 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
             // Update the idle activity duration
             currentLog.durationSeconds = idleDuration;
             
-            console.log(`[ActivityLog] Adjusted durations:`);
-            console.log(`  - ${previousLog.applicationName}: ${previousDuration}s -> ${adjustedPreviousDuration}s`);
-            console.log(`  - IDLE_STATE: ${currentLog.durationSeconds}s -> ${idleDuration}s`);
-            
             // Special case: If the next activity is ACTIVE_STATE, it should have minimal duration
             if (i + 1 < logs.length) {
               const nextLog = logs[i + 1];
               if (nextLog.activityType === 'ACTIVE_STATE' && nextLog.applicationName === 'System') {
                 // ACTIVE_STATE typically represents the transition back to active, should be minimal
                 nextLog.durationSeconds = Math.min(nextLog.durationSeconds || 1, 60); // Max 1 minute
-                console.log(`[ActivityLog] Adjusted ACTIVE_STATE duration to: ${nextLog.durationSeconds}s`);
               }
             }
           }
@@ -313,10 +289,7 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
    * Calculate activity summary from raw logs since API summary uses DurationSeconds = 0
    */
   private calculateSummaryFromLogs() {
-    console.log(`[ActivityLog] calculateSummaryFromLogs called with ${this.activityLogs.length} logs`);
-    
     if (this.activityLogs.length === 0) {
-      console.log('[ActivityLog] No activity logs available for summary calculation');
       this.activitySummary = [];
       this.totalActiveTime = 0;
       return;
@@ -332,16 +305,12 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
       appGroups.get(log.applicationName)!.push(log);
     });
 
-    console.log(`[ActivityLog] Grouped logs into ${appGroups.size} applications:`, Array.from(appGroups.keys()));
-
     // Calculate summary for each application
     this.activitySummary = Array.from(appGroups.entries()).map(([appName, logs]) => {
       const totalDuration = logs.reduce((sum, log) => sum + (log.durationSeconds || 0), 0);
       const sortedLogs = logs.sort((a, b) => 
         new Date(a.activityTimestamp).getTime() - new Date(b.activityTimestamp).getTime()
       );
-      
-      console.log(`[ActivityLog] ${appName}: ${logs.length} logs, total duration: ${totalDuration}s`);
       
       return {
         applicationName: appName,
@@ -362,8 +331,6 @@ export class EmployeeActivityLogComponent implements OnInit, OnDestroy {
 
     // Calculate total active time and percentages
     this.totalActiveTime = this.activitySummary.reduce((total, item) => total + item.totalDurationSeconds, 0);
-    
-    console.log(`[ActivityLog] Total active time calculated: ${this.totalActiveTime}s`);
     
     this.activitySummary = this.activitySummary.map(item => ({
       ...item,

@@ -140,8 +140,6 @@ export class CompanyRegister implements OnInit {
         adminDob: this.formatDateForAPI(this.adminForm.get('adminDob')?.value)
       };
 
-      console.log('Sending registration data:', registrationData);
-
       const response = await this.companyService.registerCompany(registrationData).toPromise();
 
       this.registrationResponse = response!;

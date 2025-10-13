@@ -666,13 +666,6 @@ export class Login implements AfterViewInit, OnDestroy {
       // JPEG with 0.85 quality provides good balance between size and quality
       const imageData = canvas.toDataURL('image/jpeg', 0.85);
       
-      console.log('Optimized image captured:', {
-        originalSize: `${video.videoWidth}x${video.videoHeight}`,
-        optimizedSize: `${canvasWidth}x${canvasHeight}`,
-        base64Length: imageData.length,
-        format: 'JPEG (85% quality)'
-      });
-      
       return imageData;
     } catch (error) {
       console.error('Error capturing optimized snapshot:', error);
@@ -706,7 +699,7 @@ export class Login implements AfterViewInit, OnDestroy {
       // Put enhanced image data back
       ctx.putImageData(imageData, 0, 0);
     } catch (error) {
-      console.warn('Image enhancement failed, using original:', error);
+      // Silently continue with original image
     }
   }
 

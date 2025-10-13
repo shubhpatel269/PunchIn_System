@@ -45,7 +45,6 @@ export class DesignationService {
         this.cacheTimestamp = Date.now();
       }),
       catchError((error) => {
-        console.error('Error in getDesignations:', error);
         return throwError(() => error);
       })
     );
@@ -64,7 +63,6 @@ export class DesignationService {
   getDesignationById(id: number): Observable<Designation> {
     return this.http.get<Designation>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() }).pipe(
       catchError((error) => {
-        console.error('Error in getDesignationById:', error);
         return throwError(() => error);
       })
     );
@@ -75,7 +73,6 @@ export class DesignationService {
     return this.http.post<Designation>(this.apiUrl, designation, { headers: this.getAuthHeaders() }).pipe(
       tap(() => this.clearDesignationsCache()), // Clear cache when data changes
       catchError((error) => {
-        console.error('Error in createDesignation:', error);
         return throwError(() => error);
       })
     );
@@ -86,7 +83,6 @@ export class DesignationService {
     return this.http.put<Designation>(`${this.apiUrl}/${id}`, designation, { headers: this.getAuthHeaders() }).pipe(
       tap(() => this.clearDesignationsCache()), // Clear cache when data changes
       catchError((error) => {
-        console.error('Error in updateDesignation:', error);
         return throwError(() => error);
       })
     );
@@ -97,7 +93,6 @@ export class DesignationService {
     return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() }).pipe(
       tap(() => this.clearDesignationsCache()), // Clear cache when data changes
       catchError((error) => {
-        console.error('Error in deleteDesignation:', error);
         return throwError(() => error);
       })
     );

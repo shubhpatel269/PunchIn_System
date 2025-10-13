@@ -48,12 +48,9 @@ export class AddAdmin implements OnInit {
     if (this.isEditMode && config.data.admin) {
       // Handle date formatting for edit mode
       const adminData = { ...config.data.admin };
-      console.log('Edit mode - original admin data:', adminData);
       if (adminData.adminDob) {
         // Convert string date to Date object for display
-        console.log('Original date string:', adminData.adminDob);
         adminData.adminDob = new Date(adminData.adminDob);
-        console.log('Converted to Date object:', adminData.adminDob);
       }
       this.adminForm.patchValue(adminData);
       // Remove password validation for edit mode
@@ -93,17 +90,12 @@ export class AddAdmin implements OnInit {
     // Format date for API - fix timezone issue
     if (formData.adminDob) {
       const date = new Date(formData.adminDob);
-      console.log('Original date:', formData.adminDob);
-      console.log('Date object:', date);
       // Use local date to avoid timezone issues
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       formData.adminDob = `${year}-${month}-${day}`;
-      console.log('Formatted date for API:', formData.adminDob);
     }
-
-    console.log('Form data being sent:', formData);
 
     if (this.isEditMode) {
       // For edit mode, include adminId and companyId

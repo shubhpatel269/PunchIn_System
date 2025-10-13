@@ -70,7 +70,6 @@ export default class ManageCompanyProfile implements OnInit {
   ) {}
 
   ngOnInit() {
-    console.log('CompanyProfile component initialized');
   }
 
   openNew() {
