@@ -3,10 +3,12 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { catchError, throwError } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 export function JwtInterceptor(request: HttpRequest<unknown>, next: HttpHandlerFn) {
   const router = inject(Router);
   const messageService = inject(MessageService);
+  const authService = inject(AuthService);
   
   // Get token from localStorage
   const token = localStorage.getItem('jwt_token');
@@ -25,7 +27,7 @@ export function JwtInterceptor(request: HttpRequest<unknown>, next: HttpHandlerF
     catchError((error: HttpErrorResponse) => {
       // Handle 401 Unauthorized errors
       if (error.status === 401) {
-        localStorage.removeItem('jwt_token');
+        authService.clearUserData(); // Clear all user data consistently
         router.navigate(['/login']);
         messageService.add({
           severity: 'error',
